@@ -1,0 +1,11 @@
+TestStruct v0
+{
+Property: 0
+OtherProperty: 3
+StructProperty:
+{
+IsTrue: false
+Truthfulness: 0.5
+SeveralThings: [2, 4, 6]
+}
+}

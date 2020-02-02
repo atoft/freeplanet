@@ -1,0 +1,1 @@
+cmake . -B ./build -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -T clangcl -DCMAKE_CXX_COMPILER=clang_cl

@@ -1,0 +1,7 @@
+
+#pragma once
+
+#define freeplanet_VERSION_MAJOR @freeplanet_VERSION_MAJOR@
+#define freeplanet_VERSION_MINOR @freeplanet_VERSION_MINOR@
+#define freeplanet_APP_NAME_PRETTY "freeplanet"
+#define @freeplanet_PLATFORM@

@@ -1,0 +1,68 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Dependencies
+      run: |
+        .\setup.bat
+    - name: CMake
+      run: |
+        .\scripts\windows-cmake.bat
+    - name: Build Debug
+      run: |
+        cd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\"
+        .\MSBuild.exe $Env:GITHUB_WORKSPACE\build\freeplanet.sln /p:Configuration=Debug
+    - name: Build Release
+      run: |
+        cd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\"
+        .\MSBuild.exe $Env:GITHUB_WORKSPACE\build\freeplanet.sln /p:Configuration=Release
+    - name: Test Debug
+      run: |
+        .\build\Debug\freeplanet.exe --unitTest
+    - name: Test Release
+      run: |
+        .\build\Release\freeplanet.exe --unitTest
+    - uses: actions/upload-artifact@v1
+      with:
+        name: freeplanet-windows
+        path: build/Release
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Dependencies
+      run: |
+        bash ./scripts/ubuntu-prerequisites.sh
+        export CXX="clang++"; bash ./setup.sh
+    - name: Build Debug
+      run: |
+        mkdir Debug
+        cd Debug
+        cmake .. -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Debug
+        make
+        cd ..
+    - name: Build Release
+      run: |
+        mkdir Release
+        cd Release
+        cmake .. -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
+        make
+        cd ..
+    - name: Test Debug
+      run: |
+        ./Debug/freeplanet --unitTest
+    - name: Test Release
+      run: |
+        ./Release/freeplanet --unitTest
+    - uses: actions/upload-artifact@v1
+      with:
+        name: freeplanet
+        path: ./Release
