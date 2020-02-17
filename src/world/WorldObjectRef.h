@@ -1,0 +1,8 @@
+//
+// Created by alastair on 17/02/2020.
+//
+
+#ifndef FREEPLANET_WORLDOBJECTREF_H
+#define FREEPLANET_WORLDOBJECTREF_H
+
+#endif //FREEPLANET_WORLDOBJECTREF_H
