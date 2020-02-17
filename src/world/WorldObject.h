@@ -12,6 +12,7 @@
 #include <src/tools/globals.h>
 #include <src/world/GeometryTypes.h>
 #include <src/world/WorldObjectID.h>
+#include <src/world/WorldObjectRef.h>
 #include <src/world/WorldPosition.h>
 
 class WorldZone;

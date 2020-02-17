@@ -68,18 +68,6 @@ void Globals::ReportGLProperties()
               + "\n\tPowered by: Sticky tape, rubber bands.");
 }
 
-void Globals::PrintCharArrayAsNumbers(unsigned char *array, int size)
-{
-    std::cout << "[";
-    for(int i = 0; i < size -1; i++)
-    {
-        unsigned int current = array[i];
-        std::cout << current << ", ";
-    }
-    unsigned int current = array[size - 1];
-    std::cout << current << "]" << std::endl;
-}
-
 void Globals::logError(std::string classname, std::string error)
 {
     std::string outMessage = "!Error [" + classname + "] " + error;

@@ -2,12 +2,11 @@
 // Created by alastair on 25/03/17.
 //
 
-#include <memory>
-
 #include "RenderHandler.h"
 
-#include <src/tools/MathsHelpers.h>
+#include <memory>
 
+#include <src/tools/MathsHelpers.h>
 #include <src/world/FreelookCameraComponent.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>

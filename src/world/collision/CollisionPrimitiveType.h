@@ -2,7 +2,15 @@
 // Created by alastair on 17/02/2020.
 //
 
-#ifndef FREEPLANET_COLLISIONPRIMITIVETYPE_H
-#define FREEPLANET_COLLISIONPRIMITIVETYPE_H
+#pragma once
 
-#endif //FREEPLANET_COLLISIONPRIMITIVETYPE_H
+enum class CollisionPrimitiveType
+{
+    NONE,
+    AABB,
+    OBB,
+    TRIANGLE,
+    TERRAIN,
+    CAPSULE,
+    SPHERE
+};

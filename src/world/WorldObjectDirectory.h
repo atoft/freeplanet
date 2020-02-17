@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <src/tools/globals.h>
 #include <src/world/WorldObjectID.h>
+#include <src/world/WorldObjectRef.h>
 
 class WorldObjectDirectory
 {
@@ -20,4 +21,3 @@ private:
     WorldObjectID m_NextAvailableID = 1;
 
 };
-
