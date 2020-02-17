@@ -2,6 +2,7 @@
 #include "ShaderProgram.h"
 
 #include <src/engine/Engine.h>
+#include <src/graphics/GLHelpers.h>
 
 ShaderProgram::ShaderProgram(ShaderAssetID _assetID)
 {
@@ -25,21 +26,21 @@ ShaderProgram::ShaderProgram(ShaderAssetID _assetID)
 
     // Link the vertex and fragment shader into a shader program
     m_ShaderProgramHandle = glCreateProgram();
-    Globals::ReportGLError("glCreateProgram");
+    GLHelpers::ReportError("glCreateProgram");
 
     glAttachShader(m_ShaderProgramHandle, m_VertexShaderHandle);
     glAttachShader(m_ShaderProgramHandle, m_FragmentShaderHandle);
-    Globals::ReportGLError("glAttachShader");
+    GLHelpers::ReportError("glAttachShader");
 
     glBindAttribLocation(m_ShaderProgramHandle, 0, "frplPosition");
     glBindAttribLocation(m_ShaderProgramHandle, 1, "frplNormal");
     glBindAttribLocation(m_ShaderProgramHandle, 2, "frplTexcoord");
-    Globals::ReportGLError("glBindAttribLocation");
+    GLHelpers::ReportError("glBindAttribLocation");
 
     glBindFragDataLocation(m_ShaderProgramHandle, 0, "outColor");
-    Globals::ReportGLError("glBindFragDataLocation");
+    GLHelpers::ReportError("glBindFragDataLocation");
     glLinkProgram(m_ShaderProgramHandle);
-    Globals::ReportGLError("glLinkProgram");
+    GLHelpers::ReportError("glLinkProgram");
 
 
     Use();
@@ -72,7 +73,7 @@ GLuint ShaderProgram::CompileShader(std::string name, std::string shaderSource, 
             break;
     }
 
-    Globals::ReportGLError("Compiling shader " + name);
+    GLHelpers::ReportError("Compiling shader " + name);
 
     GLuint id = glCreateShader(shaderTypeId);
 
@@ -80,7 +81,7 @@ GLuint ShaderProgram::CompileShader(std::string name, std::string shaderSource, 
 
     glShaderSource(id, 1, sourceCStrings, NULL);
     glCompileShader(id);
-    Globals::ReportGLError("glCompileShader " + name);
+    GLHelpers::ReportError("glCompileShader " + name);
 
     // Check shader compilation
     GLint params;
@@ -182,7 +183,7 @@ void ShaderProgram::SetUniformFloat3(std::string name, float r, float g, float b
     Use();
     GLint uniform = glGetUniformLocation(m_ShaderProgramHandle, name.c_str());
     glUniform3f(uniform, r, g, b);
-    Globals::ReportGLError("Setting uniform float3 \'" + name + "\'");
+    GLHelpers::ReportError("Setting uniform float3 \'" + name + "\'");
 
 }
 
@@ -191,7 +192,7 @@ void ShaderProgram::SetUniformFloat3(std::string name, glm::vec3 vector)
     Use();
     GLint uniform = glGetUniformLocation(m_ShaderProgramHandle, name.c_str());
     glUniform3f(uniform, vector.x, vector.y, vector.z);
-    Globals::ReportGLError("Setting uniform float3 \'" + name + "\'");
+    GLHelpers::ReportError("Setting uniform float3 \'" + name + "\'");
 
 }
 
@@ -200,7 +201,7 @@ void ShaderProgram::SetUniformMat4(std::string name, glm::mat4 matrix)
     Use();
     GLint uniform = glGetUniformLocation(m_ShaderProgramHandle, name.c_str());
     glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(matrix));
-    Globals::ReportGLError("Setting uniform mat4 \'" + name + "\'");
+    GLHelpers::ReportError("Setting uniform mat4 \'" + name + "\'");
 }
 
 void ShaderProgram::SetUniformFloat(std::string name, float value)
@@ -208,7 +209,7 @@ void ShaderProgram::SetUniformFloat(std::string name, float value)
     Use();
     GLint uniform = glGetUniformLocation(m_ShaderProgramHandle, name.c_str());
     glUniform1f(uniform, value);
-    Globals::ReportGLError("Setting uniform float \'" + name + "\'");
+    GLHelpers::ReportError("Setting uniform float \'" + name + "\'");
 }
 
 void ShaderProgram::Use() const
@@ -216,7 +217,7 @@ void ShaderProgram::Use() const
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
     glUseProgram(m_ShaderProgramHandle);
-    Globals::ReportGLError("glUseProgram shaderProgram");
+    GLHelpers::ReportError("glUseProgram shaderProgram");
 }
 
 void ShaderProgram::SetUniformInt(std::string name, int value)
@@ -224,5 +225,5 @@ void ShaderProgram::SetUniformInt(std::string name, int value)
     Use();
     GLint uniform = glGetUniformLocation(m_ShaderProgramHandle, name.c_str());
     glUniform1i(uniform, value);
-    Globals::ReportGLError("Setting uniform int \'" + name + "\'");
+    GLHelpers::ReportError("Setting uniform int \'" + name + "\'");
 }

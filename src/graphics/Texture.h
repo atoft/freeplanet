@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <src/assets/TextureAssets.h>
+#include <src/graphics/GLHelpers.h>
 #include <src/tools/globals.h>
 
 class ShaderProgram;

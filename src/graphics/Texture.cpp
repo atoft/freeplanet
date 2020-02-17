@@ -6,6 +6,7 @@
 
 #include <SFML/Graphics/Image.hpp>
 
+#include <src/graphics/GLHelpers.h>
 #include <src/graphics/ShaderProgram.h>
 
 Texture::Texture(TextureAssetID _asset)
@@ -40,10 +41,10 @@ void Texture::CreateImageTexture(std::string _fileName)
     imgData.flipVertically();
 
     glGenTextures(1, &m_TextureHandle);
-    Globals::ReportGLError("glGenTextures");
+    GLHelpers::ReportError("glGenTextures");
 
     glBindTexture(GL_TEXTURE_2D, m_TextureHandle);
-    Globals::ReportGLError("glBindTexture");
+    GLHelpers::ReportError("glBindTexture");
 
     glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA,
@@ -51,22 +52,22 @@ void Texture::CreateImageTexture(std::string _fileName)
             0,
             GL_RGBA, GL_UNSIGNED_BYTE, imgData.getPixelsPtr()
     );
-    Globals::ReportGLError("glTexImage2D");
+    GLHelpers::ReportError("glTexImage2D");
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    Globals::ReportGLError("glTexParameter setup");
+    GLHelpers::ReportError("glTexParameter setup");
 }
 
 void Texture::BindAsTexture(ShaderProgram *program, int textureNumber)
 {
     glBindTexture(GL_TEXTURE_2D, m_TextureHandle);
     GLuint sampler = glGetUniformLocation(program->GetProgramHandle(), "tex2D_0");
-    Globals::ReportGLError("glGetUniformLocation");
+    GLHelpers::ReportError("glGetUniformLocation");
     glUniform1i(sampler, 0);
-    Globals::ReportGLError("glUniform1i");
+    GLHelpers::ReportError("glUniform1i");
 
 }
 
@@ -74,9 +75,9 @@ void Texture::BindAsCubemap(ShaderProgram* _program, int _textureNumber)
 {
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureHandle);
     GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "texCUBE_0");
-    Globals::ReportGLError("glGetUniformLocation");
+    GLHelpers::ReportError("glGetUniformLocation");
     glUniform1i(sampler, 0);
-    Globals::ReportGLError("glUniform1i");
+    GLHelpers::ReportError("glUniform1i");
 }
 
 void Texture::Unbind()
@@ -94,10 +95,10 @@ void Texture::CreateCubemapTexture(std::string _directory)
     const std::string path = Globals::FREEPLANET_ASSET_PATH + "textures/" + _directory;
 
     glGenTextures(1, &m_TextureHandle);
-    Globals::ReportGLError("glGenTextures");
+    GLHelpers::ReportError("glGenTextures");
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureHandle);
-    Globals::ReportGLError("glBindTexture");
+    GLHelpers::ReportError("glBindTexture");
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -105,7 +106,7 @@ void Texture::CreateCubemapTexture(std::string _directory)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    Globals::ReportGLError("glTexParameter setup");
+    GLHelpers::ReportError("glTexParameter setup");
 
     for (int faceIdx = 0; faceIdx < 6; ++faceIdx)
     {
@@ -150,6 +151,6 @@ void Texture::CreateCubemapTexture(std::string _directory)
                 GL_RGBA, GL_UNSIGNED_BYTE, imgData.getPixelsPtr()
         );
 
-        Globals::ReportGLError("glTexImage2D");
+        GLHelpers::ReportError("glTexImage2D");
     }
 }

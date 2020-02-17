@@ -3,11 +3,8 @@
 //
 
 #pragma once
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <string>
-#include <GL/glew.h>
-#include <SFML/OpenGL.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 
@@ -63,19 +60,12 @@ static_assert(sizeof(f64) == 8);
 
 namespace Globals
 {
-    void ReportGLError(std::string location);
     void logError(std::string classname, std::string error);
     void logWarning(std::string classname, std::string warning);
     void log(std::string classname, std::string message);
-    void logVerbose(std::string classname, std::string message);
 
     const std::string FREEPLANET_ASSET_PATH = "assets/";
-    const float FREEPLANET_FAR_CLIP_DISTANCE = 100000.0f;
-    const float FREEPLANET_FOV_DEGREES = 90.0f;
+    const f32 FREEPLANET_FAR_CLIP_DISTANCE = 100000.0f;
+    const f32 FREEPLANET_FOV_DEGREES = 90.0f;
     const bool FREEPLANET_IS_GRAVITY = true;
-
-    void ReportGLProperties();
-
-    std::string ConvertGLString(const GLubyte *glstring);
-
 };

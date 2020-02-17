@@ -153,8 +153,8 @@ void SceneRenderer::Init()
     }
     glEnable(GL_TEXTURE_2D);
 
-    Globals::ReportGLError("glewInit");
-    Globals::ReportGLProperties();
+    GLHelpers::ReportError("glewInit");
+    GLHelpers::ReportProperties();
 }
 
 void SceneRenderer::Render(std::vector<Renderable::Scene> _scenes, std::shared_ptr<sf::RenderWindow> _window)
@@ -255,7 +255,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         }
 
         glBindVertexArray(mesh.m_VaoHandle);
-        Globals::ReportGLError("glBindVertexArray in renderer");
+        GLHelpers::ReportError("glBindVertexArray in renderer");
 
         ShaderProgram* shaderProgram = sceneObject.m_Shader.GetAsset();
         if (shaderProgram == nullptr)

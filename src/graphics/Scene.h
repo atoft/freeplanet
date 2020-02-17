@@ -14,6 +14,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 
 #include <src/engine/AssetHandle.h>
+#include <src/graphics/GLHelpers.h>
 
 class ShaderProgram;
 class Texture;
