@@ -88,13 +88,3 @@ void Globals::log(std::string classname, std::string message)
     std::cout << outMessage << std::endl;
     MessageLog::GetInstance().InsertMessage(LogType::freeplanetMESSAGE, outMessage);
 }
-
-void Globals::logVerbose(std::string classname, std::string message)
-{
-    if(Globals::FREEPLANET_PRINT_VERBOSE_LOGS)
-    {
-        std::string outMessage = "[" + classname + "] " + message;
-        std::cout << outMessage << std::endl;
-        MessageLog::GetInstance().InsertMessage(LogType::freeplanetMESSAGE, outMessage);
-    }
-}

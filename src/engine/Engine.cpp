@@ -31,24 +31,17 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     ThreadUtils::tl_ThreadType = ThreadType::Main;
     m_CommandLineArgs = _commandLineArgs;
 
-    const std::optional<EngineConfig> config = InspectionHelpers::LoadFromText<EngineConfig>("engineconfig.txt");
+    const std::optional<EngineConfig> loadedConfig = InspectionHelpers::LoadFromText<EngineConfig>("engineconfig.txt");
 
-    if (config.has_value())
+    if (loadedConfig.has_value())
     {
-        m_EngineConfig = *config;
+        m_EngineConfig = *loadedConfig;
     }
     else
     {
-        EngineConfig defaultConfig;
-
         const sf::VideoMode defaultMode = sf::VideoMode::getDesktopMode();
-        defaultConfig.m_Resolution.x = defaultMode.width;
-        defaultConfig.m_Resolution.y = defaultMode.height;
-
-        LogMessage("No engineconfig.txt found, creating.");
-
-        InspectionHelpers::SaveToText(defaultConfig, "engineconfig.txt");
-        m_EngineConfig = defaultConfig;
+        m_EngineConfig.m_Resolution.x = defaultMode.width;
+        m_EngineConfig.m_Resolution.y = defaultMode.height;
     }
 
     sf::ContextSettings settings;
@@ -77,9 +70,18 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
         m_Window->setMouseCursorGrabbed(true);
     }
 
-    // TODO remove hardcoded resolution values
-    sf::Mouse::setPosition(sf::Vector2i( (float)Globals::FREEPLANET_WINDOW_WIDTH / 2.0f , (float)Globals::FREEPLANET_WINDOW_HEIGHT / 2.0f  ), *m_Window);
+    if (!loadedConfig.has_value())
+    {
+        // Do this after the window has been created to make sure we get the resolution that is actually being displayed.
+        // Avoids issues where SFML is detecting multiple monitor resolutions incorrectly on Linux.
+        LogMessage("No engineconfig.txt found, creating.");
 
+        m_EngineConfig.m_Resolution.x = m_Window->getSize().x;
+        m_EngineConfig.m_Resolution.y = m_Window->getSize().y;
+
+        InspectionHelpers::SaveToText(m_EngineConfig, "engineconfig.txt");
+    }
+    
     m_Window->setActive(false);
 
     m_RenderHandler = std::make_shared<RenderHandler>(m_Window);
@@ -153,11 +155,6 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     }
 
     return 0;
-}
-
-void Engine::RequestWorldChange(std::shared_ptr<World> newWorld)
-{
-    m_RequestedWorld = newWorld;
 }
 
 void Engine::RequestQuit()

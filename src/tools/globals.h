@@ -69,10 +69,7 @@ namespace Globals
     void log(std::string classname, std::string message);
     void logVerbose(std::string classname, std::string message);
 
-    const int FREEPLANET_WINDOW_WIDTH = 1920;
-    const int FREEPLANET_WINDOW_HEIGHT = 1080;
     const std::string FREEPLANET_ASSET_PATH = "assets/";
-    const bool FREEPLANET_PRINT_VERBOSE_LOGS = true;
     const float FREEPLANET_FAR_CLIP_DISTANCE = 100000.0f;
     const float FREEPLANET_FOV_DEGREES = 90.0f;
     const bool FREEPLANET_IS_GRAVITY = true;
