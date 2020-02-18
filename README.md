@@ -1,5 +1,5 @@
 # freeplanet
-![](https://github.com/atoft/freeplanet/workflows/CI/badge.svg)
+[![](https://github.com/atoft/freeplanet/workflows/CI/badge.svg)](https://github.com/atoft/freeplanet/actions?query=workflow%3ACI)
 
 **Explore randomly generated worlds.**
 
@@ -16,7 +16,7 @@ A free and open source C++ 3D engine.
   - libx11
   - libxrandr
   
-  On Ubuntu, you can use `./scripts/ubuntu-prerequisites.sh` to install these.
+  On Ubuntu, you can use `sudo ./scripts/ubuntu-prerequisites.sh` to install these.
 
 ### Setup instructions
 - Clone this repository.
