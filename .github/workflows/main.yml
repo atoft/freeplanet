@@ -35,7 +35,7 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
-
+    container: ubuntu:rolling
     steps:
     - uses: actions/checkout@v1
     - name: Setup Dependencies
