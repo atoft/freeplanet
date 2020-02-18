@@ -32,7 +32,6 @@ public:
 
     s32 Run(const CommandLineArgs& _commandLineArgs);
 
-    void RequestWorldChange(std::shared_ptr<World> newWorld);
     void RequestCameraChange(WorldObjectID _cameraObjectID);
     void OnCameraDestroyed(WorldObjectID _cameraObjectID);
     void RequestQuit();

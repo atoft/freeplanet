@@ -66,7 +66,7 @@ void SceneRenderer::Run(std::shared_ptr<sf::RenderWindow> _window)
             m_StartRenderCV.wait(lock, [this](){return m_ReadyToRender;});
 
             m_ReadyToRender = false;
-            Render(m_CurrentScenes);
+            Render(m_CurrentScenes, _window);
             Render(m_CurrentUIElements, _window);
             _window->display();
 
@@ -153,11 +153,11 @@ void SceneRenderer::Init()
     }
     glEnable(GL_TEXTURE_2D);
 
-    Globals::ReportGLError("glewInit");
-    Globals::ReportGLProperties();
+    GLHelpers::ReportError("glewInit");
+    GLHelpers::ReportProperties();
 }
 
-void SceneRenderer::Render(std::vector<Renderable::Scene> _scenes)
+void SceneRenderer::Render(std::vector<Renderable::Scene> _scenes, std::shared_ptr<sf::RenderWindow> _window)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
@@ -200,7 +200,7 @@ void SceneRenderer::Render(std::vector<Renderable::Scene> _scenes)
         }
         currentMode = scene.m_RenderMode;
 
-        Render(scene);
+        Render(scene, _window);
 
         if (currentMode == Renderable::RenderMode::Vista)
         {
@@ -237,7 +237,7 @@ void SceneRenderer::ClearScreen()
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 }
 
-void SceneRenderer::Render(Renderable::Scene& _scene)
+void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::RenderWindow> _window)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
@@ -255,7 +255,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene)
         }
 
         glBindVertexArray(mesh.m_VaoHandle);
-        Globals::ReportGLError("glBindVertexArray in renderer");
+        GLHelpers::ReportError("glBindVertexArray in renderer");
 
         ShaderProgram* shaderProgram = sceneObject.m_Shader.GetAsset();
         if (shaderProgram == nullptr)
@@ -272,7 +272,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene)
         }
 
         shaderProgram->SetUniformMat4("frplTransform", _scene.m_CameraTransform * sceneObject.m_Transform);
-        shaderProgram->SetUniformFloat("frplAspectRatio", (float)Globals::FREEPLANET_WINDOW_WIDTH / (float)Globals::FREEPLANET_WINDOW_HEIGHT);
+        shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
 
 
         shaderProgram->SetUniformMat4("frplModelTransform", sceneObject.m_Transform);

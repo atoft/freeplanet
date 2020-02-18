@@ -33,6 +33,8 @@ private:
 
     void OnDebugInput(InputType _inputType);
 
+    void RecenterMouse();
+
 private:
     std::shared_ptr<sf::Window> m_Window;
 

@@ -2,12 +2,11 @@
 // Created by alastair on 25/03/17.
 //
 
-#include <memory>
-
 #include "RenderHandler.h"
 
-#include <src/tools/MathsHelpers.h>
+#include <memory>
 
+#include <src/tools/MathsHelpers.h>
 #include <src/world/FreelookCameraComponent.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
@@ -35,6 +34,9 @@ RenderHandler::RenderHandler(std::shared_ptr<sf::RenderWindow> _window)
                                  { m_SceneRenderer.Run(_window); });
 
     m_WaitingToQuit = false;
+
+    m_WindowResolution.x = _window->getSize().x;
+    m_WindowResolution.y = _window->getSize().y;
 }
 
 RenderHandler::~RenderHandler()
@@ -129,10 +131,10 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
                                                              : Renderable::RenderMode::Vista;
 
         glm::mat4 view = glm::inverse(c->GetCameraZoneTransform());
-        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()), (float) Globals::FREEPLANET_WINDOW_WIDTH /
-                                                                                   (float) Globals::FREEPLANET_WINDOW_HEIGHT,
-                                                0.1f,
-                                                c->GetFarClipDistance());
+        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()),
+            static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
+            0.1f,
+            c->GetFarClipDistance());
 
         sceneToRender.m_CameraTransform =
                 projection * view;
@@ -157,10 +159,10 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
                                                              : Renderable::RenderMode::Normal;
 
         glm::mat4 view = glm::inverse(c->GetCameraZoneTransform());
-        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()), (float) Globals::FREEPLANET_WINDOW_WIDTH /
-                                                                                   (float) Globals::FREEPLANET_WINDOW_HEIGHT,
-                                                0.1f,
-                                                c->GetFarClipDistance());
+        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()),
+            static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
+            0.1f,
+            c->GetFarClipDistance());
 
         sceneToRender.m_CameraTransform =
                 projection * view * zone.GetRelativeTransform(c->GetOwnerObject()->GetRef().m_ZoneCoordinates);
@@ -281,10 +283,10 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* world, const Freelook
         Renderable::Scene sceneToRender;
         sceneToRender.m_RenderMode = Renderable::RenderMode::Wireframe;
         glm::mat4 view = glm::inverse(c->GetCameraZoneTransform());
-        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()), (float) Globals::FREEPLANET_WINDOW_WIDTH /
-                                                                                   (float) Globals::FREEPLANET_WINDOW_HEIGHT,
-                                                0.1f,
-                                                c->GetFarClipDistance());
+        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()),
+                static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
+                0.1f,
+                c->GetFarClipDistance());
 
         sceneToRender.m_CameraTransform =
                 projection * view * zone.GetRelativeTransform(c->GetOwnerObject()->GetWorldPosition().m_ZoneCoordinates);

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <src/world/collision/CollisionAlgorithms.h>
+#include <src/world/collision/CollisionPrimitiveType.h>
 #include <src/world/GeometryTypes.h>
 #include <src/world/WorldObjectComponent.h>
 

@@ -45,6 +45,17 @@ const std::vector<InputMouseButtonMapping> DEFAULT_MOUSE_BUTTON_MAPPINGS
                 {InputType::InteractAlternate, InputContext::Gameplay, sf::Mouse::Right, InputButtonInteraction::OnReleased},
         };
 
+Input::Input(std::shared_ptr<sf::Window> _window)
+{
+    m_Window = _window;
+
+    // TODO Read from a config.
+    m_KeyMappings = DEFAULT_KEY_MAPPINGS;
+    m_MouseButtonMappings = DEFAULT_MOUSE_BUTTON_MAPPINGS;
+
+    RecenterMouse();
+}
+
 void Input::UpdateUserInput(World* _world, UIDisplay* _display)
 {
     if (_display == nullptr)
@@ -112,15 +123,15 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
 
     const sf::Vector2i pos = sf::Mouse::getPosition(*m_Window);
 
-    const f32 pX = pos.x / static_cast<f32>(Globals::FREEPLANET_WINDOW_WIDTH) - 0.5f;
-    const f32 pY = pos.y / static_cast<f32>(Globals::FREEPLANET_WINDOW_HEIGHT) - 0.5f;
+    const f32 pX = pos.x / static_cast<f32>(m_Window->getSize().x) - 0.5f;
+    const f32 pY = pos.y / static_cast<f32>(m_Window->getSize().y) - 0.5f;
 
     const Engine& engine = Engine::GetInstance();
     if (!engine.IsInMenu() && !engine.GetCommandLineArgs().m_ForceUnlockedMouse && _world != nullptr)
     {
         _world->OnMouseInput(pX, pY);
 
-        sf::Mouse::setPosition(sf::Vector2i(Globals::FREEPLANET_WINDOW_WIDTH/2 , Globals::FREEPLANET_WINDOW_HEIGHT/2), *m_Window);
+        RecenterMouse();
     }
 }
 
@@ -191,11 +202,8 @@ void Input::OnDebugInput(InputType _inputType)
     }
 }
 
-Input::Input(std::shared_ptr<sf::Window> _window)
+void Input::RecenterMouse()
 {
-    m_Window = _window;
-
-    // TODO Read from a config.
-    m_KeyMappings = DEFAULT_KEY_MAPPINGS;
-    m_MouseButtonMappings = DEFAULT_MOUSE_BUTTON_MAPPINGS;
+    const sf::Vector2i mousePos = sf::Vector2i(m_Window->getSize() / static_cast<u32>(2));
+    sf::Mouse::setPosition(mousePos, *m_Window);
 }

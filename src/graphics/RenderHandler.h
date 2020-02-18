@@ -71,6 +71,8 @@ private:
     std::thread m_RenderThread;
     SceneRenderer m_SceneRenderer;
 
+    glm::uvec2 m_WindowResolution;
+
     bool m_WaitingToQuit;
 
     // Keeping this around so we can generate debug information on the CPU.

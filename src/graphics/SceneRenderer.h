@@ -38,8 +38,8 @@ private:
     static void PrepareWireframeRender();
     static void ClearScreen();
     static void PostRender();
-    void Render(Renderable::Scene& _scene);
-    void Render(std::vector<Renderable::Scene> _scenes);
+    void Render(Renderable::Scene& _scene, std::shared_ptr<sf::RenderWindow> _window);
+    void Render(std::vector<Renderable::Scene> _scenes, std::shared_ptr<sf::RenderWindow> _window);
     static void Render(std::vector<Renderable::DrawableVariant> _uiElements, std::shared_ptr<sf::RenderWindow> _window);
 
 private:

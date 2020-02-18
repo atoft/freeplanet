@@ -77,6 +77,11 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
     {
         m_Interface.DrawRectangle(glm::vec2(0,0), glm::vec2(1920,1080), Color(0,0,0,0));
 
+        if (_world == nullptr)
+        {
+            m_Interface.DrawString(glm::vec2(20, 20), "No world is loaded. Use the console (tilde or F1) to enter a command.", 24.f);
+        }
+
         if (m_DebugMenu != nullptr)
         {
             m_DebugMenu->Draw(delta, m_Interface);
