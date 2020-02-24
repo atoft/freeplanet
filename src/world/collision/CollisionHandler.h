@@ -15,6 +15,7 @@ struct WorldPosition;
 class World;
 class WorldObject;
 struct TerrainChunk;
+class UIDrawInterface;
 
 // Handles ColliderComponents, and updates WorldObjects based on their collisions with terrain and each other.
 class CollisionHandler
@@ -28,6 +29,8 @@ public:
 
     void SetShouldResolveCollisions(bool _shouldResolve) { m_ShouldResolveCollisions = _shouldResolve; };
 
+    void DebugDraw(UIDrawInterface& _interface) const;
+
 private:
     static std::optional<CollisionResult> DoCollision(const ColliderComponent& _collider1,
                                                       const WorldObject& _object1,
@@ -39,6 +42,7 @@ private:
                                                       const std::vector<TerrainChunk>& _terrain,
                                                       const glm::vec3 _terrainOffset);
 
+private:
     World* m_World = nullptr;
 
     bool m_ShouldResolveCollisions = true;

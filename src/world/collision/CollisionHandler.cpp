@@ -5,6 +5,7 @@
 #include "CollisionHandler.h"
 
 #include <src/engine/Engine.h>
+#include <src/graphics/ui/UIDrawInterface.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/world/World.h>
 #include <src/world/collision/CollisionAlgorithms.h>
@@ -62,7 +63,7 @@ void CollisionHandler::Update(TimeMS _dt)
 
                 std::optional<CollisionResult> collision = DoCollision(collider1, *object1, collider2, *object2);
 
-                if(collision != std::nullopt && m_ShouldResolveCollisions)
+                if(collision != std::nullopt)
                 {
                     const f32 object1Movability = collider1.m_MovementType == MovementType::Movable ? 1.f : 0.f;
                     const f32 object2Movability = collider2.m_MovementType == MovementType::Movable ? 1.f : 0.f;
@@ -74,8 +75,11 @@ void CollisionHandler::Update(TimeMS _dt)
                                           ((collider1.m_MassScale * object1Movability) +
                                            (collider2.m_MassScale * object2Movability));
 
-                    object1->SetPosition(object1->GetPosition() + object1Distance * collision->m_Normal);
-                    object2->SetPosition(object2->GetPosition() - object2Distance * collision->m_Normal);
+                    if (m_ShouldResolveCollisions)
+                    {
+                        object1->SetPosition(object1->GetPosition() + object1Distance * collision->m_Normal);
+                        object2->SetPosition(object2->GetPosition() - object2Distance * collision->m_Normal);
+                    }
 
                     const CollisionResult collider1Result = *collision;
 
@@ -114,12 +118,12 @@ void CollisionHandler::Update(TimeMS _dt)
                     terrainComponent.GetChunks(),
                     MathsHelpers::GetPosition(zone.GetTerrainModelTransform()));
 
-            if(collision != std::nullopt && m_ShouldResolveCollisions)
+            if(collision != std::nullopt)
             {
-                //static u32 i = 0;
-                //LogMessage(std::to_string(i++) + "Collision between " + object->GetName() + " and terrain");
-
-                object->SetPosition(object->GetPosition() + collision->m_Normal * collision->m_Distance);
+                if (m_ShouldResolveCollisions)
+                {
+                    object->SetPosition(object->GetPosition() + collision->m_Normal * collision->m_Distance);
+                }
 
                 collider.m_CollisionsLastFrame.push_back(*collision);
             }
@@ -206,4 +210,26 @@ std::optional<f32> CollisionHandler::DoRaycast(WorldPosition _origin, glm::vec3 
     }
 
     return std::nullopt;
+}
+
+void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
+{
+    u32 collisionCount = 0;
+    for (const WorldZone& zone : m_World->GetActiveZones())
+    {
+        for (const ColliderComponent& collider : zone.GetColliderComponents())
+        {
+            const WorldObject* owner = collider.GetOwnerObject();
+
+            for (const CollisionResult& result : collider.m_CollisionsLastFrame)
+            {
+                const glm::vec3 colliderOrigin = owner->GetPosition() + collider.m_Bounds.m_PositionOffset;
+
+                _interface.DebugDrawArrow(zone.GetCoordinates(), colliderOrigin, result.m_Distance, result.m_Normal);
+                ++collisionCount;
+            }
+        }
+    }
+
+    _interface.DrawString(glm::vec2(20, 20), std::to_string(collisionCount) + " collisions this frame.", 16.f);
 }

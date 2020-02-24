@@ -9,6 +9,7 @@
 
 #include <src/engine/Engine.h>
 #include <src/graphics/ui/UIConsoleMenu.h>
+#include <src/graphics/ui/UICollisionDebug.h>
 #include <src/graphics/ui/UIComponentDebug.h>
 #include <src/graphics/ui/UIWorldZoneDebug.h>
 #include <src/graphics/ui/UITerrainDebug.h>
@@ -48,6 +49,12 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         {
             auto debugMenu = std::make_unique<UIProfilingDebug>();
             debugMenu->Init(&Profiler::GetInstance());
+            m_DebugMenu = std::move(debugMenu);
+        }
+        else if (m_RequestedDebugMenu == "collision")
+        {
+            auto debugMenu = std::make_unique<UICollisionDebug>();
+            debugMenu->Init(_world);
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "none" || m_RequestedDebugMenu == "off")

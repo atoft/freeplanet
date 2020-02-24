@@ -55,6 +55,7 @@ public:
     void OnWorldObjectTransferred(WorldObjectID _objectID, WorldObjectRef _newLocation) { m_Directory.OnWorldObjectTransferred(_objectID, _newLocation); };
 
     CollisionHandler* GetCollisionHandler() { return m_CollisionHandler.get(); };
+    const CollisionHandler* GetCollisionHandler() const { return m_CollisionHandler.get(); };
     TerrainHandler* GetTerrainHandler() { return m_TerrainHandler.get(); };
     const TerrainHandler* GetTerrainHandler() const { return m_TerrainHandler.get(); };
     const VistaHandler* GetVistaHandler() const { return m_VistaHandler.get(); };
