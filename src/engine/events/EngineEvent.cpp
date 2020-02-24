@@ -17,6 +17,7 @@ const std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS =
             {EngineEvent::Type::WorldSetCollision, true, "setcollision", "Set the world's collision mode (0,1).", EngineEvent::ArgumentType::Int},
             {EngineEvent::Type::WorldSetPlanetaryRotationSpeedScale, true, "sunspeed", "Scale the speed of the planet's rotation.", EngineEvent::ArgumentType::Float},
             {EngineEvent::Type::WorldSetTimeScale, true, "timescale", "Set the factor to scale gameplay speed by.", EngineEvent::ArgumentType::Float},
+            {EngineEvent::Type::WorldSetGravity, true, "gravity", "Set the strength of gravity.", EngineEvent::ArgumentType::Float},
             {EngineEvent::Type::EngineRequestQuit, true, "quit", "Request to end any running tasks and quit the engine.", EngineEvent::ArgumentType::Void},
             {EngineEvent::Type::EngineTestWorld, true, "testworld", "Switch world to the specified test world.", EngineEvent::ArgumentType::String},
             {

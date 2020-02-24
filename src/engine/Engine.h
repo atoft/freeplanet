@@ -58,7 +58,7 @@ private:
     std::shared_ptr<sf::RenderWindow> m_Window = nullptr;
 
     std::shared_ptr<World> m_World = nullptr;
-    std::optional<std::shared_ptr<World>> m_RequestedWorld = std::nullopt;
+    std::shared_ptr<World> m_RequestedWorld = nullptr;
 
     std::shared_ptr<RenderHandler> m_RenderHandler = nullptr;
     std::shared_ptr<UIDisplay> m_UIDisplay = nullptr;

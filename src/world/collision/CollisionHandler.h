@@ -26,6 +26,8 @@ public:
 
     std::optional<f32> DoRaycast(WorldPosition _origin, glm::vec3 _direction);
 
+    void SetShouldResolveCollisions(bool _shouldResolve) { m_ShouldResolveCollisions = _shouldResolve; };
+
 private:
     static std::optional<CollisionResult> DoCollision(const ColliderComponent& _collider1,
                                                       const WorldObject& _object1,
@@ -38,4 +40,6 @@ private:
                                                       const glm::vec3 _terrainOffset);
 
     World* m_World = nullptr;
+
+    bool m_ShouldResolveCollisions = true;
 };

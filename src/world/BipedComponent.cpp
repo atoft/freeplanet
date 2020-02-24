@@ -45,7 +45,7 @@ void BipedComponent::Update(TimeMS _delta)
     }
 
 
-    const f32 gravity = Engine::GetInstance().GetCommandLineArgs().m_Noclip ? 0.f : 9.81f * 2.f;
+    const f32 gravity = m_World->GetGravityStrength();
     const f32 walkAcceleration = 20.0f;
     const f32 friction = 20.0f;
 

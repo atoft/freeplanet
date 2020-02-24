@@ -101,9 +101,20 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     if (!m_CommandLineArgs.m_TestWorld.empty())
     {
         m_RequestedWorld = Test::BuildTestWorld(m_CommandLineArgs.m_TestWorld);
+
+        if (m_RequestedWorld != nullptr)
+        {
+            m_RequestedWorld->HandleCommandLineArgs(m_CommandLineArgs);
+        }
     }
 
     if (!m_CommandLineArgs.m_DebugUI.empty())
+    {
+        const EngineEvent event = EngineEvent(EngineEvent::Type::UIRequestDebugMenu, m_CommandLineArgs.m_DebugUI);
+        AddEvent(event);
+    }
+
+    if (m_CommandLineArgs.m_Noclip)
     {
         const EngineEvent event = EngineEvent(EngineEvent::Type::UIRequestDebugMenu, m_CommandLineArgs.m_DebugUI);
         AddEvent(event);
@@ -113,17 +124,14 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     m_IsGameplayRunning = true;
     while (m_IsGameplayRunning) 
     {
-        if (m_RequestedWorld != std::nullopt)
+        if (m_RequestedWorld != m_World)
         {
-            const std::shared_ptr<World> requestedWorld = *m_RequestedWorld;
-
-            LogMessage("Changing world from " 
+            LogMessage("Changing world from "
                 + (m_World != nullptr ? m_World->GetName() : "[none]")
                 + " to "
-                + (requestedWorld != nullptr? requestedWorld->GetName() : "[none]"));
+                + (m_RequestedWorld != nullptr? m_RequestedWorld->GetName() : "[none]"));
 
-            m_World = requestedWorld;
-            m_RequestedWorld = std::nullopt;
+            m_World = m_RequestedWorld;
         }
 
         if (m_IsCameraChangePending)

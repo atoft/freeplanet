@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <optional>
 #include <memory>
 #include <string>
 
@@ -12,6 +11,6 @@ class World;
 
 namespace Test
 {
-    std::optional<std::shared_ptr<World>> BuildTestWorld(std::string _worldName);
+    std::shared_ptr<World> BuildTestWorld(std::string _worldName);
 
 }

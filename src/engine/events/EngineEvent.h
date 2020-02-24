@@ -27,6 +27,7 @@ public:
         WorldSetCollision,
         WorldSetPlanetaryRotationSpeedScale,
         WorldSetTimeScale,
+        WorldSetGravity,
         EngineRequestQuit,
         EngineTestWorld,
 

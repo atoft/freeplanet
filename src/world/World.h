@@ -9,6 +9,7 @@
 #include <src/engine/events/EventHandler.h>
 #include <src/engine/loader/DynamicLoaderCollection.h>
 #include <src/engine/events/EngineEvent.h>
+#include <src/engine/StartupHelpers.h>
 #include <src/world/WorldZone.h>
 #include <src/world/WorldObjectDirectory.h>
 #include <src/world/Player.h>
@@ -59,6 +60,7 @@ public:
     const VistaHandler* GetVistaHandler() const { return m_VistaHandler.get(); };
 
     void HandleEvent(EngineEvent _event);
+    void HandleCommandLineArgs(const CommandLineArgs& _args);
 
     void AddWorldEvent(WorldEvent _event);
 
@@ -70,6 +72,7 @@ public:
     const EnvironmentState& GetEnvironmentState() const { return m_EnvironmentState; };
     const WorldZoneRegion& GetWorldBounds() const { return m_WorldBounds; };
     f32 GetTimeScale() const { return m_TimeScale; };
+    f32 GetGravityStrength() const { return m_GravityStrength; };
 
 private:
     const WorldObject* FindWorldObject(const WorldObjectRef& _objectRef) const;
@@ -109,4 +112,5 @@ private:
     EnvironmentState m_EnvironmentState;
 
     f32 m_TimeScale = 1.f;
+    f32 m_GravityStrength = 9.81f;
 };

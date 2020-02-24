@@ -21,11 +21,6 @@ void CollisionHandler::Update(TimeMS _dt)
 {
     ProfileCurrentFunction();
 
-    if(Engine::GetInstance().GetCommandLineArgs().m_Noclip)
-    {
-        return;
-    }
-
     for(WorldZone& zone : m_World->GetActiveZones())
     {
         if(zone.GetColliderComponents().empty())
@@ -67,7 +62,7 @@ void CollisionHandler::Update(TimeMS _dt)
 
                 std::optional<CollisionResult> collision = DoCollision(collider1, *object1, collider2, *object2);
 
-                if(collision != std::nullopt)
+                if(collision != std::nullopt && m_ShouldResolveCollisions)
                 {
                     const f32 object1Movability = collider1.m_MovementType == MovementType::Movable ? 1.f : 0.f;
                     const f32 object2Movability = collider2.m_MovementType == MovementType::Movable ? 1.f : 0.f;
@@ -119,7 +114,7 @@ void CollisionHandler::Update(TimeMS _dt)
                     terrainComponent.GetChunks(),
                     MathsHelpers::GetPosition(zone.GetTerrainModelTransform()));
 
-            if(collision != std::nullopt)
+            if(collision != std::nullopt && m_ShouldResolveCollisions)
             {
                 //static u32 i = 0;
                 //LogMessage(std::to_string(i++) + "Collision between " + object->GetName() + " and terrain");

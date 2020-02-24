@@ -7,7 +7,7 @@
 #include <src/world/World.h>
 #include <src/tools/PropRecipe.h>
 
-std::optional<std::shared_ptr<World>> Test::BuildTestWorld(std::string _worldName)
+std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
 {
     std::shared_ptr<World> world = nullptr;
 
@@ -103,7 +103,7 @@ std::optional<std::shared_ptr<World>> Test::BuildTestWorld(std::string _worldNam
     else
     {
         LogError(_worldName + " is not a valid test world.");
-        return std::nullopt;
+        return nullptr;
     }
 
     return world;

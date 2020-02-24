@@ -441,17 +441,6 @@ void World::HandleEvent(EngineEvent _event)
 {
     switch (_event.GetType())
     {
-    case EngineEvent::Type::WorldSetCollision:
-    {
-        for (WorldZone& zone : m_ActiveZones)
-        {
-            for (ColliderComponent& collider : zone.GetColliderComponents())
-            {
-                collider.m_CollisionEnabled = static_cast<bool>(_event.GetIntData());
-            }
-        }
-        break;
-    }
     case EngineEvent::Type::WorldRequestDestroyWorldObject:
     {
         const WorldObjectID id = _event.GetIntData();
@@ -487,6 +476,23 @@ void World::HandleEvent(EngineEvent _event)
 
         break;
     }
+    case EngineEvent::Type::WorldSetCollision:
+    {
+        m_CollisionHandler->SetShouldResolveCollisions(_event.GetIntData() == 1);
+
+        break;
+    }
+    case EngineEvent::Type::WorldSetGravity:
+    {
+        const f32 gravity = _event.GetFloatData();
+
+        if (gravity >= 0.f && !MathsHelpers::IsNaN(gravity))
+        {
+            m_GravityStrength = gravity;
+        }
+
+        break;
+    }
     case EngineEvent::Type::TerrainSetNormalGenerationMethod:
     {
         const NormalGenerationMethod method = static_cast<NormalGenerationMethod>(_event.GetIntData());
@@ -495,9 +501,20 @@ void World::HandleEvent(EngineEvent _event)
         {
             m_TerrainHandler->SetNormalGenerationMethod(method);
         }
+
+        break;
     }
     default:
-        return;
+        break;
+    }
+}
+
+void World::HandleCommandLineArgs(const CommandLineArgs& _args)
+{
+    if (_args.m_Noclip)
+    {
+        m_GravityStrength = 0.f;
+        m_CollisionHandler->SetShouldResolveCollisions(false);
     }
 }
 
