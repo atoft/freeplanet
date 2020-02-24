@@ -11,6 +11,7 @@
 
 #include <src/graphics/ui/UIDisplay.h>
 #include <src/world/World.h>
+#include <src/tools/MathsHelpers.h>
 
 static const glm::ivec2 DEFAULT_RES = glm::ivec2(1920,1080);
 
@@ -138,6 +139,23 @@ void UIDrawInterface::DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _pos
         Renderable::SceneObject sceneObject;
         sceneObject.m_Mesh = sphere->GetMesh();
         sceneObject.m_Transform = glm::scale(glm::translate(glm::mat4x4(1.f), _position),  glm::vec3(_radius));
+        sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+
+        m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
+    }
+}
+
+void UIDrawInterface::DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _length, glm::vec3 _normal)
+{
+    StaticMesh* arrow = AssetHandle<StaticMesh>(MeshAsset_Arrow).GetAsset();
+
+    if(arrow != nullptr)
+    {
+        Renderable::SceneObject sceneObject;
+        sceneObject.m_Mesh = arrow->GetMesh();
+
+        const glm::mat4 translation = glm::translate(glm::mat4(1.f), _position);
+        sceneObject.m_Transform = glm::scale(translation * MathsHelpers::GenerateRotationMatrixFromNormal(_normal),  glm::vec3(_length, 1.f, 1.f));
         sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);

@@ -29,6 +29,7 @@ public:
     void DrawSpriteFromDisk(glm::vec2 _position, glm::vec2 _scale, std::string _path);
 
     void DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _radius);
+    void DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _length, glm::vec3 _normal);
 
     glm::ivec2 GetDisplayResolution() const;
 
