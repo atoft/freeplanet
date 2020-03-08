@@ -11,6 +11,7 @@
 
 using Color = glm::vec4;
 
+struct AABB;
 class UIDisplay;
 
 enum class FontStyle
@@ -30,6 +31,7 @@ public:
 
     void DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _radius);
     void DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _length, glm::vec3 _normal);
+    void DebugDrawAABB(glm::ivec3 zoneCoordinates, const glm::vec3& _position, const AABB& _aabb);
 
     glm::ivec2 GetDisplayResolution() const;
 

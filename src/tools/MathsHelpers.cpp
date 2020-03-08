@@ -72,8 +72,8 @@ bool MathsHelpers::IsNaN(f32 _value)
 
 bool MathsHelpers::IsNormalized(glm::vec3 _value)
 {
-    f32 length = glm::length(_value);
-    return length >= 1.f - glm::epsilon<f32>() && length <= 1.f + glm::epsilon<f32>();
+    const f32 length = glm::length(_value);
+    return length >= 1.f - 2.f * glm::epsilon<f32>() && length <= 1.f + 2.f * glm::epsilon<f32>();
 }
 
 glm::vec3 MathsHelpers::ComputeFaceNormal(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)

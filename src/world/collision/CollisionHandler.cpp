@@ -115,7 +115,7 @@ void CollisionHandler::Update(TimeMS _dt)
             std::optional<CollisionResult> collision = DoCollision(
                     collider,
                     *object,
-                    terrainComponent.GetChunks(),
+                    terrainComponent,
                     MathsHelpers::GetPosition(zone.GetTerrainModelTransform()));
 
             if(collision != std::nullopt)
@@ -158,7 +158,7 @@ std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderCompo
 
 std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderComponent& _collider,
                                                              const WorldObject& _object,
-                                                             const std::vector<TerrainChunk>& _terrain,
+                                                             const TerrainComponent& _terrain,
                                                              const glm::vec3 _terrainOffset)
 {
     if(_collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
@@ -225,8 +225,16 @@ void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
             {
                 const glm::vec3 colliderOrigin = owner->GetPosition() + collider.m_Bounds.m_PositionOffset;
 
-                _interface.DebugDrawArrow(zone.GetCoordinates(), colliderOrigin, result.m_Distance, result.m_Normal);
+                _interface.DebugDrawArrow(zone.GetCoordinates(), colliderOrigin, 1.f + glm::abs(result.m_Distance), result.m_Normal);
+                _interface.DrawString(glm::vec2(20, 40), result.m_DebugInfo, 16.f, Color(0.f,1.f,0.f,1.f));
+
                 ++collisionCount;
+            }
+
+            if (collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
+            {
+                const AABB boundsForOBB = CollisionHelpers::GetAABBForOBB(MathsHelpers::GetRotationMatrix(owner->GetZoneTransform()), collider.m_Bounds);
+                _interface.DebugDrawAABB(zone.GetCoordinates(), owner->GetPosition(), boundsForOBB);
             }
         }
     }

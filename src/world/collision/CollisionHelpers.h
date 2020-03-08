@@ -16,6 +16,7 @@ namespace CollisionHelpers
 {
     struct OBBProperties
     {
+        glm::vec3 m_Origin;
         glm::vec3 m_X;
         glm::vec3 m_Y;
         glm::vec3 m_Z;
@@ -54,5 +55,7 @@ namespace CollisionHelpers
 
     // Compute various properties needed in OBB collision algorithms
     OBBProperties GetOBBProperties(const glm::mat4& _transform, const AABB& _bounds, const glm::vec3& _positionOffset);
+
+    AABB GetAABBForOBB(const glm::mat4& _rotation, const AABB& _bounds);
 
 }

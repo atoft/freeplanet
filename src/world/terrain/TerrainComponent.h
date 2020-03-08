@@ -20,6 +20,9 @@ class TerrainComponent
     friend class CollisionHandler;
     friend class TerrainHandler;
 
+    // TODO This doesn't really make sense, need a rethink.
+    friend class CollisionAlgorithms;
+
 public:
     TerrainComponent(u32 _chunksPerEdge, f32 _chunkSize, glm::ivec3 _zoneCoords);
     TerrainComponent();

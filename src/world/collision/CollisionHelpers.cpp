@@ -193,27 +193,39 @@ bool CollisionHelpers::IsTriangleCollisionInAxis(const std::array<glm::vec3, 8>&
 
 CollisionHelpers::OBBProperties CollisionHelpers::GetOBBProperties(const glm::mat4& _transform, const AABB& _bounds, const glm::vec3& _positionOffset)
 {
-    const glm::vec3 obbCentre = MathsHelpers::GetPosition(_transform) + _bounds.m_PositionOffset - _positionOffset;
-
     CollisionHelpers::OBBProperties properties;
 
-    properties.m_X = MathsHelpers::GetRightVector(_transform);
-    properties.m_Y = MathsHelpers::GetUpVector(_transform);
-    properties.m_Z = MathsHelpers::GetForwardVector(_transform);
+    properties.m_Origin = MathsHelpers::GetPosition(_transform) + _bounds.m_PositionOffset - _positionOffset;
+    properties.m_X = glm::normalize(MathsHelpers::GetRightVector(_transform));
+    properties.m_Y = glm::normalize(MathsHelpers::GetUpVector(_transform));
+    properties.m_Z = glm::normalize(MathsHelpers::GetForwardVector(_transform));
 
     const glm::vec3 obbExtents = _bounds.m_Dimensions;
 
-    properties.m_Coordinates[0] = obbCentre + properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
-    properties.m_Coordinates[1] = obbCentre - properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[0] = properties.m_Origin + properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[1] = properties.m_Origin - properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
 
-    properties.m_Coordinates[2] = obbCentre + properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
-    properties.m_Coordinates[3] = obbCentre - properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[2] = properties.m_Origin + properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[3] = properties.m_Origin - properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y + properties.m_Z * obbExtents.z;
 
-    properties.m_Coordinates[4] = obbCentre + properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
-    properties.m_Coordinates[5] = obbCentre - properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[4] = properties.m_Origin + properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[5] = properties.m_Origin - properties.m_X * obbExtents.x + properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
 
-    properties.m_Coordinates[6] = obbCentre + properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
-    properties.m_Coordinates[7] = obbCentre - properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[6] = properties.m_Origin + properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
+    properties.m_Coordinates[7] = properties.m_Origin - properties.m_X * obbExtents.x - properties.m_Y * obbExtents.y - properties.m_Z * obbExtents.z;
 
     return properties;
+}
+
+AABB CollisionHelpers::GetAABBForOBB(const glm::mat4& _rotation, const AABB& _bounds)
+{
+    glm::vec3 basisX = glm::abs(glm::vec4(1,0,0,1) * glm::inverse(_rotation)) * _bounds.m_Dimensions.x;
+    glm::vec3 basisY = glm::abs(glm::vec4(0,1,0,1) * glm::inverse(_rotation)) * _bounds.m_Dimensions.y;
+    glm::vec3 basisZ = glm::abs(glm::vec4(0,0,1,1) * glm::inverse(_rotation)) * _bounds.m_Dimensions.z;
+
+    AABB result;
+    result.m_PositionOffset = _bounds.m_PositionOffset;
+    result.m_Dimensions = basisX + basisY + basisZ;
+
+    return result;
 }

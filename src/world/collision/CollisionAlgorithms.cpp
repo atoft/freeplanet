@@ -9,6 +9,8 @@
 
 #include <src/tools/MathsHelpers.h>
 #include <src/world/collision/CollisionHelpers.h>
+#include <src/world/terrain/TerrainConstants.h>
+#include <src/world/terrain/TerrainComponent.h>
 
 std::optional<CollisionResult> CollisionAlgorithms::CollideOBB_OBB(
         const glm::mat4& _transform1,
@@ -72,118 +74,57 @@ std::optional<CollisionResult> CollisionAlgorithms::CollideOBB_OBB(
 
 std::optional<CollisionResult> CollisionAlgorithms::CollideOBB_Terrain(const glm::mat4& _transform1,
                                              const AABB& _bounds1,
-                                             const std::vector<TerrainChunk>& _terrain,
+                                             const TerrainComponent& _terrain,
                                              const glm::vec3& _terrainOffset)
 {
-    const CollisionHelpers::OBBProperties properties = CollisionHelpers::GetOBBProperties(_transform1, _bounds1, _terrainOffset);
-
-    const glm::vec3& obbX = properties.m_X;
-    const glm::vec3& obbY = properties.m_Y;
-    const glm::vec3& obbZ = properties.m_Z;
-    const std::array<glm::vec3, 8>& obbCoordinates = properties.m_Coordinates;
-
     glm::vec3 overallChosenAxis = glm::vec3();
-    f32 overallSeparation = -std::numeric_limits<f32>::max();
+    f32 overallSeparation = 0.f;
     bool didCollide = false;
+    std::string debug;
 
-    for (const TerrainChunk& chunk : _terrain)
+    const glm::vec3 relativeZoneOffset = glm::vec3(0.f); // TODO
+    const glm::vec3 zonePositionOffset = relativeZoneOffset * glm::vec3(_terrain.m_ChunkSize * _terrain.m_ChunksPerEdge);
+    const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_terrain.m_ChunkSize * _terrain.m_ChunksPerEdge) /2.f;
+
+    const glm::vec3 localPosition = MathsHelpers::GetPosition(_transform1) + _bounds1.m_PositionOffset + chunksToZoneOriginOffset + zonePositionOffset;
+
+    // Use the bounds of the collider to only test chunks that could possibly overlap.
+    const AABB boundsForOBB = CollisionHelpers::GetAABBForOBB(MathsHelpers::GetRotationMatrix(_transform1), _bounds1);
+    const glm::ivec3 minRegion = glm::floor((localPosition - boundsForOBB.m_Dimensions) / _terrain.m_ChunkSize);
+    const glm::ivec3 maxRegion = glm::ceil((localPosition + boundsForOBB.m_Dimensions) / _terrain.m_ChunkSize);
+
+    const glm::ivec3 clampedMinRegion = glm::clamp(minRegion, glm::ivec3(), glm::ivec3(_terrain.m_ChunksPerEdge));
+    const glm::ivec3 clampedMaxRegion = glm::clamp(maxRegion, glm::ivec3(), glm::ivec3(_terrain.m_ChunksPerEdge));
+
+    const u32 dimensions = _terrain.GetDimensions();
+
+    for (s32 z = clampedMinRegion.z; z < clampedMaxRegion.z; ++z)
     {
-        for (u32 triIdx = 0; triIdx < chunk.m_Count; ++triIdx)
+        for (s32 y = clampedMinRegion.y; y < clampedMaxRegion.y; ++y)
         {
-            glm::vec3 possibleAxis = glm::vec3();
-            f32 possibleSeparation = -std::numeric_limits<f32>::max();
-
-            const Triangle& tri = chunk.m_Triangles[triIdx];
-
-            // Collision detection in axes of OBB  x3
-            if (   !CollisionHelpers::IsTriangleCollisionInAxis(obbCoordinates, tri, obbX, possibleSeparation, possibleAxis)
-                || !CollisionHelpers::IsTriangleCollisionInAxis(obbCoordinates, tri, obbY, possibleSeparation, possibleAxis)
-                || !CollisionHelpers::IsTriangleCollisionInAxis(obbCoordinates, tri, obbZ, possibleSeparation, possibleAxis))
+            for (s32 x = clampedMinRegion.x; x < clampedMaxRegion.x; ++x)
             {
-                continue;
+                const TerrainChunk& chunk = _terrain.GetChunks()[x + y * dimensions + z * dimensions * dimensions];
+
+                for (u32 triIdx = 0; triIdx < chunk.m_Count; ++triIdx)
+                {
+                    const std::optional<CollisionResult> triangleResult = CollideOBB_Triangle(_transform1, _bounds1, chunk.m_Triangles[triIdx], _terrainOffset);
+
+                    if (triangleResult != std::nullopt)
+                    {
+                        // When comparing collisions of the separate triangles, take the collision with the greatest
+                        // penetration (as opposed to when doing an individual separating axis test, when we choose the
+                        // axis with smallest penetration).
+                        if (triangleResult->m_Distance < overallSeparation)
+                        {
+                            overallSeparation = triangleResult->m_Distance;
+                            overallChosenAxis = triangleResult->m_Normal;
+                            debug = triangleResult->m_DebugInfo;
+                            didCollide = true;
+                        }
+                    }
+                }
             }
-
-            // Get two vectors in the triangle in order to find the triangle normal
-            glm::vec3 triangleSide1 = tri.m_Vertices[2] - tri.m_Vertices[0];
-            glm::vec3 triangleSide2 = tri.m_Vertices[1] - tri.m_Vertices[0];
-
-            if (triangleSide1 == glm::vec3() || triangleSide2 == glm::vec3())
-            {
-                // This is an invalid triangle, so we skip it.
-                // These seem to occur occasionally from the marching cubes algorithm. :(
-                continue;
-            }
-
-            const std::optional<glm::vec3> triangleNormal = CollisionHelpers::TryNormalizedCross(
-                    glm::normalize(triangleSide1),
-                    glm::normalize(triangleSide2));
-
-            if (triangleNormal.has_value())
-            {
-                // Collision detection in axes of cross products of edges of OBB and triangle normal  x3
-                if (   !CollisionHelpers::IsTriangleCollisionInAxis(obbCoordinates, tri, CollisionHelpers::TryNormalizedCross(obbX, *triangleNormal), possibleSeparation, possibleAxis)
-                    || !CollisionHelpers::IsTriangleCollisionInAxis(obbCoordinates, tri, CollisionHelpers::TryNormalizedCross(obbY, *triangleNormal), possibleSeparation, possibleAxis)
-                    || !CollisionHelpers::IsTriangleCollisionInAxis(obbCoordinates, tri, CollisionHelpers::TryNormalizedCross(obbZ, *triangleNormal), possibleSeparation, possibleAxis))
-                {
-                    continue;
-                }
-
-                // In the normal of the tri, check tri is inside but not in front of the obb.
-                // If it is, this gives us the intersection distance.
-
-                f32 obbMinDistanceOnTriNormal = std::numeric_limits<f32>::max();
-                f32 obbMaxDistanceOnTriNormal = -std::numeric_limits<f32>::max();
-
-                const f32 triDistanceOnNormal = glm::dot(tri.m_Vertices[0], *triangleNormal);
-
-                for (u32 i = 0; i < 8; ++i)
-                {
-                    const f32 distOnAxis1 = glm::dot(obbCoordinates[i], *triangleNormal);
-
-                    // If further along the axis in + or - dir, set as our max or min
-                    obbMaxDistanceOnTriNormal = glm::max(obbMaxDistanceOnTriNormal, distOnAxis1);
-                    obbMinDistanceOnTriNormal = glm::min(obbMinDistanceOnTriNormal, distOnAxis1);
-                }
-
-                const f32 overlap = obbMaxDistanceOnTriNormal - triDistanceOnNormal;
-                const f32 span = obbMaxDistanceOnTriNormal - obbMinDistanceOnTriNormal;
-
-                if ( overlap > span /* obb behind triangle */
-                    || overlap < 0 /* obb in front of triangle*/ )
-                {
-                    continue;
-                }
-
-
-                // I think the jumping issue is related to a case where the box is intersecting the triangle,
-                // but is not actually overlapping the full distance in the triangle normal direction.
-                // That can be the case when the box is clipping an edge of the triangle.
-                // I think, in that case, we should use the axis of the box with the smallest overlap distance.
-
-
-                didCollide = true;
-
-                if (overlap > possibleSeparation)
-                {
-                    possibleSeparation = -overlap;
-                    possibleAxis = *triangleNormal;
-                }
-
-                if (possibleSeparation > overallSeparation)
-                {
-                    overallSeparation = possibleSeparation;
-                    overallChosenAxis = possibleAxis;
-                }
-
-                // HACK
-                break;
-            }
-        }
-
-        // HACK
-        if (didCollide)
-        {
-            break;
         }
     }
 
@@ -193,10 +134,202 @@ std::optional<CollisionResult> CollisionAlgorithms::CollideOBB_Terrain(const glm
         assert(MathsHelpers::IsNormalized(overallChosenAxis));
         result.m_Normal = overallChosenAxis;
         result.m_Distance = overallSeparation;
+        result.m_DebugInfo = debug;
         return result;
     }
-    else
+
+    return std::nullopt;
+}
+
+bool TestAxis(
+        const glm::vec3& _axis,
+        const CollisionHelpers::OBBProperties _obb,
+        const Triangle& _triangle,
+        glm::vec3& _inOutAxis,
+        f32& _inOutPenetration, std::string& _outDebugInfo)
+{
+    f32 obbMax = -std::numeric_limits<f32>::max();
+    f32 obbMin = std::numeric_limits<f32>::max();
+
+    for (const glm::vec3& obbPoint : _obb.m_Coordinates)
+    {
+        const f32 distanceOnAxis = glm::dot(obbPoint, _axis);
+
+        obbMax = glm::max(obbMax, distanceOnAxis);
+        obbMin = glm::min(obbMin, distanceOnAxis);
+    }
+
+    f32 triMax = -std::numeric_limits<f32>::max();
+    f32 triMin = std::numeric_limits<f32>::max();
+
+    for (const glm::vec3 triPoint : _triangle.m_Vertices)
+    {
+        const f32 distanceOnAxis = glm::dot(triPoint, _axis);
+
+        triMax = glm::max(triMax, distanceOnAxis);
+        triMin = glm::min(triMin, distanceOnAxis);
+    }
+
+    const f32 obbRange = obbMax - obbMin;
+    const f32 triRange = triMax - triMin;
+
+    if (glm::epsilonEqual(triMax, triMin, glm::epsilon<f32>()))
+    {
+        // The triangle normal is closely aligned to _axis.
+        // Skip this test as the penetration in the normal direction will
+        // be handled in TestTriangleNormalAxis.
+        LogMessage("Skipped due to normal aligned with triangle.")
+        return true;
+    }
+
+    const f32 span = obbRange + triRange;
+    const f32 range = glm::max(obbMax, triMax) - glm::min(obbMin, triMin);
+
+    if (range <= span)
+    {
+        const f32 penetration = span - range;
+
+        const f32 obbCenter = obbMin + (obbMax - obbMin) / 2.f;
+        const f32 triCenter = triMin + (triMax - triMin) / 2.f;
+
+        // Always want a normal pointed towards the intersecting triangle.
+        const glm::vec3 direction = obbCenter < triCenter ? _axis : -_axis;
+
+        assert(penetration >= 0.f);
+        if (penetration < _inOutPenetration)
+        {
+            _inOutPenetration = penetration;
+            _inOutAxis = direction;
+            _outDebugInfo = "Axis";
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+bool TestCrossProductAxis(
+        const glm::vec3& _axisA,
+        const glm::vec3& _axisB,
+        const CollisionHelpers::OBBProperties _obb,
+        const Triangle& _triangle,
+        glm::vec3& _inOutAxis,
+        f32& _inOutPenetration, std::string& _outDebugInfo)
+{
+    if (glm::abs(glm::dot(_axisA, _axisB)) > 0.99f)
+    {
+        // The axes are close to parallel, so skip this test.
+        return true;
+    }
+
+    const glm::vec3 testAxis = glm::normalize(glm::cross(_axisA, _axisB));
+
+    const f32 oldPenetration = _inOutPenetration;
+
+    const bool result = TestAxis(testAxis, _obb, _triangle, _inOutAxis, _inOutPenetration, _outDebugInfo);
+
+    if (oldPenetration != _inOutPenetration)
+    {
+        _outDebugInfo = "Cross Product Axis";
+    }
+
+    return result;
+}
+
+bool TestTriangleNormalAxis(
+        const CollisionHelpers::OBBProperties _obb,
+        const Triangle& _triangle,
+        glm::vec3& _inOutAxis,
+        f32& _inOutPenetration, std::string& _outDebugInfo)
+{
+    const glm::vec3 axis = glm::normalize(
+            glm::cross(
+                    glm::normalize(_triangle.m_Vertices[1] - _triangle.m_Vertices[0]),
+                    glm::normalize(_triangle.m_Vertices[2] - _triangle.m_Vertices[1])));
+
+    f32 obbMax = -std::numeric_limits<f32>::max();
+    f32 obbMin = std::numeric_limits<f32>::max();
+
+    for (const glm::vec3& obbPoint : _obb.m_Coordinates)
+    {
+        const f32 distanceOnAxis = glm::dot(obbPoint, axis);
+
+        obbMax = glm::max(obbMax, distanceOnAxis);
+        obbMin = glm::min(obbMin, distanceOnAxis);
+    }
+
+    const f32 triDistance = glm::dot(_triangle.m_Vertices[0], axis);
+
+    if (obbMax > triDistance && obbMin < triDistance)
+    {
+        const f32 penetration = triDistance - obbMin;
+
+        assert(penetration >= 0.f);
+        if (penetration < _inOutPenetration)
+        {
+            _inOutPenetration = penetration;
+            _inOutAxis = -axis;
+            _outDebugInfo = "Triangle Normal";
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+std::optional<CollisionResult> CollisionAlgorithms::CollideOBB_Triangle(const glm::mat4& _transform,
+                                                                        const AABB& _bounds,
+                                                                        const Triangle& _triangle,
+                                                                        const glm::vec3& _triangleOffset)
+{
+    // TODO Pass in.
+    const CollisionHelpers::OBBProperties obb = CollisionHelpers::GetOBBProperties(_transform, _bounds, _triangleOffset);
+
+    if (_triangle.m_Vertices[1] ==  _triangle.m_Vertices[0] || _triangle.m_Vertices[2] ==  _triangle.m_Vertices[1] || _triangle.m_Vertices[2] ==  _triangle.m_Vertices[0])
     {
         return std::nullopt;
     }
+
+    const glm::vec3 triEdge0 = glm::normalize(_triangle.m_Vertices[1] - _triangle.m_Vertices[0]);
+    const glm::vec3 triEdge1 = glm::normalize(_triangle.m_Vertices[2] - _triangle.m_Vertices[1]);
+    const glm::vec3 triEdge2 = glm::normalize(_triangle.m_Vertices[0] - _triangle.m_Vertices[2]);
+
+    glm::vec3 chosenAxis = glm::vec3();
+    f32 penetration = std::numeric_limits<f32>::max();
+    std::string debug;
+
+    if (
+            !TestCrossProductAxis(obb.m_X, triEdge0, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_X, triEdge1, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_X, triEdge2, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_Y, triEdge0, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_Y, triEdge1, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_Y, triEdge2, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_Z, triEdge0, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_Z, triEdge1, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestCrossProductAxis(obb.m_Z, triEdge2, obb, _triangle, chosenAxis, penetration, debug))
+    {
+        return std::nullopt;
+    }
+
+    if (
+            !TestAxis(obb.m_X, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestAxis(obb.m_Y, obb, _triangle, chosenAxis, penetration, debug)
+         || !TestAxis(obb.m_Z, obb, _triangle, chosenAxis, penetration, debug))
+    {
+        return std::nullopt;
+    }
+
+    if (!TestTriangleNormalAxis(obb, _triangle, chosenAxis, penetration, debug))
+    {
+        return std::nullopt;
+    }
+
+    CollisionResult result;
+    result.m_Normal = chosenAxis;
+    result.m_Distance = -penetration;
+    result.m_DebugInfo = debug;
+    return result;
 }
