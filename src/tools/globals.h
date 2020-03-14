@@ -36,9 +36,9 @@ enum class LogType
 std::string StripFunctionString(std::string functionName);
 
 // @CrossPlatform __PRETTY_FUNCTION__ is non-standard C++ but Clang supports it.
-#define LogMessage(message) Globals::log( StripFunctionString(__PRETTY_FUNCTION__), message );
-#define LogWarning(message) Globals::logWarning( StripFunctionString(__PRETTY_FUNCTION__), message );
-#define LogError(message) Globals::logError( StripFunctionString(__PRETTY_FUNCTION__), message );
+#define LogMessage(message) Globals::log( StripFunctionString(__PRETTY_FUNCTION__), message )
+#define LogWarning(message) Globals::logWarning( StripFunctionString(__PRETTY_FUNCTION__), message )
+#define LogError(message) Globals::logError( StripFunctionString(__PRETTY_FUNCTION__), message )
 
 using u8 = std::uint8_t;
 using u16 = std::uint16_t;

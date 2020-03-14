@@ -178,7 +178,7 @@ bool TestAxis(
         // The triangle normal is closely aligned to _axis.
         // Skip this test as the penetration in the normal direction will
         // be handled in TestTriangleNormalAxis.
-        LogMessage("Skipped due to normal aligned with triangle.")
+        LogMessage("Skipped due to normal aligned with triangle.");
         return true;
     }
 

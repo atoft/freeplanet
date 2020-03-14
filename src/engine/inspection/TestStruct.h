@@ -23,6 +23,8 @@ struct TestStruct
     u32 m_Property = 0;
     u32 m_OtherProperty = 3;
     TestSubStruct m_StructProperty;
+
+    bool operator==(const TestStruct& _other) const;
 };
 
 void Inspect(std::string _name, TestSubStruct& _target, InspectionContext& _context);
