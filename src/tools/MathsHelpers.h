@@ -35,4 +35,10 @@ public:
     static f32 ComputeFaceArea(glm::vec3 p1, glm::vec3 p2);
 
     static glm::mat4x4 GenerateRotationMatrixFromNormal(glm::vec3 normal);
+
+    template <typename Vec, typename Numeric>
+    static bool EqualWithEpsilon(const Vec& _lhs, const Vec& _rhs, Numeric _epsilon)
+    {
+        return glm::all(glm::epsilonEqual(_lhs, _rhs, _epsilon));
+    }
 };

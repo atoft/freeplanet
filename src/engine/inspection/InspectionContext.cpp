@@ -142,8 +142,6 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
 
             ++m_Depth;
 
-            LogMessage("Read start of struct " + ToString(_type));
-
             break;
         }
         default:
@@ -179,8 +177,6 @@ void InspectionContext::EndStruct()
                 assert(m_TextIt == m_TextEnd);
             }
 
-            LogMessage("Read end of struct");
-
             break;
         }
         default:
@@ -203,8 +199,6 @@ void InspectionContext::U32(std::string _name, u32& _value)
             std::string valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
 
             _value = static_cast<u32>(atol(valueString.c_str()));
-
-            LogMessage("Read " + _name + " with value " + std::to_string(_value));
 
             break;
         }
@@ -229,8 +223,6 @@ void InspectionContext::S32(std::string _name, s32& _value)
 
         _value = static_cast<s32>(atoi(valueString.c_str()));
 
-        LogMessage("Read " + _name + " with value " + std::to_string(_value));
-
         break;
     }
     default:
@@ -254,8 +246,6 @@ void InspectionContext::F32(std::string _name, f32& _value)
 
         _value = static_cast<f32>(atof(valueString.c_str()));
 
-        LogMessage("Read " + _name + " with value " + std::to_string(_value));
-
         break;
     }
     default:
@@ -278,8 +268,6 @@ void InspectionContext::Bool(std::string _name, bool& _value)
         std::string valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
 
         _value = (valueString == "true");
-
-        LogMessage("Read " + _name + " with value " + std::to_string(_value));
 
         break;
     }

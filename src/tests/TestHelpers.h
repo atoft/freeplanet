@@ -4,4 +4,4 @@
 
 #pragma once
 
-#define TestResult(condition) ((condition) ? (LogMessage("PASSED (" #condition ")"), true) : (LogError("FAILED !(" #condition ")"), false))
+#define TestResult(condition) ((condition) ? (LogMessage("PASSED"), true) : (LogError("FAILED"), false))

@@ -18,8 +18,8 @@ struct TerrainChunk
 
 struct AABB
 {
-    glm::vec3 m_Dimensions;
-    glm::vec3 m_PositionOffset;
+    glm::vec3 m_Dimensions = glm::vec3(1.f);
+    glm::vec3 m_PositionOffset = glm::vec3();
 
     AABB()
             : m_Dimensions(glm::vec3()),

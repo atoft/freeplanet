@@ -19,8 +19,6 @@ bool Test::TestInspection()
     std::string toString = "";
     InspectionHelpers::ToText(testValue, toString);
 
-    LogMessage(toString);
-
     TestStruct fromString;
     InspectionHelpers::FromText(toString, fromString);
 
