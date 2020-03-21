@@ -96,7 +96,7 @@ bool CollideOBBOBB::TestAxis(
         assert(penetration >= 0.f);
         if (penetration < _inOutPenetration)
         {
-            // Always want a normal pointed towards the intersecting triangle.
+            // Always want a normal pointed towards the second box.
             const glm::vec3 direction = max1 < max2 ? _projectionAxis : -_projectionAxis;
 
             _inOutPenetration = penetration;
