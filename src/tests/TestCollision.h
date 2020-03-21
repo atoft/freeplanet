@@ -22,5 +22,11 @@ namespace Test
     bool CollideOverlappingOBBPairEdgeWithEdge();
     bool CollideNonOverlappingOBBPairEdgeWithEdge();
 
+    bool CollideOverlappingOBBTriangleFaces();
+    bool CollideOverlappingOBBTriangleFacesWithOffset();
+    bool CollideNonOverlappingOBBTriangleFaces();
+
+    bool CollideOverlappingOBBTriangleEdges();
+
     static constexpr f32 TEST_COLLISION_EPS = glm::epsilon<f32>() * 2.f;
 }
