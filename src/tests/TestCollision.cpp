@@ -33,8 +33,10 @@ bool Test::TestCollision()
     result &= CollideNonOverlappingOBBTriangleFaces();
 
     result &= CollideOverlappingOBBTriangleEdges();
+    result &= CollideNonOverlappingOBBTriangleEdges();
 
-
+    result &= CollideOverlappingOBBTriangleNormal();
+    result &= CollideNonOverlappingOBBTriangleNormal();
 
     return result;
 }
@@ -180,5 +182,44 @@ bool Test::CollideNonOverlappingOBBTriangleFaces()
 
 bool Test::CollideOverlappingOBBTriangleEdges()
 {
-    return true;
+    const AABB box = AABB(glm::vec3(2.f, 2.f, 1.f));
+    const glm::mat4 boxTransform = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f)) * glm::rotate(glm::mat4(1.f), glm::pi<f32>() / 4.f, glm::vec3(0,0,1));
+
+    const Triangle triangle {{glm::vec3(-2.f, 2.8f, 0.f), glm::vec3(2.f, 2.8f, 0.f), glm::vec3(0.f, 4.f, 2.f)}};
+
+    const std::optional<CollisionResult> collisionResult = CollisionAlgorithms::CollideOBB_Triangle(boxTransform, box, triangle, glm::vec3());
+    return TestResult(collisionResult.has_value());
+}
+
+bool Test::CollideNonOverlappingOBBTriangleEdges()
+{
+    const AABB box = AABB(glm::vec3(2.f, 2.f, 1.f));
+    const glm::mat4 boxTransform = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f)) * glm::rotate(glm::mat4(1.f), glm::pi<f32>() / 4.f, glm::vec3(0,0,1));
+
+    const Triangle triangle {{glm::vec3(-2.f, 2.9f, 0.f), glm::vec3(2.f, 2.9f, 0.f), glm::vec3(0.f, 4.f, 2.f)}};
+
+    const std::optional<CollisionResult> collisionResult = CollisionAlgorithms::CollideOBB_Triangle(boxTransform, box, triangle, glm::vec3());
+    return TestResult(collisionResult == std::nullopt);
+}
+
+bool Test::CollideOverlappingOBBTriangleNormal()
+{
+    const AABB box = AABB(glm::vec3(2.f, 2.f, 2.f));
+    const glm::mat4 boxTransform = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
+
+    const Triangle triangle {{glm::vec3(-2.1f, -1.5f, -2.1f), glm::vec3(-1.5f, -2.1f, -2.1f), glm::vec3(-2.1f, -2.1f, -1.5f)}};
+
+    const std::optional<CollisionResult> collisionResult = CollisionAlgorithms::CollideOBB_Triangle(boxTransform, box, triangle, glm::vec3());
+    return TestResult(collisionResult.has_value());
+}
+
+bool Test::CollideNonOverlappingOBBTriangleNormal()
+{
+    const AABB box = AABB(glm::vec3(2.f, 2.f, 2.f));
+    const glm::mat4 boxTransform = glm::translate(glm::mat4(1.f), glm::vec3(0.1f));
+
+    const Triangle triangle {{glm::vec3(-2.1f, -1.5f, -2.1f), glm::vec3(-1.5f, -2.1f, -2.1f), glm::vec3(-2.1f, -2.1f, -1.5f)}};
+
+    const std::optional<CollisionResult> collisionResult = CollisionAlgorithms::CollideOBB_Triangle(boxTransform, box, triangle, glm::vec3());
+    return TestResult(collisionResult == std::nullopt);
 }
