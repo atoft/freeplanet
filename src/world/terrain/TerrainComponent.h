@@ -20,9 +20,6 @@ class TerrainComponent
     friend class CollisionHandler;
     friend class TerrainHandler;
 
-    // TODO This doesn't really make sense, need a rethink.
-    friend class CollisionAlgorithms;
-
 public:
     TerrainComponent(u32 _chunksPerEdge, f32 _chunkSize, glm::ivec3 _zoneCoords);
     TerrainComponent();
@@ -43,13 +40,13 @@ public:
 public:
     mutable DynamicMeshHandle m_DynamicMesh;
 
-protected:
-    Terrain m_Terrain;
-
     std::vector<TerrainChunk> m_TerrainChunks;
 
     u32 m_ChunksPerEdge = 0;
     f32 m_ChunkSize = 0.f;
+
+private:
+    Terrain m_Terrain;
 
     glm::ivec3 m_ZoneCoordinates;
 

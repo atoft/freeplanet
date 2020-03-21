@@ -5,9 +5,11 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
-#include <src/world/collision/CollisionAlgorithms.h>
 #include <src/world/WorldObjectID.h>
+
+struct TerrainChunk;
 
 struct RaycastResult
 {

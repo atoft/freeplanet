@@ -12,6 +12,14 @@
 
 struct Triangle;
 
+struct CollisionResult
+{
+    glm::vec3 m_Normal = glm::vec3();
+    float m_Distance = 0.f;
+
+    std::string m_DebugInfo;
+};
+
 namespace CollisionHelpers
 {
     struct OBBProperties
@@ -30,32 +38,8 @@ namespace CollisionHelpers
 
     glm::vec3 Rotate(glm::vec3 position, glm::vec3 eulerAngles);
 
-    std::optional<glm::vec3> TryNormalizedCross(glm::vec3 _a, glm::vec3 _b);
-
-    // Project OBBs onto an axis and return their separation distance
-    float GetProjectedIntersectionDistance(const std::array<glm::vec3, 8>& _obb1,
-                                           const std::array<glm::vec3, 8>& _obb2,
-                                           const glm::vec3& _projectionAxis,
-                                           bool& _outIsPos);
-
-    float GetProjectedIntersectionDistance(const std::array<glm::vec3, 8>& _obb, const Triangle& _triangle,
-                                           const glm::vec3& _projectionAxis, bool& _outIsPosDir);
-
-
-    bool IsOBBCollisionInAxis(
-            const std::array<glm::vec3, 8>& obb1,
-            const std::array<glm::vec3, 8>& obb2,
-            const std::optional<glm::vec3>& _projectionAxis,
-            float& _minIntersect,
-            glm::vec3& _axisOfMinIntersect);
-
-    bool IsTriangleCollisionInAxis(const std::array<glm::vec3, 8>& _obb, const Triangle& _triangle,
-                                   const std::optional<glm::vec3>& _projectionAxis, f32& _outSeparation, glm::vec3& _inOutAxisOfMinIntersect);
-
-
     // Compute various properties needed in OBB collision algorithms
     OBBProperties GetOBBProperties(const glm::mat4& _transform, const AABB& _bounds, const glm::vec3& _positionOffset);
 
     AABB GetAABBForOBB(const glm::mat4& _rotation, const AABB& _bounds);
-
 }

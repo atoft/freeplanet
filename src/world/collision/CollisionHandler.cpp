@@ -6,12 +6,13 @@
 
 #include <src/engine/Engine.h>
 #include <src/graphics/ui/UIDrawInterface.h>
+#include <src/profiling/Profiler.h>
 #include <src/tools/MathsHelpers.h>
-#include <src/world/World.h>
-#include <src/world/collision/CollisionAlgorithms.h>
+#include <src/world/collision/algorithms/CollideOBBOBB.h>
+#include <src/world/collision/algorithms/CollideOBBTerrain.h>
 #include <src/world/collision/CollisionHelpers.h>
 #include <src/world/collision/RaycastAlgorithms.h>
-#include <src/profiling/Profiler.h>
+#include <src/world/World.h>
 
 CollisionHandler::CollisionHandler(World* _world)
     : m_World(_world)
@@ -143,7 +144,7 @@ std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderCompo
     if(   _collider1.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB
        && _collider2.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
-        return CollisionAlgorithms::CollideOBB_OBB(
+        return CollideOBBOBB::Collide(
                 _object1.GetZoneTransform(),
                 _collider1.m_Bounds,
                 _object2.GetZoneTransform(),
@@ -163,7 +164,7 @@ std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderCompo
 {
     if(_collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
-        return CollisionAlgorithms::CollideOBB_Terrain(
+        return CollideOBBTerrain::Collide(
                 _object.GetZoneTransform(),
                 _collider.m_Bounds,
                 _terrain,

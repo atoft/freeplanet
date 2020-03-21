@@ -32,17 +32,19 @@ std::optional<RaycastResult> RaycastAlgorithms::RaycastTerrain(
                 continue;
             }
 
-            const std::optional<glm::vec3> triangleNormal = CollisionHelpers::TryNormalizedCross(
-                    glm::normalize(triangleSide1),
-                    glm::normalize(tri.m_Vertices[2] - tri.m_Vertices[0]));
+            const glm::vec3 axisA = glm::normalize(triangleSide1);
+            const glm::vec3 axisB = glm::normalize(tri.m_Vertices[2] - tri.m_Vertices[0]);
 
-            if(!triangleNormal.has_value())
+            if (glm::abs(glm::dot(axisA, axisB)) > 0.99f)
             {
+                // The axes are close to parallel, so skip this test.
                 continue;
             }
 
-            const f32 planeDistanceFromOrigin = -glm::dot(*triangleNormal, tri.m_Vertices[0]);
-            const f32 normalDotRayDirection = glm::dot(*triangleNormal, _direction);
+            const glm::vec3 triangleNormal = glm::normalize(glm::cross(axisA, axisB));
+
+            const f32 planeDistanceFromOrigin = -glm::dot(triangleNormal, tri.m_Vertices[0]);
+            const f32 normalDotRayDirection = glm::dot(triangleNormal, _direction);
 
             if(glm::abs(normalDotRayDirection) <= glm::epsilon<float>())
             {
@@ -50,7 +52,7 @@ std::optional<RaycastResult> RaycastAlgorithms::RaycastTerrain(
                 continue;
             }
 
-            const f32 rayDistanceToPlane = -(glm::dot(*triangleNormal, _localOrigin) + planeDistanceFromOrigin) / normalDotRayDirection;
+            const f32 rayDistanceToPlane = -(glm::dot(triangleNormal, _localOrigin) + planeDistanceFromOrigin) / normalDotRayDirection;
 
             if(rayDistanceToPlane <= 0.f)
             {
@@ -74,9 +76,9 @@ std::optional<RaycastResult> RaycastAlgorithms::RaycastTerrain(
             const glm::vec3 p1 = point - tri.m_Vertices[1];
             const glm::vec3 p2 = point - tri.m_Vertices[2];
 
-            if(    glm::dot(*triangleNormal, glm::cross(triangleSide1, p0)) >= 0.f
-                   && glm::dot(*triangleNormal, glm::cross(triangleSide2, p1)) >= 0.f
-                   && glm::dot(*triangleNormal, glm::cross(triangleSide3, p2)) >= 0.f)
+            if(    glm::dot(triangleNormal, glm::cross(triangleSide1, p0)) >= 0.f
+                && glm::dot(triangleNormal, glm::cross(triangleSide2, p1)) >= 0.f
+                && glm::dot(triangleNormal, glm::cross(triangleSide3, p2)) >= 0.f)
             {
                 // Point inside triangle!
                 minDistance = rayDistanceToPlane;
