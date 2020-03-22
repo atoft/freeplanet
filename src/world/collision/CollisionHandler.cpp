@@ -227,7 +227,13 @@ void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
                 const glm::vec3 colliderOrigin = owner->GetPosition() + collider.m_Bounds.m_PositionOffset;
 
                 _interface.DebugDrawArrow(zone.GetCoordinates(), colliderOrigin, 1.f + glm::abs(result.m_Distance), result.m_Normal);
-                _interface.DrawString(glm::vec2(20, 40), result.m_DebugInfo, 16.f, Color(0.f,1.f,0.f,1.f));
+                _interface.DrawString(
+                        glm::vec2(20, 40 + collisionCount * 50.f),
+                        "Collider: " + owner->GetName() + "\nChosen axis: " + result.m_DebugInfo,
+                        16.f,
+                        Color(1.f,0.f,0.f,1.f),
+                        FontStyle::Sans,
+                        true);
 
                 ++collisionCount;
             }
@@ -240,5 +246,11 @@ void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
         }
     }
 
-    _interface.DrawString(glm::vec2(20, 20), std::to_string(collisionCount) + " collisions this frame.", 16.f);
+    _interface.DrawString(
+            glm::vec2(20, 20),
+            std::to_string(collisionCount) + " collisions this frame.",
+            16.f,
+            Color(0.f,0.f,0.f,1.f),
+            FontStyle::Sans,
+            true);
 }
