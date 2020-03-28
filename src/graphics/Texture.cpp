@@ -9,7 +9,7 @@
 #include <src/graphics/GLHelpers.h>
 #include <src/graphics/ShaderProgram.h>
 
-Texture::Texture(TextureAssetID _asset)
+void Texture::AcquireResources(TextureAssetID _asset)
 {
     m_TextureType = Assets::GetTextureAssetType(_asset);
 
@@ -25,6 +25,11 @@ Texture::Texture(TextureAssetID _asset)
             break;
     }
     static_assert(static_cast<u32>(TextureAssetType::Count) == 2);
+}
+
+void Texture::ReleaseResources()
+{
+    // TODO Oh no, texture resources are never freed from GPU?
 }
 
 void Texture::CreateImageTexture(std::string _fileName)
@@ -83,11 +88,6 @@ void Texture::BindAsCubemap(ShaderProgram* _program, int _textureNumber)
 void Texture::Unbind()
 {
     glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-GLuint Texture::GetTextureHandle() const
-{
-    return m_TextureHandle;
 }
 
 void Texture::CreateCubemapTexture(std::string _directory)

@@ -13,8 +13,12 @@
 class StaticMesh
 {
 public:
-    StaticMesh(MeshAssetID _meshAsset);
-    ~StaticMesh();
+    StaticMesh() = default;
+    ~StaticMesh() = default;
+
+    void AcquireResources(MeshAssetID _asset);
+    void ReleaseResources();
+
     void SetupForShader(const ShaderProgram& _shader);
 
     const Renderable::Mesh& GetMesh() const { return m_Mesh; };

@@ -4,12 +4,14 @@
 
 #pragma once
 
+#include <algorithm>
 #include <vector>
 #include <unordered_map>
 #include <map>
 #include <mutex>
 
 #include <src/tools/globals.h>
+#include <src/tools/STL.h>
 
 using AssetID = u32;
 constexpr AssetID ASSETID_INVALID = 0;
@@ -37,7 +39,7 @@ private:
     // arrays if we reach capacity
     static constexpr u32 ASSETBANK_CAPACITY = 32;
 
-    // Could split this into access to map and acces to data if needed
+    // Could split this into access to map and access to data if needed
     std::mutex m_AccessMutex;
 
     std::vector<AssetID> m_AssetsToCreate;
@@ -66,10 +68,15 @@ private:
         if(result != m_Map.end())
         {
             result->second.m_RefCount++;
+
+            // Cancel any pending requests to destroy this asset.
+            // TODO Need to evaluate whether it's more performant just to generate the destroy list during HandleLoadRequests.
+            STL::Remove(m_AssetsToDestroy, _asset);
         }
         else
         {
             assert(m_Data.size() < ASSETBANK_CAPACITY);
+            assert(std::find(m_AssetsToDestroy.begin(), m_AssetsToDestroy.end(), _asset) == m_AssetsToDestroy.end());
 
             m_AssetsToCreate.push_back(_asset);
             m_Map[_asset].m_RefCount = 1;
@@ -96,6 +103,9 @@ private:
         if(refCount == 0)
         {
             m_AssetsToDestroy.push_back(_asset);
+
+            // Cancel any pending requests to create this asset.
+            STL::Remove(m_AssetsToCreate, _asset);
         }
     }
 
@@ -143,7 +153,6 @@ private:
         return &(m_Data[result->second.m_Index]);
     }
 
-    // TODO There are definitely crash bugs in here if the RefCount toggles in and out of 0 between calls.
     void HandleLoadRequests()
     {
         std::lock_guard<std::mutex> lock(m_AccessMutex);
@@ -159,10 +168,16 @@ private:
 
             if(previousIndex == m_Data.size() -1)
             {
+                m_Data.back().ReleaseResources();
                 m_Data.pop_back();
             }
             else
             {
+                // Note that we use an explicit ReleaseResources instead of using the destructor
+                // to avoid destructor weirdness, such as getting a destructor call from swapping
+                // the elements in this case.
+
+                m_Data[previousIndex].ReleaseResources();
                 m_Data[previousIndex] = m_Data[m_Data.size() -1];
                 m_Data.pop_back();
 
@@ -181,7 +196,9 @@ private:
             LogMessage("Creating " + std::string(typeid(T).name()) + " AssetID" + std::to_string(id));
 
             assert(m_Data.size() < ASSETBANK_CAPACITY);
-            m_Data.emplace_back(id);
+            m_Data.emplace_back();
+            m_Data.back().AcquireResources(id);
+
             m_Map[id].m_Index = m_Data.size() - 1;
         }
 

@@ -22,8 +22,11 @@ class ShaderProgram
     };
 
 public:
-    ShaderProgram(ShaderAssetID _assetID);
-    ~ShaderProgram();
+    ShaderProgram() = default;
+    ~ShaderProgram() = default;
+
+    void AcquireResources(ShaderAssetID _asset);
+    void ReleaseResources();
 
     GLuint GetProgramHandle() const;
 
@@ -46,6 +49,4 @@ private:
     GLuint m_VertexShaderHandle;
     GLuint m_FragmentShaderHandle;
     GLuint m_ShaderProgramHandle;
-
-    std::vector<GLint> mVertexAttribs;
 };

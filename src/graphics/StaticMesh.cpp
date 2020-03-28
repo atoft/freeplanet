@@ -8,7 +8,7 @@
 #include <src/graphics/MeshImport.h>
 #include <src/graphics/ShaderProgram.h>
 
-StaticMesh::StaticMesh(MeshAssetID _meshAsset)
+void StaticMesh::AcquireResources(MeshAssetID _meshAsset)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
@@ -48,6 +48,15 @@ StaticMesh::StaticMesh(MeshAssetID _meshAsset)
 
         LoadToGPU(fallbackVerts.data(), fallbackVerts.size() * sizeof(GLfloat), fallbackElements.data(), fallbackElements.size() * sizeof(GLuint));
     }
+}
+
+void StaticMesh::ReleaseResources()
+{
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
+
+    glDeleteBuffers(1, &m_Mesh.m_EboHandle);
+    glDeleteBuffers(1, &m_Mesh.m_VboHandle);
+    glDeleteVertexArrays(1, &m_Mesh.m_VaoHandle);
 }
 
 void StaticMesh::LoadToGPU(const GLfloat* _vertices, u32 _sizeofVertices, const GLuint* _elements, u32 _sizeofElements)
@@ -139,13 +148,4 @@ void StaticMesh::SetupForShader(const ShaderProgram& _shader)
     }
 
     m_Mesh.m_VertexAttribs = { posAttrib, normalAttrib, texcoordAttrib };
-}
-
-StaticMesh::~StaticMesh()
-{
-     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
-
-     glDeleteBuffers(1, &m_Mesh.m_EboHandle);
-     glDeleteBuffers(1, &m_Mesh.m_VboHandle);
-     glDeleteVertexArrays(1, &m_Mesh.m_VaoHandle);
 }

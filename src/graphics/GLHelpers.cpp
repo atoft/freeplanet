@@ -36,21 +36,25 @@ void GLHelpers::ReportError(std::string _location)
     //TODO: Disable in release builds
     GLenum glErr = glGetError();
 
-    if(glErr != 0)
+    if (glErr != 0)
     {
-        if(didRepeat == true && lastGLError == glErr && lastGLErrLocation == _location)
+        if (didRepeat && lastGLError == glErr && lastGLErrLocation == _location)
         {
             return;
         }
-        if(lastGLError == glErr && lastGLErrLocation == _location)
+
+        if (lastGLError == glErr && lastGLErrLocation == _location)
         {
             didRepeat = true;
             LogError(ConvertGLString(gluErrorString(glErr)) + " at \"" + _location + "\" occurred again. Suppressing further errors...");
             return;
         }
+
         LogError(ConvertGLString(gluErrorString(glErr)) + " at \"" + _location + "\"" );
         lastGLError = glErr;
         lastGLErrLocation = _location;
         didRepeat = false;
+
+        assert(false);
     }
 }

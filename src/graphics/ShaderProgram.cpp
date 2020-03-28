@@ -4,7 +4,7 @@
 #include <src/engine/Engine.h>
 #include <src/graphics/GLHelpers.h>
 
-ShaderProgram::ShaderProgram(ShaderAssetID _assetID)
+void ShaderProgram::AcquireResources(ShaderAssetID _assetID)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
@@ -46,7 +46,7 @@ ShaderProgram::ShaderProgram(ShaderAssetID _assetID)
     Use();
 }
 
-ShaderProgram::~ShaderProgram()
+void ShaderProgram::ReleaseResources()
 {
     glDeleteProgram(m_ShaderProgramHandle);
     glDeleteShader(m_FragmentShaderHandle);
