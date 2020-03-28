@@ -4,7 +4,6 @@
 
 #include "CollisionHandler.h"
 
-#include <src/engine/Engine.h>
 #include <src/graphics/ui/UIDrawInterface.h>
 #include <src/profiling/Profiler.h>
 #include <src/tools/MathsHelpers.h>
