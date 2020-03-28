@@ -13,7 +13,7 @@ class Profiler;
 class UIProfilingDebug : public UIBaseMenu
 {
 public:
-    void Draw(TimeMS _delta, UIDrawInterface& _display) override;
+    void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
     void Init(const Profiler* _profiler);
 
 private:

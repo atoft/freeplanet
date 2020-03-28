@@ -9,9 +9,5 @@
 class UICollisionDebug : public UIBaseMenu
 {
 public:
-    void Draw(TimeMS _delta, UIDrawInterface& _display) override;
-    void Init(const World* _world);
-
-private:
-    const World* m_World = nullptr;
+    void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
 };

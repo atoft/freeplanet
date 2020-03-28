@@ -8,25 +8,20 @@
 #include <src/world/terrain/TerrainHandler.h>
 #include <src/world/World.h>
 
-void UITerrainDebug::Init(const World* _world)
+void UITerrainDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _world)
 {
-    m_World = _world;
-}
-
-void UITerrainDebug::Draw(TimeMS _delta, UIDrawInterface& _display)
-{
-    if (m_World == nullptr)
+    if (_world == nullptr)
     {
         return;
     }
 
-    for (const WorldZone& zone : m_World->GetActiveZones())
+    for (const WorldZone& zone : _world->GetActiveZones())
     {
         for (const BipedComponent& component : zone.GetBipedComponents())
         {
             std::string displayString;
 
-            const TerrainHandler* terrainHandler = m_World->GetTerrainHandler();
+            const TerrainHandler* terrainHandler = _world->GetTerrainHandler();
             assert(terrainHandler != nullptr);
 
             displayString += "Density at player: " + std::to_string(terrainHandler->GetDensity(component.GetOwnerObject()->GetWorldPosition()));

@@ -6,16 +6,12 @@
 
 #include <src/world/World.h>
 
-void UIWorldZoneDebug::Init(const World* _world)
+void UIWorldZoneDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _world)
 {
-    m_World = _world;
-}
-
-void UIWorldZoneDebug::Draw(TimeMS _delta, UIDrawInterface& _display)
-{
-    if(m_World == nullptr)
+    if(_world == nullptr)
     {
         return;
     }
-    m_World->DebugDraw(_display);
+
+    _world->DebugDraw(_display);
 }

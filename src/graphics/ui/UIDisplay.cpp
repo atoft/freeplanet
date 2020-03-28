@@ -30,19 +30,16 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         if (m_RequestedDebugMenu == "components")
         {
             auto debugMenu = std::make_unique<UIComponentDebug>();
-            debugMenu->Init(_world);
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "zones")
         {
             auto debugMenu = std::make_unique<UIWorldZoneDebug>();
-            debugMenu->Init(_world);
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "terrain")
         {
             auto debugMenu = std::make_unique<UITerrainDebug>();
-            debugMenu->Init(_world);
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "profile")
@@ -54,7 +51,6 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         else if (m_RequestedDebugMenu == "collision")
         {
             auto debugMenu = std::make_unique<UICollisionDebug>();
-            debugMenu->Init(_world);
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "none" || m_RequestedDebugMenu == "off")
@@ -76,7 +72,7 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
 
         if (m_Console != nullptr)
         {
-            m_Console->Draw(delta, m_Interface);
+            m_Console->Draw(delta, m_Interface, _world);
         }
 
     }
@@ -91,7 +87,7 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
 
         if (m_DebugMenu != nullptr)
         {
-            m_DebugMenu->Draw(delta, m_Interface);
+            m_DebugMenu->Draw(delta, m_Interface, _world);
         }
 
         if (!Engine::GetInstance().GetCommandLineArgs().m_ForceUnlockedMouse)

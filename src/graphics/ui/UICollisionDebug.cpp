@@ -7,12 +7,10 @@
 #include <src/world/collision/CollisionHandler.h>
 #include <src/world/World.h>
 
-void UICollisionDebug::Init(const World* _world)
+void UICollisionDebug::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world)
 {
-    m_World = _world;
-}
-
-void UICollisionDebug::Draw(TimeMS _delta, UIDrawInterface& _display)
-{
-    m_World->GetCollisionHandler()->DebugDraw(_display);
+    if (_world != nullptr)
+    {
+        _world->GetCollisionHandler()->DebugDraw(_display);
+    }
 }

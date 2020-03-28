@@ -11,7 +11,7 @@ class UIConsoleMenu : public UIBaseMenu
 {
 public:
     UIConsoleMenu();
-    void Draw(TimeMS _delta, UIDrawInterface& _display) override;
+    void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
     void OnTextEntered(std::string _text) override;
     void OnButtonReleased(InputType _type) override;
 

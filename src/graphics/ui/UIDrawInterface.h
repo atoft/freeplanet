@@ -40,5 +40,5 @@ private:
     sf::Vector2f GetSFMLScaledVector(u32 x, u32 y) const;
 
 private:
-    UIDisplay* m_UIDisplay;
+    UIDisplay* m_UIDisplay = nullptr;
 };

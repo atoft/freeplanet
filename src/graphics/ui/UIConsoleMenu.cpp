@@ -20,7 +20,7 @@ long lineCount(std::string inString)
     return 1 + std::count(inString.begin(), inString.end(), '\n');
 }
 
-void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display)
+void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World*)
 {
     _display.DrawRectangle(glm::vec2(0), glm::ivec2(1920,1080), Color(0,0,0,0.5f));
 

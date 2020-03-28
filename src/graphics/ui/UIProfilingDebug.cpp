@@ -11,7 +11,7 @@ void UIProfilingDebug::Init(const Profiler* _profiler)
     m_Profiler = _profiler;
 }
 
-void UIProfilingDebug::Draw(TimeMS _delta, UIDrawInterface& _display)
+void UIProfilingDebug::Draw(TimeMS, UIDrawInterface& _display, const World*)
 {
     if (m_Profiler != nullptr)
     {

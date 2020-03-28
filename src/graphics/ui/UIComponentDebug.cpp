@@ -6,22 +6,17 @@
 
 #include <src/world/World.h>
 
-void UIComponentDebug::Init(const World* _world)
+void UIComponentDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _world)
 {
-    m_World = _world;
-}
-
-void UIComponentDebug::Draw(TimeMS _delta, UIDrawInterface& _display)
-{
-    if(m_World == nullptr)
+    if(_world == nullptr)
     {
         return;
     }
 
     // TODO Implement iterators over components for world
-    for(const auto& zone : m_World->GetActiveZones())
+    for(const auto& zone : _world->GetActiveZones())
     {
-        if (!m_World->IsPlayerInZone(zone.GetCoordinates()))
+        if (!_world->IsPlayerInZone(zone.GetCoordinates()))
         {
             continue;
         }
