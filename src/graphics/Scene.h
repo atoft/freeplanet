@@ -14,6 +14,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 
 #include <src/engine/AssetHandle.h>
+#include <src/graphics/Color.h>
 #include <src/graphics/GLHelpers.h>
 
 class ShaderProgram;
@@ -72,6 +73,8 @@ namespace Renderable
 
         Mesh m_Mesh;
         u32 m_MeshID = 0;
+
+        Color m_BaseColor = Color(0.f, 0.f, 0.f, 1.f);
 
         glm::mat4 m_Transform;
     };

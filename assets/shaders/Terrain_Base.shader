@@ -4,6 +4,7 @@
 in vec3 frplPosition;
 in vec3 frplNormal;
 in vec2 frplTexcoord;
+in vec3 frplColor;
 
 uniform vec3 frplBaseColor;
 uniform mat4 frplTransform;
@@ -22,7 +23,7 @@ uniform sampler2D tex2D_0;
 
 void main()
 {
-    Color = frplBaseColor;
+    Color = frplColor;
     TexCoord = frplTexcoord;
 
 
@@ -69,12 +70,9 @@ out vec4 outColor;
 
 void main()
 {
-    vec3 GROUND_COLOR = vec3(0.211, 0.925, 0.235);
-
-
     vec3 sunDiffuse = clamp(dot(Normal, frplDirectionalLight.direction), 0, 1) * frplDirectionalLight.color * frplDirectionalLight.intensity;
 
     vec3 ambient = clamp(dot(Normal, vec3(0,1,0)), 0.5, 1) * frplAmbientLight.color * frplAmbientLight.intensity;
 
-    outColor = vec4((ambient + sunDiffuse) * GROUND_COLOR,1.0);
+    outColor = vec4((ambient + sunDiffuse) * Color,1.0);
 }

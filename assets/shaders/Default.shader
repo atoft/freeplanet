@@ -4,6 +4,7 @@
 in vec3 frplPosition;
 in vec3 frplNormal;
 in vec2 frplTexcoord;
+in vec3 frplColor;
 
 uniform vec3 frplBaseColor;
 uniform mat4 frplTransform;
@@ -22,7 +23,7 @@ uniform sampler2D tex2D_0;
 
 void main()
 {
-    Color = frplBaseColor;
+    Color = frplBaseColor + frplColor;
     TexCoord = frplTexcoord;
 
 
@@ -61,5 +62,5 @@ out vec4 outColor;
 
 void main()
 {
-    outColor = vec4(Normal, 1.0)* 0.5 + texture(tex2D_0, TexCoord) + vec4(TexCoord, 0.0, 1.0);
+    outColor = vec4(Normal, 1.0)* 0.5 + texture(tex2D_0, TexCoord) + vec4(TexCoord, 0.0, 1.0) + vec4(Color, 1.0);
 }

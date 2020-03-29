@@ -15,6 +15,7 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
     assert(_mesh.m_Vertices.size() == _mesh.m_Normals.size());
+    assert(_mesh.m_Vertices.size() == _mesh.m_Colors.size());
 
     std::vector<GLfloat> vertices;
     std::vector<GLuint > elements;
@@ -32,6 +33,10 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
         // Placeholder texture coordinates
         vertices.push_back(0.f);
         vertices.push_back(0.f);
+
+        vertices.push_back(_mesh.m_Colors[vertIdx].x);
+        vertices.push_back(_mesh.m_Colors[vertIdx].y);
+        vertices.push_back(_mesh.m_Colors[vertIdx].z);
     }
 
     for (const RawTriangle& triangle : _mesh.m_Faces)
@@ -101,22 +106,22 @@ void DynamicMesh::SetupForShader(const ShaderProgram& _shader)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
-    constexpr u32 dimensions = (3 + 3 + 2);
+    constexpr u32 dimensions = (3 + 3 + 2 + 3);
 
-    // Specify the layout of the vertex data
+    // Specify the layout of the vertex data.
 
-    // position
+    // Position
     GLint posAttrib = glGetAttribLocation(_shader.GetProgramHandle(), "frplPosition");
     GLHelpers::ReportError("glGetAttribLocation position");
     glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, dimensions * sizeof(GLfloat), 0);
 
-    // normal
+    // Normal
     GLint normalAttrib = glGetAttribLocation(_shader.GetProgramHandle(), "frplNormal");
     GLHelpers::ReportError("glGetAttribLocation normal");
     glVertexAttribPointer(normalAttrib, 3, GL_FLOAT, GL_FALSE, dimensions * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
     GLHelpers::ReportError("glVertexAttribPointer normal");
 
-    // texcoords
+    // Texcoords
     GLint texcoordAttrib = glGetAttribLocation(_shader.GetProgramHandle(), "frplTexcoord");
     GLHelpers::ReportError("glGetAttribLocation texcoord");
     if(texcoordAttrib >= 0)
@@ -126,26 +131,40 @@ void DynamicMesh::SetupForShader(const ShaderProgram& _shader)
         GLHelpers::ReportError("glVertexAttribPointer texcoord");
     }
 
-    if(posAttrib < 0 || normalAttrib < 0 || texcoordAttrib <0)
+    // Color
+    GLint colorAttrib = glGetAttribLocation(_shader.GetProgramHandle(), "frplColor");
+    GLHelpers::ReportError("glGetAttribLocation Color");
+    if (colorAttrib >= 0)
+    {
+        glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, dimensions * sizeof(GLfloat),
+                              (GLvoid *) (8 * sizeof(GLfloat)));
+        GLHelpers::ReportError("glVertexAttribPointer Color");
+    }
+
+    if (posAttrib < 0 || normalAttrib < 0 || texcoordAttrib < 0 || colorAttrib < 0)
     {
         std::string errmsg = "Warning: the following variable(s) were not used in the shader "
                              "(they may have been optimised out): \n\t[";
 
-        if(posAttrib < 0)
+        if (posAttrib < 0)
         {
             errmsg += "frplPosition ";
         }
-        if(normalAttrib < 0)
+        if (normalAttrib < 0)
         {
             errmsg += "frplNormal ";
         }
-        if(texcoordAttrib < 0)
+        if (texcoordAttrib < 0)
         {
             errmsg += "frplTexcoord ";
         }
+        if (colorAttrib < 0)
+        {
+            errmsg += "frplColor ";
+        }
 
-        Globals::logWarning("RenderComponent", errmsg + "] \n\tThis will result in OpenGL errors.");
+        LogWarning(errmsg + "] \n\tThis will result in OpenGL errors.");
     }
 
-    m_Mesh.m_VertexAttribs = { posAttrib, normalAttrib, texcoordAttrib };
+    m_Mesh.m_VertexAttribs = { posAttrib, normalAttrib, texcoordAttrib, colorAttrib };
 }

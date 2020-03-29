@@ -7,6 +7,7 @@
 #include <array>
 #include <vector>
 
+#include <src/graphics/Color.h>
 #include <src/tools/globals.h>
 
 struct Triangle;
@@ -25,6 +26,7 @@ struct RawMesh
     std::vector<glm::vec3> m_Vertices;
     std::vector<glm::vec3> m_Normals;
     std::vector<glm::vec2> m_TextureCoordinates;
+    std::vector<Color> m_Colors;
 
     std::vector<RawTriangle> m_Faces;
 };

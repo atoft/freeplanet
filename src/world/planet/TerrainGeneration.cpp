@@ -18,6 +18,13 @@ f32 TerrainGeneration::GetDensity(const Planet& _planet, const WorldPosition& _p
     return density;
 }
 
+// Later, will probably want to expose materials with blending rather than color, e.g. 0.9 stone, 0.1 dirt
+// And let the shader draw them as needed.
+Color TerrainGeneration::GetColor(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
+{
+    return Color(_position.m_ZoneCoordinates.x % 2, _position.m_ZoneCoordinates.y % 2, _position.m_ZoneCoordinates.z % 2, 1.f);
+}
+
 f32 TerrainGeneration::ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position)
 {
     switch (_planet.m_Shape)
