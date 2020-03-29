@@ -12,6 +12,8 @@
 #include <src/world/terrain/Terrain.h>
 #include <src/world/GeometryTypes.h>
 
+struct Planet;
+
 struct TerrainRegion
 {
     glm::ivec3 m_Min;
@@ -26,6 +28,8 @@ struct TerrainProperties
 
 struct TerrainMeshUpdateParams
 {
+    glm::ivec3 m_ZoneCoordinates;
+    const Planet* m_Planet = nullptr;
     Terrain m_Terrain;
     std::vector<TerrainChunk> m_ExistingChunks;
     TerrainProperties m_Properties;
@@ -42,8 +46,8 @@ public:
     std::vector<TerrainChunk> GetChunks() const { return m_Chunks; };
 
 private:
-    void UpdateChunks(const Terrain& _terrain, std::vector<TerrainChunk>& _existingChunks, const TerrainRegion& _region, const TerrainProperties& _properties) const;
-    void ConvertToRawMesh(const Terrain& _terrain, std::vector<TerrainChunk>& _existingChunks, const TerrainProperties& _properties, NormalGenerationMethod _normalGenerationMethod, RawMesh& _outRawMesh) const;
+    void UpdateChunks(const TerrainMeshUpdateParams& _params, std::vector<TerrainChunk>& _existingChunks) const;
+    void ConvertToRawMesh(const TerrainMeshUpdateParams& _params, const Terrain& _terrain, std::vector<TerrainChunk>& _existingChunks, const TerrainProperties& _properties, NormalGenerationMethod _normalGenerationMethod, RawMesh& _outRawMesh) const;
 
 private:
     RawMesh m_Mesh;

@@ -15,34 +15,36 @@
 #include <src/tools/MathsHelpers.h>
 #include <src/tools/PropRecipe.h>
 
-World::World(std::string _worldName, u32 _seed, bool _initTerrain /*=false*/)
+World::World(std::string _worldName, std::optional<Planet> _planet)
 {
     m_Name = _worldName;
-    m_TerrainSeed = _seed;
-    m_ShouldInitTerrain = _initTerrain;
 
     m_CollisionHandler = std::make_unique<CollisionHandler>(this);
     m_TerrainHandler = std::make_unique<TerrainHandler>(this);
     m_VistaHandler = std::make_unique<VistaHandler>(this);
 
-    // Construct the default terrain.
-    // Eventually there will be some kind of factory to do the procedural terrain construction
-    // and it will have to push elements into the vista.
-    if (_initTerrain)
-    {
-        m_VistaHandler->ForceAddElement(PerlinTerrainElement());
-    }
+    m_Planet = _planet;
 
     constexpr u32 INITIAL_RESERVED_ZONES = 27;
     m_ActiveZones.reserve(INITIAL_RESERVED_ZONES);
 
+    u32 zonesRadius = 16;
+    glm::ivec3 spawnZoneCoordinates = glm::ivec3(0);
+
+    if (_planet.has_value())
+    {
+        const f32 worldSpaceRadius = _planet->m_Radius + _planet->m_AtmosphereHeight + _planet->m_WorldPadding;
+        zonesRadius = worldSpaceRadius / TerrainConstants::WORLD_ZONE_SIZE;
+        spawnZoneCoordinates = glm::ivec3(0, _planet->m_Radius / TerrainConstants::WORLD_ZONE_SIZE, 0);
+    }
+
     // TODO Make sure zones outside these bounds are never loaded.
-    m_WorldBounds.m_Min = glm::ivec3(-16, -16, -16);
-    m_WorldBounds.m_Max = glm::ivec3( 16,  16,  16);
+    m_WorldBounds.m_Min = glm::ivec3(-zonesRadius, -zonesRadius, -zonesRadius);
+    m_WorldBounds.m_Max = glm::ivec3( zonesRadius,  zonesRadius,  zonesRadius);
 
     // Construct an initial zone so it's possible to start spawning right away.
     // Normally zones are built async by a DynamicLoader.
-    m_ActiveZones.emplace_back(this, glm::ivec3(0), glm::vec3(TerrainConstants::WORLD_ZONE_SIZE), _seed, _initTerrain);
+    m_ActiveZones.emplace_back(this, spawnZoneCoordinates, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
 }
 
 const WorldObject* World::FindWorldObject(const WorldObjectRef& _objectRef) const
@@ -320,7 +322,7 @@ void World::UpdateActiveZones()
                 glm::ivec3 coords = playerZones[0] + glm::ivec3(x, y, z);
                 if (!IsZoneLoaded(coords) && !IsZoneLoading(coords))
                 {
-                    LoadZone(this, coords, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE), m_TerrainSeed, m_ShouldInitTerrain);
+                    LoadZone(this, coords, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
                 }
             }
         }
@@ -337,9 +339,9 @@ void World::SendWorldEvents()
     }
 }
 
-void World::LoadZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions, u32 _terrainSeed, bool _initTerrain)
+void World::LoadZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions)
 {
-    const bool wasLoadPossible = m_ZoneLoaders.RequestLoad(_position, _world, _position, _dimensions, _terrainSeed, _initTerrain);
+    const bool wasLoadPossible = m_ZoneLoaders.RequestLoad(_position, _world, _position, _dimensions);
     if (!wasLoadPossible)
     {
         LogMessage("Tried to load a zone when there was no loader available, will try again next frame.");

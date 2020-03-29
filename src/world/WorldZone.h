@@ -22,7 +22,7 @@ struct PropRecipe;
 class WorldZone
 {
 public:
-    WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions, u32 _terrainSeed, bool _initTerrain);
+    WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions);
 
     void Update(TimeMS delta);
 

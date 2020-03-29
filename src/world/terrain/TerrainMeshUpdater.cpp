@@ -8,32 +8,56 @@
 
 #include <src/world/terrain/MarchingCubes.h>
 #include <src/tools/MathsHelpers.h>
+#include <src/world/planet/TerrainGeneration.h>
+#include <src/world/WorldPosition.h>
 
 TerrainMeshUpdater::TerrainMeshUpdater(TerrainMeshUpdateParams _params)
 {
     m_Chunks = _params.m_ExistingChunks;
-    UpdateChunks(_params.m_Terrain, m_Chunks, _params.m_DirtyRegion, _params.m_Properties);
-    ConvertToRawMesh(_params.m_Terrain, m_Chunks, _params.m_Properties, _params.m_NormalGenerationMethod, m_Mesh);
+    UpdateChunks(_params, m_Chunks);
+    ConvertToRawMesh(_params, _params.m_Terrain, m_Chunks, _params.m_Properties, _params.m_NormalGenerationMethod, m_Mesh);
 }
 
-void TerrainMeshUpdater::UpdateChunks(const Terrain& _terrain, std::vector<TerrainChunk>& _existingChunks, const TerrainRegion& _region, const TerrainProperties& _properties) const
+f32 GetDensity(const TerrainMeshUpdateParams& _params, glm::vec3 _pos)
 {
-    const f32 spacing = _properties.m_ChunkSize;
-    const u32 dimensions = _properties.m_ChunksPerEdge;
+    f32 density = 0.f;
+
+    if (_params.m_Planet != nullptr)
+    {
+        // TODO Bad copy-paste from TerrainHandler, really need to fix the coordinate system of TerrainChunks.
+        const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_params.m_Properties.m_ChunkSize * _params.m_Properties.m_ChunksPerEdge) / 2.f;
+
+        density += TerrainGeneration::GetDensity(*_params.m_Planet, {_params.m_ZoneCoordinates, _pos - chunksToZoneOriginOffset});
+    }
+
+    // TODO need rename some terrain types, maybe Terrain is now TerrainEdits since the Planet
+    // determines the base shape?
+    density += _params.m_Terrain.GetDensity(_pos);
+
+    return density;
+}
+
+void TerrainMeshUpdater::UpdateChunks(const TerrainMeshUpdateParams& _params, std::vector<TerrainChunk>& _existingChunks) const
+{
+    const f32 spacing = _params.m_Properties.m_ChunkSize;
+    const u32 dimensions = _params.m_Properties.m_ChunksPerEdge;
     assert(_existingChunks.size() == dimensions * dimensions * dimensions);
 
-    for (s32 z = _region.m_Min.z; z < _region.m_Max.z; ++z)
+    const TerrainRegion& region = _params.m_DirtyRegion;
+
+    for (s32 z = region.m_Min.z; z < region.m_Max.z; ++z)
     {
-        for (s32 y = _region.m_Min.y; y < _region.m_Max.y; ++y)
+        for (s32 y = region.m_Min.y; y < region.m_Max.y; ++y)
         {
-            for (s32 x = _region.m_Min.x; x < _region.m_Max.x; ++x)
+            for (s32 x = region.m_Min.x; x < region.m_Max.x; ++x)
             {
                 const glm::vec3 pos = glm::vec3(static_cast<f32>(x) * spacing, static_cast<f32>(y) * spacing, static_cast<f32>(z) * spacing);
 
                 MarchingCubes::Cell cell;
                 for (u32 cellIdx = 0; cellIdx < 8; ++cellIdx)
                 {
-                    cell[cellIdx] = _terrain.GetDensity(pos + spacing * MarchingCubes::ms_VertexIndexToCubeOffset[cellIdx]);
+                    const f32 density = GetDensity(_params, pos + spacing * MarchingCubes::ms_VertexIndexToCubeOffset[cellIdx]);
+                    cell[cellIdx] = density;
                 }
 
                 _existingChunks.at(x + y * dimensions + z * dimensions * dimensions) = MarchingCubes::GetIsosurface(pos, spacing, cell);
@@ -42,7 +66,7 @@ void TerrainMeshUpdater::UpdateChunks(const Terrain& _terrain, std::vector<Terra
     }
 }
 
-void TerrainMeshUpdater::ConvertToRawMesh(
+void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params, // TODO fix arg list
         const Terrain& _terrain,
         std::vector<TerrainChunk>& _existingChunks,
         const TerrainProperties& _properties,
@@ -167,14 +191,14 @@ void TerrainMeshUpdater::ConvertToRawMesh(
 
         for (u32 vertIdx = 0; vertIdx < _outRawMesh.m_Vertices.size(); ++vertIdx)
         {
-            const f32 gradX = _terrain.GetDensity(_outRawMesh.m_Vertices[vertIdx] - glm::vec3(1, 0, 0) * GRADIENT_EPSILON)
-                              - _terrain.GetDensity(_outRawMesh.m_Vertices[vertIdx] + glm::vec3(1, 0, 0) * GRADIENT_EPSILON);
+            const f32 gradX = GetDensity(_params, _outRawMesh.m_Vertices[vertIdx] - glm::vec3(1, 0, 0) * GRADIENT_EPSILON)
+                              - GetDensity(_params, _outRawMesh.m_Vertices[vertIdx] + glm::vec3(1, 0, 0) * GRADIENT_EPSILON);
 
-            const f32 gradY = _terrain.GetDensity(_outRawMesh.m_Vertices[vertIdx] - glm::vec3(0, 1, 0) * GRADIENT_EPSILON)
-                              - _terrain.GetDensity(_outRawMesh.m_Vertices[vertIdx] + glm::vec3(0, 1, 0) * GRADIENT_EPSILON);
+            const f32 gradY = GetDensity(_params, _outRawMesh.m_Vertices[vertIdx] - glm::vec3(0, 1, 0) * GRADIENT_EPSILON)
+                              - GetDensity(_params, _outRawMesh.m_Vertices[vertIdx] + glm::vec3(0, 1, 0) * GRADIENT_EPSILON);
 
-            const f32 gradZ = _terrain.GetDensity(_outRawMesh.m_Vertices[vertIdx] - glm::vec3(0, 0, 1) * GRADIENT_EPSILON)
-                              - _terrain.GetDensity(_outRawMesh.m_Vertices[vertIdx] + glm::vec3(0, 0, 1) * GRADIENT_EPSILON);
+            const f32 gradZ = GetDensity(_params, _outRawMesh.m_Vertices[vertIdx] - glm::vec3(0, 0, 1) * GRADIENT_EPSILON)
+                              - GetDensity(_params, _outRawMesh.m_Vertices[vertIdx] + glm::vec3(0, 0, 1) * GRADIENT_EPSILON);
 
             _outRawMesh.m_Normals.push_back(glm::normalize(glm::vec3(gradX, gradY, gradZ)));
         }

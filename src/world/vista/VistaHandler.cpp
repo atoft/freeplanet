@@ -88,6 +88,8 @@ void VistaHandler::Update(TimeMS _dt)
         VistaChunkIdentifier identifier { request.m_LOD, request.m_Index, m_Generation };
 
         TerrainMeshUpdateParams params;
+        params.m_Planet = m_World->GetPlanet();
+        params.m_ZoneCoordinates = request.m_Index * static_cast<s32>(ZONES_PER_EDGE_FOR_LOD[request.m_LOD]) + m_VistaOrigin;
         params.m_Properties = GetPropertiesForLOD(request.m_LOD);
         params.m_DirtyRegion = {glm::ivec3(), glm::ivec3(params.m_Properties.m_ChunksPerEdge)};
         params.m_ExistingChunks = std::vector<TerrainChunk>(params.m_Properties.m_ChunksPerEdge * params.m_Properties.m_ChunksPerEdge * params.m_Properties.m_ChunksPerEdge);
@@ -128,11 +130,6 @@ void VistaHandler::Update(TimeMS _dt)
 
 void VistaHandler::OnLocalPlayerWorldZoneChanged(glm::ivec3 _zone)
 {
-    if (m_VistaTerrain.IsEmpty())
-    {
-        return;
-    }
-
     m_PendingRequests.clear();
     m_CombinedRawMesh = RawMesh();
     m_Generation++;
@@ -171,11 +168,6 @@ void VistaHandler::GenerateChunkRequestsForLOD(u32 _lod)
             }
         }
     }
-}
-
-void VistaHandler::ForceAddElement(const TerrainElementVariant& element)
-{
-    m_VistaTerrain.m_AdditiveElements.push_back(element);
 }
 
 glm::mat4x4 VistaHandler::GetTerrainModelTransform() const

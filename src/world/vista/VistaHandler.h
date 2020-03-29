@@ -36,8 +36,6 @@ public:
     void Update(TimeMS _dt);
     void OnLocalPlayerWorldZoneChanged(glm::ivec3 _zone);
 
-    void ForceAddElement(const TerrainElementVariant& element);
-
     glm::mat4 GetTerrainModelTransform() const;
 
 public:

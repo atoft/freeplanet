@@ -15,7 +15,7 @@
 template<typename Type>
 bool DestroyComponentOfObject(std::vector<Type>& _components, WorldObjectID _objectID, bool _isBeingRemovedFromWorld);
 
-WorldZone::WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions, u32 _terrainSeed, bool _initTerrain)
+WorldZone::WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions)
 {
     m_OwnerWorld = _world;
     m_Coordinates = _position;
@@ -34,11 +34,6 @@ WorldZone::WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions,
     const f32 chunksPerEdge = Engine::GetInstance().GetCommandLineArgs().m_TriangleDebug ? 1 : TerrainConstants::CHUNKS_PER_ZONE_EDGE;
 
     m_TerrainComponent = TerrainComponent(chunksPerEdge, _dimensions.x / chunksPerEdge, _position);
-
-    if (_initTerrain)
-    {
-        m_TerrainComponent.ForceAddElement(PerlinTerrainElement());
-    }
 }
 
 void WorldZone::OnRemovedFromWorld()
@@ -69,7 +64,7 @@ WorldObjectID WorldZone::ConstructPlayerInZone(std::string _name)
 
     newObject.SetWorldObjectID(newID);
     newObject.SetName(_name);
-    newObject.SetInitialPosition(glm::vec3(0, 0, 0));
+    newObject.SetInitialPosition(glm::vec3(0, 2, 0));
 
     m_ColliderComponents.emplace_back(m_OwnerWorld, newID, CollisionPrimitiveType::OBB, MovementType::Movable);
     m_ColliderComponents.back().m_Bounds = glm::vec3(.5f, 1.f, .5f);

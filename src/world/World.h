@@ -14,6 +14,7 @@
 #include <src/world/WorldObjectDirectory.h>
 #include <src/world/Player.h>
 #include <src/world/WorldZoneRegion.h>
+#include <src/world/planet/Planet.h>
 
 class WorldObject;
 class WorldZone;
@@ -26,7 +27,7 @@ class VistaHandler;
 class World
 {
 public:
-    World(std::string _worldName, u32 _seed, bool _initTerrain = false);
+    World(std::string _worldName, std::optional<Planet> _planet);
 
     void Update(TimeMS _delta);
 
@@ -70,6 +71,7 @@ public:
     bool IsPlayerInZone(glm::ivec3 _coords) const;
     std::vector<WorldObjectID> GetLocalPlayers() const;
 
+    const Planet* GetPlanet() const { return m_Planet.has_value() ? &m_Planet.value() : nullptr; };
     const EnvironmentState& GetEnvironmentState() const { return m_EnvironmentState; };
     const WorldZoneRegion& GetWorldBounds() const { return m_WorldBounds; };
     f32 GetTimeScale() const { return m_TimeScale; };
@@ -84,18 +86,14 @@ private:
 
     bool IsZoneLoading(glm::ivec3 _coords) const;
     bool IsZoneLoaded(glm::ivec3 _coords) const;
-    void LoadZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions, u32 _terrainSeed, bool _initTerrain);
+    void LoadZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions);
 
 private:
     std::vector<WorldZone> m_ActiveZones;
 
     static constexpr u32 CONCURRENT_WORLD_ZONE_LOADERS_COUNT = 9;
-    using WorldZoneLoaders = DynamicLoaderCollection<WorldZone, glm::ivec3, CONCURRENT_WORLD_ZONE_LOADERS_COUNT, World*, glm::ivec3, glm::vec3, u32, bool>;
+    using WorldZoneLoaders = DynamicLoaderCollection<WorldZone, glm::ivec3, CONCURRENT_WORLD_ZONE_LOADERS_COUNT, World*, glm::ivec3, glm::vec3>;
     WorldZoneLoaders m_ZoneLoaders;
-
-    u32 m_TerrainSeed = 0;
-    // TODO Remove once we have a pipeline for terrain generation.
-    bool m_ShouldInitTerrain = false;
 
     std::string m_Name;
     WorldZoneRegion m_WorldBounds;
@@ -110,6 +108,7 @@ private:
 
     EventHandler<WorldEvent> m_WorldEventHandler;
 
+    std::optional<Planet> m_Planet;
     EnvironmentState m_EnvironmentState;
 
     f32 m_TimeScale = 1.f;

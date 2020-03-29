@@ -6,6 +6,7 @@
 
 #include <src/world/World.h>
 #include <src/tools/PropRecipe.h>
+#include <src/world/terrain/TerrainConstants.h>
 
 std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
 {
@@ -16,10 +17,16 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     }
     else if (_worldName == "terrain")
     {
-        constexpr u32 TEST_WORLD_SEED = 0;
+        Planet planet;
 
-        world = std::make_shared<World>("Terrain", TEST_WORLD_SEED, true);
-        world->SpawnPlayerInWorldZone(glm::ivec3(0,0,0));
+        world = std::make_shared<World>("Terrain", planet);
+
+        // HACK copy-paste from World.cpp
+        // In the real flow we need to be able to request the world to add a player, it will handle loading the relevant
+        // zones, and decide when everything's ready to spawn the player.
+        const glm::ivec3 spawnZoneCoordinates = glm::ivec3(0, planet.m_Radius / TerrainConstants::WORLD_ZONE_SIZE, 0);
+
+        world->SpawnPlayerInWorldZone(spawnZoneCoordinates);
 
         PropRecipe boxRecipe;
         boxRecipe.m_TextureID = TextureAsset_Dev_512;
@@ -27,14 +34,12 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
         boxRecipe.m_MeshID = MeshAsset_UnitCube;
         boxRecipe.m_Name = "Box";
 
-        world->SpawnPropInWorldZone(WorldPosition(glm::ivec3(0,0,0), glm::vec3(10.f,1.25f,-5.25f)), boxRecipe);
-        world->SpawnPropInWorldZone(WorldPosition(glm::ivec3(0,0,0), glm::vec3(0.f, 0.f, -5.f)), boxRecipe);
+        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(10.f,2.25f,-5.25f)), boxRecipe);
+        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(0.f, 1.f, -5.f)), boxRecipe);
     }
     else if (_worldName == "empty")
     {
-        constexpr u32 TEST_WORLD_SEED = 0;
-
-        world = std::make_shared<World>("Empty", TEST_WORLD_SEED, false);
+        world = std::make_shared<World>("Empty", std::nullopt);
         world->SpawnPlayerInWorldZone(glm::ivec3(0,0,0));
 
         PropRecipe planeRecipe;
@@ -48,9 +53,7 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     }
     else if (_worldName == "collision")
     {
-        constexpr u32 TEST_WORLD_SEED = 0;
-
-        world = std::make_shared<World>("Collision", TEST_WORLD_SEED, false);
+        world = std::make_shared<World>("Collision", std::nullopt);
         world->SpawnPlayerInWorldZone(glm::ivec3(0,0,0));
 
         {

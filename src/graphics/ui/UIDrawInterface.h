@@ -7,9 +7,8 @@
 #include <glm/vec4.hpp>
 #include <SFML/System/Vector2.hpp>
 
+#include <src/graphics/Color.h>
 #include <src/tools/globals.h>
-
-using Color = glm::vec4;
 
 struct AABB;
 class UIDisplay;

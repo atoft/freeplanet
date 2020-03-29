@@ -39,6 +39,9 @@ void TerrainHandler::Update(TimeMS _dt)
             const TerrainMeshUpdateParams params =
                     {
                         // TODO Would be nice if the params were already stored in this struct in TerrainComponent, would prevent having to rebuild it every time.
+                        zone.GetCoordinates(),
+                        m_World->GetPlanet(),
+
                         terrainComponent.m_Terrain,
                         terrainComponent.m_TerrainChunks,
                         {terrainComponent.m_ChunksPerEdge, terrainComponent.m_ChunkSize},
@@ -125,6 +128,7 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
     }
 }
 
+// TODO This is now invalid, as it's not accounting for Planet density.
 f32 TerrainHandler::GetDensity(const WorldPosition& _position) const
 {
     const WorldZone* zone = m_World->FindZoneAtCoordinates(_position.m_ZoneCoordinates);
