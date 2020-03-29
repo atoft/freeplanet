@@ -44,6 +44,12 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
         m_EngineConfig.m_Resolution.y = defaultMode.height;
     }
 
+    if (m_CommandLineArgs.m_ForceWindowed)
+    {
+        m_EngineConfig.m_Resolution.x = 1280;
+        m_EngineConfig.m_Resolution.y = 720;
+    }
+
     sf::ContextSettings settings;
 
     LogMessage("SFML OpenGL context: " + std::to_string(settings.majorVersion) + "." + std::to_string(settings.minorVersion));
