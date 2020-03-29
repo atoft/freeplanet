@@ -33,6 +33,35 @@ void CollisionHandler::Update(TimeMS _dt)
         for(ColliderComponent& collider : zone.GetColliderComponents())
         {
             collider.m_CollisionsLastFrame.clear();
+
+            if (collider.m_KeepUpright && m_World->GetPlanet() != nullptr)
+            {
+                WorldObject* owner = collider.GetOwnerObject();
+
+                const glm::vec3 currentUp = owner->GetUpVector();
+                const glm::vec3 desiredUp = glm::normalize(owner->GetWorldPosition().GetPositionRelativeTo(m_World->GetPlanet()->m_OriginZone));
+
+                const f32 dotProduct = glm::dot(currentUp, desiredUp);
+                if (dotProduct < 1.f - glm::epsilon<f32>())
+                {
+                    glm::vec3 newZ;
+
+                    if (glm::abs(glm::dot(desiredUp, owner->GetRightVector())) < 0.99f)
+                    {
+                        newZ = glm::cross(owner->GetRightVector(), desiredUp);
+                    }
+                    else
+                    {
+                        // Avoid numerical issues if the desiredUp happens to be very close to the right vector.
+                        // Just keep the existing Z basis (which is the opposite direction from the forward).
+                        newZ = -owner->GetForwardVector();
+                    }
+
+                    const glm::vec3 newX = glm::cross(desiredUp, newZ);
+
+                    MathsHelpers::SetRotationPart(owner->GetZoneTransform(), newX, desiredUp, newZ);
+                }
+            }
         }
 
         // Collision between WorldObjects

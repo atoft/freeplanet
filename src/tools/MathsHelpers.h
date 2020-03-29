@@ -14,6 +14,8 @@ class MathsHelpers
 public:
     static glm::mat4x4 GetRotationMatrix(glm::mat4x4 _transform);
 
+    static void SetRotationPart(glm::mat4x4& _inOutTransform, glm::vec3 _basisX, glm::vec3 _basisY, glm::vec3 _basisZ);
+
     static glm::vec3 GetScale(glm::mat4x4 _transform);
 
     static void SetScale(glm::mat4x4& _inOutTransform, glm::vec3 _scale);

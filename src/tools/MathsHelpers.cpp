@@ -30,6 +30,23 @@ glm::mat4x4 MathsHelpers::GetRotationMatrix(glm::mat4x4 _transform)
 
 }
 
+void MathsHelpers::SetRotationPart(glm::mat4x4& _inOutTransform, glm::vec3 _basisX, glm::vec3 _basisY, glm::vec3 _basisZ)
+{
+    const glm::vec3 scale = GetScale(_inOutTransform);
+
+    _inOutTransform[0][0] = _basisX.x * scale.x;
+    _inOutTransform[0][1] = _basisX.y * scale.x;
+    _inOutTransform[0][2] = _basisX.z * scale.x;
+
+    _inOutTransform[1][0] = _basisY.x * scale.y;
+    _inOutTransform[1][1] = _basisY.y * scale.y;
+    _inOutTransform[1][2] = _basisY.z * scale.y;
+
+    _inOutTransform[2][0] = _basisZ.x * scale.z;
+    _inOutTransform[2][1] = _basisZ.y * scale.z;
+    _inOutTransform[2][2] = _basisZ.z * scale.z;
+}
+
 glm::vec3 MathsHelpers::GetScale(glm::mat4x4 _transform)
 {
     return glm::vec3(

@@ -34,6 +34,7 @@ public:
     float m_MassScale = 1.f;
 
     bool m_CollisionEnabled = true;
+    bool m_KeepUpright = false;
     CollisionPrimitiveType m_CollisionPrimitiveType = CollisionPrimitiveType::AABB;
     MovementType m_MovementType = MovementType::Fixed;
     std::vector<CollisionResult> m_CollisionsLastFrame;

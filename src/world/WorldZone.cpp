@@ -68,6 +68,7 @@ WorldObjectID WorldZone::ConstructPlayerInZone(std::string _name)
 
     m_ColliderComponents.emplace_back(m_OwnerWorld, newID, CollisionPrimitiveType::OBB, MovementType::Movable);
     m_ColliderComponents.back().m_Bounds = glm::vec3(.5f, 1.f, .5f);
+    m_ColliderComponents.back().m_KeepUpright = true;
     newObject.GetComponentRef<ColliderComponent>() = m_ColliderComponents.size() - 1;
 
     m_CameraComponents.emplace_back(m_OwnerWorld, newID);

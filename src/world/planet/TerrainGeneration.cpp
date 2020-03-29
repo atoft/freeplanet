@@ -24,9 +24,7 @@ f32 TerrainGeneration::ComputeBaseShapeDensity(const Planet& _planet, const Worl
     {
     case Planet::BaseShape::Sphere:
     {
-        const glm::ivec3 planetCoreZone = glm::ivec3(0);
-
-         const f32 density = _planet.m_Radius - glm::length(_position.GetPositionRelativeTo(planetCoreZone));
+         const f32 density = _planet.m_Radius - glm::length(_position.GetPositionRelativeTo(_planet.m_OriginZone));
 
          // TODO any min/max clamping here.
 
