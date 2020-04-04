@@ -49,7 +49,6 @@ private:
 
     void GenerateChunkRequestsForLOD(u32 _lod);
 private:
-    [[maybe_unused]]
     const World* m_World = nullptr;
 
     RawMesh m_CombinedRawMesh;

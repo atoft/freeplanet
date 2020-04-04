@@ -127,3 +127,13 @@ glm::mat4x4 MathsHelpers::GenerateRotationMatrixFromNormal(glm::vec3 normal)
 
     return matrix;
 }
+
+glm::vec3 MathsHelpers::GenerateNormalFromPitchYaw(f32 _pitch, f32 _yaw)
+{
+    glm::vec4 unitVector = glm::vec4(1.f,0.f,0.f, 1.f);
+
+    unitVector = glm::rotate(glm::mat4(1.f), _pitch, glm::vec3(0.f,0.f,1.f)) * unitVector;
+    unitVector = glm::rotate(glm::mat4(1.f), _yaw, glm::vec3(0.f,1.f,0.f)) * unitVector;
+
+    return glm::vec3(unitVector);
+}

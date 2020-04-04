@@ -208,11 +208,21 @@ void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params
         break;
     }
 
-    // TODO Bad copy-paste from TerrainHandler, really need to fix the coordinate system of TerrainChunks.
-    const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_params.m_Properties.m_ChunkSize * _params.m_Properties.m_ChunksPerEdge) / 2.f;
-
-    for (u32 vertIdx = 0; vertIdx < _outRawMesh.m_Vertices.size(); ++vertIdx)
+    if (_params.m_Planet != nullptr)
     {
-        _outRawMesh.m_Colors.push_back(TerrainGeneration::GetColor(*_params.m_Planet, {_params.m_ZoneCoordinates, _outRawMesh.m_Vertices[vertIdx] - chunksToZoneOriginOffset}));
+        // TODO Bad copy-paste from TerrainHandler, really need to fix the coordinate system of TerrainChunks.
+        const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_params.m_Properties.m_ChunkSize * _params.m_Properties.m_ChunksPerEdge) / 2.f;
+
+        for (u32 vertIdx = 0; vertIdx < _outRawMesh.m_Vertices.size(); ++vertIdx)
+        {
+            _outRawMesh.m_Colors.push_back(TerrainGeneration::GetColor(*_params.m_Planet, {_params.m_ZoneCoordinates, _outRawMesh.m_Vertices[vertIdx] - chunksToZoneOriginOffset}));
+        }
+    }
+    else
+    {
+        for (u32 vertIdx = 0; vertIdx < _outRawMesh.m_Vertices.size(); ++vertIdx)
+        {
+            _outRawMesh.m_Colors.emplace_back(1.f,1.f,1.f,1.f);
+        }
     }
 }

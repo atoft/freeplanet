@@ -20,8 +20,3 @@ TerrainComponent::TerrainComponent()
     m_ChunksPerEdge = 0;
     m_ChunkSize = 0.f;
 }
-
-void TerrainComponent::ForceAddElement(const TerrainElementVariant& element)
-{
-    m_Terrain.m_AdditiveElements.push_back(element);
-}

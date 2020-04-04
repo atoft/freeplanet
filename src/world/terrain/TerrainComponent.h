@@ -26,11 +26,6 @@ public:
 
     u32 GetDimensions() const { return m_ChunksPerEdge; };
 
-    // A bit of a hack, really only the TerrainHandler should be doing work on the TerrainComponent.
-    // But until we have a proper idea of how worlds are generated, it's not clear who's in charge of
-    // populating the procedural terrain. This will do for now...
-    void ForceAddElement(const TerrainElementVariant& element);
-
     // For now we keep this accessible to be used by collision.
     // It wouldn't be too difficult to extract the triangles from the RawMesh and no longer use Chunks in physics.
     // Even then it may be worth caching them internally so that we don't have to regenerate all the chunks

@@ -21,7 +21,7 @@ struct Planet
     };
 
     BaseShape m_Shape = BaseShape::Sphere;
-    f32 m_Radius = 512.f;
+    f32 m_Radius = 1024.f;
     f32 m_AtmosphereHeight = 128.f;
     glm::ivec3 m_OriginZone = glm::ivec3(0);
 
@@ -34,6 +34,7 @@ struct Planet
     {
         f32 m_PitchRadians = 0.f;
         f32 m_YawRadians = 0.f;
+        glm::vec3 m_BiomeDirection = glm::vec3(1.f,0.f,0.f);
 
         Color m_GroundColor = Color(0.f,1.f,0.f,1.f);
     };

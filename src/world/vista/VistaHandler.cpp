@@ -51,6 +51,11 @@ void VistaHandler::Update(TimeMS _dt)
 {
     ProfileCurrentFunction();
 
+    if (m_World->GetPlanet() == nullptr)
+    {
+        return;
+    }
+
     for (const VistaChunkIdentifier& identifier : m_TerrainMeshUpdaters.GetLoadedIdentifiers())
     {
         if (identifier.m_Generation == m_Generation)    // Hack, see comment in .h
@@ -89,7 +94,12 @@ void VistaHandler::Update(TimeMS _dt)
 
         TerrainMeshUpdateParams params;
         params.m_Planet = m_World->GetPlanet();
+
+        // TODO This provides incorrect zoneCoordinates, because there will be more than one zone inside each
+        // TerrainMeshUpdate. Need more information inside the structure to do this properly.
+        // Only works now for absolute positions/distances.
         params.m_ZoneCoordinates = request.m_Index * static_cast<s32>(ZONES_PER_EDGE_FOR_LOD[request.m_LOD]) + m_VistaOrigin;
+
         params.m_Properties = GetPropertiesForLOD(request.m_LOD);
         params.m_DirtyRegion = {glm::ivec3(), glm::ivec3(params.m_Properties.m_ChunksPerEdge)};
         params.m_ExistingChunks = std::vector<TerrainChunk>(params.m_Properties.m_ChunksPerEdge * params.m_Properties.m_ChunksPerEdge * params.m_Properties.m_ChunksPerEdge);
@@ -134,7 +144,10 @@ void VistaHandler::OnLocalPlayerWorldZoneChanged(glm::ivec3 _zone)
     m_CombinedRawMesh = RawMesh();
     m_Generation++;
 
-    std::vector<glm::ivec3> lod0Chunks;
+    if (m_World->GetPlanet() == nullptr)
+    {
+        return;
+    }
 
     // We'll be waiting a while for the new vista to be generated for the player's new zone.
     // In the meantime, offset the existing vista so it's positioned correctly for the new zone.

@@ -14,6 +14,7 @@
 #include <src/graphics/ui/UIWorldZoneDebug.h>
 #include <src/graphics/ui/UITerrainDebug.h>
 #include <src/graphics/ui/UIProfilingDebug.h>
+#include <src/graphics/ui/UIPlanetDebug.h>
 #include <src/profiling/Profiler.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
@@ -51,6 +52,11 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         else if (m_RequestedDebugMenu == "collision")
         {
             auto debugMenu = std::make_unique<UICollisionDebug>();
+            m_DebugMenu = std::move(debugMenu);
+        }
+        else if (m_RequestedDebugMenu == "planet")
+        {
+            auto debugMenu = std::make_unique<UIPlanetDebug>();
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "none" || m_RequestedDebugMenu == "off")

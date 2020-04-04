@@ -38,6 +38,8 @@ public:
 
     static glm::mat4x4 GenerateRotationMatrixFromNormal(glm::vec3 normal);
 
+    static glm::vec3 GenerateNormalFromPitchYaw(f32 _pitch, f32 _yaw);
+
     template <typename Vec, typename Numeric>
     static bool EqualWithEpsilon(const Vec& _lhs, const Vec& _rhs, Numeric _epsilon)
     {

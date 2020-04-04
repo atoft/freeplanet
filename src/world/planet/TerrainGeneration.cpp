@@ -6,6 +6,7 @@
 
 #include <src/world/planet/Planet.h>
 #include <src/world/WorldPosition.h>
+#include <src/tools/MathsHelpers.h>
 
 f32 TerrainGeneration::GetDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
 {
@@ -22,7 +23,45 @@ f32 TerrainGeneration::GetDensity(const Planet& _planet, const WorldPosition& _p
 // And let the shader draw them as needed.
 Color TerrainGeneration::GetColor(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
 {
-    return Color(_position.m_ZoneCoordinates.x % 2, _position.m_ZoneCoordinates.y % 2, _position.m_ZoneCoordinates.z % 2, 1.f);
+    const Planet::Biome biome = GetBiome(_planet, _position);
+
+    return biome.m_GroundColor;
+}
+
+const Planet::Biome& TerrainGeneration::GetBiome(const Planet& _planet, const WorldPosition& _position)
+{
+    assert(!_planet.m_Biomes.empty());
+
+    if (_planet.m_Biomes.size() > 1)
+    {
+        const glm::vec3 planetaryPosition = _position.GetPositionRelativeTo(_planet.m_OriginZone);
+
+        if (MathsHelpers::EqualWithEpsilon(planetaryPosition, glm::vec3(0.f), glm::epsilon<f32>()))
+        {
+            return _planet.m_Biomes[0];
+        }
+
+        const glm::vec3 targetDirection = glm::normalize(planetaryPosition);
+
+        const Planet::Biome* bestBiome = nullptr;
+        f32 bestDotProduct = -std::numeric_limits<f32>::max();
+
+        for (const Planet::Biome& biome : _planet.m_Biomes)
+        {
+            const f32 dotProduct = glm::dot(biome.m_BiomeDirection, targetDirection);
+
+            if (dotProduct > bestDotProduct)
+            {
+                bestDotProduct = dotProduct;
+                bestBiome = &biome;
+            }
+        }
+
+        assert(bestBiome != nullptr);
+        return *bestBiome;
+    }
+
+    return _planet.m_Biomes[0];
 }
 
 f32 TerrainGeneration::ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position)

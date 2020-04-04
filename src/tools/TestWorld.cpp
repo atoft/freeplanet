@@ -4,7 +4,10 @@
 
 #include "TestWorld.h"
 
+#include <random>
+
 #include <src/world/World.h>
+#include <src/tools/MathsHelpers.h>
 #include <src/tools/PropRecipe.h>
 #include <src/world/terrain/TerrainConstants.h>
 
@@ -18,6 +21,25 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     else if (_worldName == "terrain")
     {
         Planet planet;
+        planet.m_Radius = 128.f;
+        planet.m_TerrainSeed = 0;
+
+        constexpr u32 biomeCount = 40;
+
+        std::mt19937 gen(planet.m_TerrainSeed);
+        std::uniform_real_distribution<> signedDistribution(-1.f, 1.f);
+        std::uniform_real_distribution<> unsignedDistribution(0.f, 1.f);
+
+        for (u32 biomeIdx = 0; biomeIdx < biomeCount; ++biomeIdx)
+        {
+            Planet::Biome greenBiome;
+            greenBiome.m_GroundColor = Color(unsignedDistribution(gen), unsignedDistribution(gen), unsignedDistribution(gen), 1);
+            greenBiome.m_PitchRadians = signedDistribution(gen) * glm::half_pi<f32>();
+            greenBiome.m_YawRadians = signedDistribution(gen) * glm::pi<f32>();
+            greenBiome.m_BiomeDirection = MathsHelpers::GenerateNormalFromPitchYaw(greenBiome.m_PitchRadians,
+                                                                                   greenBiome.m_YawRadians);
+            planet.m_Biomes.push_back(greenBiome);
+        }
 
         world = std::make_shared<World>("Terrain", planet);
 
