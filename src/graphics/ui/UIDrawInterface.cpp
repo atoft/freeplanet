@@ -130,7 +130,7 @@ void UIDrawInterface::DrawSpriteFromDisk(glm::vec2 _position, glm::vec2 _scale, 
     m_UIDisplay->m_DrawingQueue.push_back(sprite);
 }
 
-void UIDrawInterface::DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _radius)
+void UIDrawInterface::DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _radius, Color _color)
 {
     StaticMesh* sphere = AssetHandle<StaticMesh>(MeshAsset_UnitUVSphere).GetAsset();
 
@@ -140,12 +140,13 @@ void UIDrawInterface::DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _pos
         sceneObject.m_Mesh = sphere->GetMesh();
         sceneObject.m_Transform = glm::scale(glm::translate(glm::mat4x4(1.f), _position),  glm::vec3(_radius));
         sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+        sceneObject.m_BaseColor = _color;
 
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
     }
 }
 
-void UIDrawInterface::DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _length, glm::vec3 _normal)
+void UIDrawInterface::DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _length, glm::vec3 _normal, Color _color)
 {
     StaticMesh* arrow = AssetHandle<StaticMesh>(MeshAsset_Arrow).GetAsset();
 
@@ -157,6 +158,7 @@ void UIDrawInterface::DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _posi
         const glm::mat4 translation = glm::translate(glm::mat4(1.f), _position);
         sceneObject.m_Transform = glm::scale(translation * MathsHelpers::GenerateRotationMatrixFromNormal(_normal),  glm::vec3(_length, 1.f, 1.f));
         sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+        sceneObject.m_BaseColor = _color;
 
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
     }

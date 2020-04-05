@@ -28,8 +28,8 @@ public:
     void DrawRectangle(glm::vec2 _position, glm::vec2 _scale, Color _color = Color(1.f));
     void DrawSpriteFromDisk(glm::vec2 _position, glm::vec2 _scale, std::string _path);
 
-    void DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _radius);
-    void DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _length, glm::vec3 _normal);
+    void DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _radius, Color _color = Color(0.f, 0.f, 0.f, 1.f));
+    void DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _length, glm::vec3 _normal, Color _color = Color(0.f, 0.f, 0.f, 1.f));
     void DebugDrawAABB(glm::ivec3 zoneCoordinates, const glm::vec3& _position, const AABB& _aabb);
 
     glm::ivec2 GetDisplayResolution() const;
