@@ -24,7 +24,11 @@ public:
     static Color GetColor(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod = TerrainLevelOfDetail::ActiveZone);
 
     static const Planet::Biome& GetBiome(const Planet& _planet, const WorldPosition& _position);
+    static void GetClosestBiomes(const Planet& _planet, const WorldPosition& _position, std::vector<std::pair<f32, const Planet::Biome*>>& _outBiomes);
+
+    static void GenerateFibonacciSphere(u32 _count, std::vector<glm::vec2>& _outPitchYaws);
 
 private:
+
     static f32 ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position);
 };
