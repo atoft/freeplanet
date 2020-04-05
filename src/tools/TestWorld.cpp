@@ -44,7 +44,7 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
 
             for (f32& weight : greenBiome.m_OctaveWeights)
             {
-                weight = 1.f + signedDistribution(gen) * 0.5f;
+                weight = 1.375f + signedDistribution(gen) * 0.625f;
             }
 
             planet.m_Biomes.push_back(greenBiome);
