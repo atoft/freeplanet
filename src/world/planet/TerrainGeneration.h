@@ -28,7 +28,10 @@ public:
 
     static void GenerateFibonacciSphere(u32 _count, std::vector<glm::vec2>& _outPitchYaws);
 
+    static f32 ClampDensity(f32 _density);
+
 private:
 
     static f32 ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position);
+    static f32 ComputeBiomeDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod);
 };

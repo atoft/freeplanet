@@ -37,6 +37,8 @@ struct Planet
         glm::vec3 m_BiomeDirection = glm::vec3(1.f,0.f,0.f);
 
         Color m_GroundColor = Color(0.f,1.f,0.f,1.f);
+
+        f32 m_OctaveWeights[4] = {1.f, 1.f, 1.f, 1.f};
     };
 
     std::vector<Biome> m_Biomes;

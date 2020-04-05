@@ -5,6 +5,7 @@
 #include "TerrainGeneration.h"
 
 #include <algorithm>
+#include <glm/gtc/noise.hpp>
 
 #include <src/world/planet/Planet.h>
 #include <src/world/WorldPosition.h>
@@ -16,10 +17,11 @@ f32 TerrainGeneration::GetDensity(const Planet& _planet, const WorldPosition& _p
     f32 density = 0.f;
 
     density += ComputeBaseShapeDensity(_planet, _position);
+    density += ComputeBiomeDensity(_planet, _position, _lod);
 
     (void)(_lod);
 
-    return density;
+    return ClampDensity(density);
 }
 
 // Later, will probably want to expose materials with blending rather than color, e.g. 0.9 stone, 0.1 dirt
@@ -156,19 +158,79 @@ void TerrainGeneration::GenerateFibonacciSphere(u32 _count, std::vector<glm::vec
     _outPitchYaws.emplace_back(-glm::half_pi<f32>(), 2.f * glm::pi<f32>());
 }
 
+// Keep all densities in the terrain pipeline in this range, so that terrain edits behave predictably.
+f32 TerrainGeneration::ClampDensity(f32 _density)
+{
+    constexpr f32 minDensity = -1.f;
+    constexpr f32 maxDensity = 1.f;
+
+
+    return glm::clamp(_density, minDensity, maxDensity);
+}
+
 f32 TerrainGeneration::ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position)
 {
     switch (_planet.m_Shape)
     {
     case Planet::BaseShape::Sphere:
     {
-         const f32 density = _planet.m_Radius - glm::length(_position.GetPositionRelativeTo(_planet.m_OriginZone));
+         constexpr f32 scaleFactor = 16.f;
+         const f32 density = (_planet.m_Radius - glm::length(_position.GetPositionRelativeTo(_planet.m_OriginZone))) / scaleFactor;
 
-         // TODO any min/max clamping here.
-
+         // Don't clamp here as we want to strictly enforce that there is less density higher up when generating
+         // terrain. A later clamp with remove very large values before the final result is returned.
          return density;
     }
     default:
         return 0.f;
     }
+}
+
+u32 GetMaxOctavesForLOD(TerrainLevelOfDetail _lod)
+{
+    switch (_lod)
+    {
+    case TerrainLevelOfDetail::ActiveZone:
+        return 4;
+    case TerrainLevelOfDetail::NearVista:
+        return 3;
+    case TerrainLevelOfDetail::Planetary:
+        [[fallthrough]];
+    default:
+        return 0;
+    }
+}
+
+f32 TerrainGeneration::ComputeBiomeDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
+{
+    srand(_planet.m_TerrainSeed);
+
+    f32 density = 0.f;
+
+    // TODO get blended biome
+    const Planet::Biome& biome = GetBiome(_planet, _position);
+
+    const u32 maxOctaves = GetMaxOctavesForLOD(_lod);
+
+    const f32 baseFrequency = 0.025f;
+    const f32 baseAmplitude = 0.5f;
+
+    constexpr f32 freqMultiplier = 2.f;
+    constexpr f32 amplitudeMultiplier = 0.5f;
+
+    // TODO How can we avoid float precision issues with noise?
+    const glm::vec3 planetaryPosition = _position.GetPositionRelativeTo(_planet.m_OriginZone);
+
+    f32 frequency = baseFrequency;
+    f32 amplitude = baseAmplitude;
+
+    for (u32 octave = 1; octave <= maxOctaves; ++ octave)
+    {
+        density += ClampDensity(glm::perlin(planetaryPosition * frequency) * amplitude * biome.m_OctaveWeights[octave - 1]);
+
+        frequency *= freqMultiplier;
+        amplitude *= amplitudeMultiplier;
+    }
+
+    return ClampDensity(density);
 }

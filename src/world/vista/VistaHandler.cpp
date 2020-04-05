@@ -109,6 +109,19 @@ void VistaHandler::Update(TimeMS _dt)
                 + GetGlobalSamplingOffset(request.m_Index, request.m_LOD)
                 - glm::vec3(TerrainConstants::WORLD_ZONE_SIZE * GetZonesOffsetFromCenter(request.m_LOD)); // Because the origin of the Terrain is offset by (1 zone * 1 zone * 1 zone) in each direction, need to include this in the global offset so we get the same sampling.
 
+        switch (request.m_LOD)
+        {
+        case 0:
+            params.m_LevelOfDetail = TerrainLevelOfDetail::NearVista;
+            break;
+        case 1:
+            params.m_LevelOfDetail = TerrainLevelOfDetail::Planetary;
+            break;
+        default:
+            break;
+        }
+        static_assert(LODS_IN_USE_COUNT == 2);
+
         if (request.m_Index == glm::ivec3(0))
         {
             // Adjacent meshes of different LODs will have visible seams between them. Perfectly stitching the seams is

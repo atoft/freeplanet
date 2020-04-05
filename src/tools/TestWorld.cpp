@@ -28,6 +28,7 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
 
         std::mt19937 gen(planet.m_TerrainSeed);
         std::uniform_real_distribution<> unsignedDistribution(0.f, 1.f);
+        std::uniform_real_distribution<> signedDistribution(-1.f, 1.f);
 
         std::vector<glm::vec2> pitchYaws;
         TerrainGeneration::GenerateFibonacciSphere(biomeCount, pitchYaws);
@@ -40,6 +41,12 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
             greenBiome.m_YawRadians = pitchYaws[biomeIdx].y;
             greenBiome.m_BiomeDirection = MathsHelpers::GenerateNormalFromPitchYaw(greenBiome.m_PitchRadians,
                                                                                    greenBiome.m_YawRadians);
+
+            for (f32& weight : greenBiome.m_OctaveWeights)
+            {
+                weight = 1.f + signedDistribution(gen) * 0.5f;
+            }
+
             planet.m_Biomes.push_back(greenBiome);
         }
 

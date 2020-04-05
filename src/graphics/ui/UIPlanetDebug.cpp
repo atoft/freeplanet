@@ -58,4 +58,18 @@ void UIPlanetDebug::Draw(TimeMS _delta, UIDrawInterface& _display, const World* 
         yOffset += 20;
     }
 
+    u32 octaveIdx = 1;
+    for (const f32 weight : biomes[0].second->m_OctaveWeights)
+    {
+        _display.DrawString(
+                glm::ivec2(20, yOffset),
+                "Octave: " + std::to_string(octaveIdx) + " Weight: " + std::to_string(weight),
+                16.f,
+                Color(0.f, 0.f, 0.f, 1.f),
+                FontStyle::Sans,
+                true);
+
+        yOffset += 20;
+        ++octaveIdx;
+    }
 }

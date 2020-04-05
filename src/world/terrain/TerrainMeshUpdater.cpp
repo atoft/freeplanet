@@ -27,14 +27,14 @@ f32 GetDensity(const TerrainMeshUpdateParams& _params, glm::vec3 _pos)
         // TODO Bad copy-paste from TerrainHandler, really need to fix the coordinate system of TerrainChunks.
         const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_params.m_Properties.m_ChunkSize * _params.m_Properties.m_ChunksPerEdge) / 2.f;
 
-        density += TerrainGeneration::GetDensity(*_params.m_Planet, {_params.m_ZoneCoordinates, _pos - chunksToZoneOriginOffset});
+        density += TerrainGeneration::GetDensity(*_params.m_Planet, {_params.m_ZoneCoordinates, _pos - chunksToZoneOriginOffset}, _params.m_LevelOfDetail);
     }
 
     // TODO need rename some terrain types, maybe Terrain is now TerrainEdits since the Planet
     // determines the base shape?
     density += _params.m_Terrain.GetDensity(_pos);
 
-    return density;
+    return TerrainGeneration::ClampDensity(density);
 }
 
 void TerrainMeshUpdater::UpdateChunks(const TerrainMeshUpdateParams& _params, std::vector<TerrainChunk>& _existingChunks) const

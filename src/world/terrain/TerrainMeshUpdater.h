@@ -11,6 +11,7 @@
 #include <src/world/terrain/NormalGenerationMethod.h>
 #include <src/world/terrain/Terrain.h>
 #include <src/world/GeometryTypes.h>
+#include <src/world/planet/TerrainGeneration.h>
 
 struct Planet;
 
@@ -35,6 +36,7 @@ struct TerrainMeshUpdateParams
     TerrainProperties m_Properties;
     TerrainRegion m_DirtyRegion;
     NormalGenerationMethod m_NormalGenerationMethod = NormalGenerationMethod::FromVolume;
+    TerrainLevelOfDetail m_LevelOfDetail = TerrainLevelOfDetail::ActiveZone;
 };
 
 class TerrainMeshUpdater
