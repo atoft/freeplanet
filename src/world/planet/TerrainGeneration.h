@@ -34,4 +34,8 @@ private:
 
     static f32 ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position);
     static f32 ComputeBiomeDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod);
+
+public:
+    static constexpr f32 MINIMUM_VALID_DENSITY = -1.f;
+    static constexpr f32 MAXIMUM_VALID_DENSITY = 1.f;
 };

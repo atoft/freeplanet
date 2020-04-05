@@ -17,9 +17,13 @@ f32 TerrainGeneration::GetDensity(const Planet& _planet, const WorldPosition& _p
     f32 density = 0.f;
 
     density += ComputeBaseShapeDensity(_planet, _position);
-    density += ComputeBiomeDensity(_planet, _position, _lod);
 
-    (void)(_lod);
+    // Outside this range, density cannot be affected by the biome.
+    // Avoid the biome noise computations in that case to gain a lot of performance.
+    if (density >= 2.f * MINIMUM_VALID_DENSITY && density <= 2.f * MAXIMUM_VALID_DENSITY)
+    {
+        density += ComputeBiomeDensity(_planet, _position, _lod);
+    }
 
     return ClampDensity(density);
 }
@@ -161,11 +165,7 @@ void TerrainGeneration::GenerateFibonacciSphere(u32 _count, std::vector<glm::vec
 // Keep all densities in the terrain pipeline in this range, so that terrain edits behave predictably.
 f32 TerrainGeneration::ClampDensity(f32 _density)
 {
-    constexpr f32 minDensity = -1.f;
-    constexpr f32 maxDensity = 1.f;
-
-
-    return glm::clamp(_density, minDensity, maxDensity);
+    return glm::clamp(_density, MINIMUM_VALID_DENSITY, MAXIMUM_VALID_DENSITY);
 }
 
 f32 TerrainGeneration::ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position)
