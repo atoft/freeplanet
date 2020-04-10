@@ -28,6 +28,7 @@ public:
         WorldSetPlanetaryRotationSpeedScale,
         WorldSetTimeScale,
         WorldSetGravity,
+        WorldFreezeZones,
         EngineRequestQuit,
         EngineTestWorld,
 

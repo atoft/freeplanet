@@ -70,6 +70,7 @@ public:
 
     bool IsPlayerInZone(glm::ivec3 _coords) const;
     std::vector<WorldObjectID> GetLocalPlayers() const;
+    bool IsControlledByLocalPlayer(WorldObjectID _id) const;
 
     const Planet* GetPlanet() const { return m_Planet.has_value() ? &m_Planet.value() : nullptr; };
     const EnvironmentState& GetEnvironmentState() const { return m_EnvironmentState; };
@@ -86,7 +87,7 @@ private:
 
     bool IsZoneLoading(glm::ivec3 _coords) const;
     bool IsZoneLoaded(glm::ivec3 _coords) const;
-    void LoadZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions);
+    void LoadZone(glm::ivec3 _position, glm::vec3 _dimensions);
 
 private:
     std::vector<WorldZone> m_ActiveZones;
@@ -113,4 +114,6 @@ private:
 
     f32 m_TimeScale = 1.f;
     f32 m_GravityStrength = 9.81f;
+
+    bool m_FreezeZones = false;
 };

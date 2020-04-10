@@ -140,8 +140,12 @@ void World::Update(TimeMS _delta)
     m_EnvironmentState.Update(deltaWithTimeScale);
 
     SendWorldEvents();
-    TransferEntitiesBetweenZones();
-    UpdateActiveZones();
+
+    if (!m_FreezeZones)
+    {
+        TransferEntitiesBetweenZones();
+        UpdateActiveZones();
+    }
 }
 
 void World::TransferEntitiesBetweenZones()
@@ -184,7 +188,7 @@ void World::TransferEntitiesBetweenZones()
                 PendingZoneTransfer zoneTransfer;
                 zoneTransfer.m_SourceZone = zone.GetCoordinates();
                 zoneTransfer.m_DestinationZone = destinationCoords;
-                zoneTransfer.m_ShouldDelete = destinationZone == nullptr;
+                zoneTransfer.m_ShouldDelete = destinationZone == nullptr && !IsControlledByLocalPlayer(worldObject.GetWorldObjectID());
                 zoneTransfer.m_Object = &worldObject;
                 worldObjectsToTransfer.push_back(zoneTransfer);
 
@@ -199,7 +203,7 @@ void World::TransferEntitiesBetweenZones()
     for (const PendingZoneTransfer& pendingTransfer : worldObjectsToTransfer)
     {
         // This requires some thought about WorldObjects and Components that hold on to resources
-        // such as RenderComponents texture handles etc.
+        // such as RenderComponents, texture handles etc.
         // We don't want those resources to be released and reacquired.
 
         WorldZone* sourceZone = FindZoneAtCoordinates(pendingTransfer.m_SourceZone);
@@ -207,7 +211,13 @@ void World::TransferEntitiesBetweenZones()
         if (!pendingTransfer.m_ShouldDelete)
         {
             WorldZone* destinationZone = FindZoneAtCoordinates(pendingTransfer.m_DestinationZone);
-            assert(destinationZone != nullptr);
+
+            if (destinationZone == nullptr)
+            {
+                LoadZone(pendingTransfer.m_DestinationZone, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
+                continue;
+            }
+
             assert(pendingTransfer.m_Object != nullptr);
 
             destinationZone->GetWorldObjects().push_back(*pendingTransfer.m_Object);
@@ -258,8 +268,7 @@ void World::TransferEntitiesBetweenZones()
 
             m_Directory.OnWorldObjectTransferred(destinationObject.GetWorldObjectID(), destinationObject.GetRef());
 
-            std::vector<WorldObjectID> players = GetLocalPlayers();
-            if (std::find(players.begin(), players.end(), destinationObject.GetWorldObjectID()) != players.end())
+            if (IsControlledByLocalPlayer(destinationObject.GetWorldObjectID()))
             {
                 m_VistaHandler->OnLocalPlayerWorldZoneChanged(pendingTransfer.m_DestinationZone);
             }
@@ -276,9 +285,6 @@ void World::TransferEntitiesBetweenZones()
 
 void World::UpdateActiveZones()
 {
-    // Check for zones that have finished loading
-    m_ZoneLoaders.TransferLoadedContent(m_ActiveZones);
-
     std::vector<glm::ivec3> playerZones;
     for (const Player& player : m_ActivePlayers)
     {
@@ -292,8 +298,6 @@ void World::UpdateActiveZones()
     }
 
     assert(playerZones.size() == 1);
-
-
 
     m_ActiveZones.erase(std::remove_if(m_ActiveZones.begin(), m_ActiveZones.end(),
                                        [playerZones](WorldZone& zone)
@@ -322,11 +326,14 @@ void World::UpdateActiveZones()
                 glm::ivec3 coords = playerZones[0] + glm::ivec3(x, y, z);
                 if (!IsZoneLoaded(coords) && !IsZoneLoading(coords))
                 {
-                    LoadZone(this, coords, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
+                    LoadZone(coords, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
                 }
             }
         }
     }
+
+    // Check for zones that have finished loading
+    m_ZoneLoaders.TransferLoadedContent(m_ActiveZones);
 }
 
 void World::SendWorldEvents()
@@ -339,9 +346,9 @@ void World::SendWorldEvents()
     }
 }
 
-void World::LoadZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions)
+void World::LoadZone(glm::ivec3 _position, glm::vec3 _dimensions)
 {
-    const bool wasLoadPossible = m_ZoneLoaders.RequestLoad(_position, _world, _position, _dimensions);
+    const bool wasLoadPossible = m_ZoneLoaders.RequestLoad(_position, this, _position, _dimensions);
     if (!wasLoadPossible)
     {
         LogMessage("Tried to load a zone when there was no loader available, will try again next frame.");
@@ -439,6 +446,19 @@ std::vector<WorldObjectID> World::GetLocalPlayers() const
     return result;
 }
 
+bool World::IsControlledByLocalPlayer(WorldObjectID _id) const
+{
+    for (const Player& player : m_ActivePlayers)
+    {
+        if (player.m_IsLocal && player.GetControlledWorldObjectID() == _id)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void World::HandleEvent(EngineEvent _event)
 {
     switch (_event.GetType())
@@ -492,6 +512,12 @@ void World::HandleEvent(EngineEvent _event)
         {
             m_GravityStrength = gravity;
         }
+
+        break;
+    }
+    case EngineEvent::Type::WorldFreezeZones:
+    {
+        m_FreezeZones = _event.GetIntData() == 1;
 
         break;
     }

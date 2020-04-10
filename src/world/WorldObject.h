@@ -24,7 +24,7 @@ class BipedComponent;
 class ColliderComponent;
 class FreelookCameraComponent;
 
-// Any object which exits in 3D space
+// Any object which exists in 3D space
 class WorldObject
 {
 public:

@@ -264,35 +264,7 @@ glm::mat4x4 WorldZone::GetTerrainModelTransform() const
 
 glm::ivec3 WorldZone::ComputeRelativeCoordinates(glm::vec3 _zonePosition) const
 {
-    glm::ivec3 relativeCoords = glm::ivec3(0.f);
-
-    // TODO There's probably a simple way to express this that's obvious when I'm more awake
-    if (_zonePosition.x > m_Dimensions.x / 2.f)
-    {
-        relativeCoords.x = 1;
-    }
-    else if (_zonePosition.x < -m_Dimensions.x / 2.f)
-    {
-        relativeCoords.x = -1;
-    }
-
-    if (_zonePosition.y > m_Dimensions.y / 2.f)
-    {
-        relativeCoords.y = 1;
-    }
-    else if (_zonePosition.y < -m_Dimensions.y / 2.f)
-    {
-        relativeCoords.y = -1;
-    }
-
-    if (_zonePosition.z > m_Dimensions.z / 2.f)
-    {
-        relativeCoords.z = 1;
-    }
-    else if (_zonePosition.z < -m_Dimensions.z / 2.f)
-    {
-        relativeCoords.z = -1;
-    }
+    const glm::ivec3 relativeCoords = glm::ivec3(glm::round(_zonePosition / m_Dimensions) );
 
     return relativeCoords;
 }
