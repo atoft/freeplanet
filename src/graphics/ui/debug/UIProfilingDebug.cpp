@@ -6,7 +6,7 @@
 
 #include <src/profiling/Profiler.h>
 
-void UIProfilingDebug::Init(const Profiler* _profiler)
+void UIProfilingDebug::InitProfiler(const Profiler* _profiler)
 {
     m_Profiler = _profiler;
 }

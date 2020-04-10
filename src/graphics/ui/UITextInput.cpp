@@ -69,8 +69,8 @@ void UITextInput::MoveCaretRight()
     m_CaretPosition = (m_CaretPosition == m_InputBuffer.size()) ? m_CaretPosition : m_CaretPosition + 1;
 }
 
-void UITextInput::Draw(TimeMS _delta, UIDrawInterface& _display, glm::vec2 _position, glm::vec2 _dimensions, float _fontSize)
+void UITextInput::Draw(TimeMS _delta, UIDrawInterface& _display, bool _isFocused)
 {
-    _display.DrawRectangle(_position, _dimensions, Color(0.1f, 0.1f, 0.1f, 1.f));
-    _display.DrawString(_position, m_InputBuffer, _fontSize, Color(0,1.f,0,1.f), FontStyle::Monospace, false, m_CaretPosition);
+    _display.DrawRectangle(m_Position, m_Dimensions, Color(0.1f, 0.1f, 0.1f, 1.f));
+    _display.DrawString(m_Position, m_InputBuffer, m_FontSize, Color(0,1.f,0,1.f), FontStyle::Monospace, false, m_CaretPosition);
 }

@@ -14,6 +14,7 @@
 #include <src/engine/events/EngineEvent.h>
 #include <src/graphics/Scene.h>
 #include <src/graphics/ui/UIBaseMenu.h>
+#include <src/graphics/ui/UIActions.h>
 #include <src/graphics/ui/UIDrawInterface.h>
 
 namespace sf
@@ -44,7 +45,19 @@ public:
 
     bool IsInMenu();
 
+    void AddEvent(EngineEvent _event);
     void HandleEvent(EngineEvent _event);
+
+    void RequestQuit();
+
+    void CloseGameMenu();
+
+public:
+    template <typename T>
+    void RequestMenu()
+    {
+        m_RequestedGameMenu = std::make_unique<T>();
+    }
 
 private:
     static constexpr u32 MAX_COLOR = 255;
@@ -56,10 +69,13 @@ private:
     bool m_DisplayLog = false;
 
     UIDrawInterface m_Interface;
+    UIActions m_Actions;
+
     std::unique_ptr<UIBaseMenu> m_GameMenu;
     std::unique_ptr<UIBaseMenu> m_DebugMenu;
     std::unique_ptr<UIBaseMenu> m_Console;
 
+    std::unique_ptr<UIBaseMenu> m_RequestedGameMenu;
     std::string m_RequestedDebugMenu;
 
     std::vector<Renderable::DrawableVariant> m_DrawingQueue;

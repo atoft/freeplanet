@@ -13,6 +13,10 @@ UIConsoleMenu::UIConsoleMenu()
 {
     m_HistoryBuffer.reserve(CONSOLE_HISTORY_SIZE);
     m_HistoryBuffer.push_back("");
+
+    m_Textbox.m_Position = glm::vec2(0, 1080 - 40);
+    m_Textbox.m_Dimensions = glm::vec2(1920,32);
+    m_Textbox.m_FontSize = 32;
 }
 
 long lineCount(std::string inString)
@@ -32,7 +36,7 @@ void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World*)
 
     currentY-= MARGIN_Y + CONSOLE_LOG_SIZE;
 
-    m_Textbox.Draw(_delta, _display, glm::vec2(0, 1080 - 40), glm::vec2(1920,32), 32);
+    m_Textbox.Draw(_delta, _display, true);
 
     for(s32 logIdx = log.size() -1; logIdx >=0; --logIdx)
     {
@@ -76,7 +80,7 @@ void UIConsoleMenu::OnTextEntered(std::string _text)
     m_Textbox.OnTextEntered(_text);
 }
 
-void UIConsoleMenu::OnButtonReleased(InputType _type)
+void UIConsoleMenu::OnButtonReleased(InputType _type, UIActions& _actions)
 {
     switch(_type)
     {

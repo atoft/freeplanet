@@ -8,6 +8,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include <src/engine/Engine.h>
+#include <src/graphics/ui/UIActions.h>
 #include <src/graphics/ui/UIConsoleMenu.h>
 #include <src/graphics/ui/debug/UICollisionDebug.h>
 #include <src/graphics/ui/debug/UIComponentDebug.h>
@@ -15,6 +16,7 @@
 #include <src/graphics/ui/debug/UITerrainDebug.h>
 #include <src/graphics/ui/debug/UIProfilingDebug.h>
 #include <src/graphics/ui/debug/UIPlanetDebug.h>
+#include <src/graphics/ui/menus/UIMainMenu.h>
 #include <src/profiling/Profiler.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
@@ -25,6 +27,13 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
 
     m_DrawingQueue.clear();
     m_Debug3DDrawingQueue.clear();
+
+    if (m_RequestedGameMenu != nullptr)
+    {
+        m_GameMenu = std::move(m_RequestedGameMenu);
+        m_GameMenu->Init();
+        m_RequestedGameMenu = nullptr;
+    }
 
     if (!m_RequestedDebugMenu.empty())
     {
@@ -46,7 +55,7 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         else if (m_RequestedDebugMenu == "profile")
         {
             auto debugMenu = std::make_unique<UIProfilingDebug>();
-            debugMenu->Init(&Profiler::GetInstance());
+            debugMenu->InitProfiler(&Profiler::GetInstance());
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "collision")
@@ -71,6 +80,11 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         m_RequestedDebugMenu = "";
     }
 
+    if (m_GameMenu != nullptr)
+    {
+        m_GameMenu->Draw(delta, m_Interface, _world);
+    }
+
     if (m_DisplayLog)
     {
         m_Window->setMouseCursorVisible(true);
@@ -85,11 +99,6 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
     else
     {
         m_Interface.DrawRectangle(glm::vec2(0,0), glm::vec2(1920,1080), Color(0,0,0,0));
-
-        if (_world == nullptr)
-        {
-            m_Interface.DrawString(glm::vec2(20, 20), "No world is loaded. Use the console (tilde or F1) to enter a command.", 24.f);
-        }
 
         if (m_DebugMenu != nullptr)
         {
@@ -119,7 +128,9 @@ UIDisplay::UIDisplay(sf::RenderWindow *_window)
     }
 
     m_Interface.SetUIDisplay(this);
+    m_Actions.SetUIDisplay(this);
     m_Console = std::make_unique<UIConsoleMenu>();
+    m_RequestedGameMenu = std::make_unique<UIMainMenu>();
 }
 
 void UIDisplay::OnButtonInput(InputType _type)
@@ -131,17 +142,17 @@ void UIDisplay::OnButtonInput(InputType _type)
 
     if (m_GameMenu != nullptr)
     {
-        m_GameMenu->OnButtonReleased(_type);
+        m_GameMenu->OnButtonReleased(_type, m_Actions);
     }
 
     if (m_DebugMenu != nullptr)
     {
-        m_DebugMenu->OnButtonReleased(_type);
+        m_DebugMenu->OnButtonReleased(_type, m_Actions);
     }
 
     if (m_Console != nullptr)
     {
-        m_Console->OnButtonReleased(_type);
+        m_Console->OnButtonReleased(_type, m_Actions);
     }
 }
 
@@ -170,7 +181,7 @@ void UIDisplay::OnTextEntered(std::string _value)
 
 bool UIDisplay::IsInMenu()
 {
-    return m_DisplayLog;
+    return m_DisplayLog || (m_GameMenu != nullptr && m_GameMenu->ShouldTakeFocus());
 }
 
 void UIDisplay::UpdateSplashScreen()
@@ -180,6 +191,11 @@ void UIDisplay::UpdateSplashScreen()
     m_Interface.DrawString(glm::ivec2(100, 948), "Reticulating splines...", 32.f, Color(1.f));
 }
 
+void UIDisplay::AddEvent(EngineEvent _event)
+{
+    Engine::GetInstance().AddEvent(_event);
+}
+
 void UIDisplay::HandleEvent(EngineEvent _event)
 {
     if (_event.GetType() == EngineEvent::Type::UIRequestDebugMenu)
@@ -187,4 +203,14 @@ void UIDisplay::HandleEvent(EngineEvent _event)
         m_RequestedDebugMenu = _event.GetStringData();
         m_DisplayLog = false;
     }
+}
+
+void UIDisplay::RequestQuit()
+{
+    Engine::GetInstance().RequestQuit();
+}
+
+void UIDisplay::CloseGameMenu()
+{
+    m_GameMenu.release();
 }

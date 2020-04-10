@@ -13,7 +13,7 @@ public:
     UIConsoleMenu();
     void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
     void OnTextEntered(std::string _text) override;
-    void OnButtonReleased(InputType _type) override;
+    void OnButtonReleased(InputType _type, UIActions& _actions) override;
 
 private:
     UITextInput m_Textbox;
