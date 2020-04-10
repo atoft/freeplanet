@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "UIBaseMenu.h"
+#include "src/graphics/ui/UIBaseMenu.h"
 
-class UIComponentDebug : public UIBaseMenu
+class UIWorldZoneDebug : public UIBaseMenu
 {
 public:
     void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;

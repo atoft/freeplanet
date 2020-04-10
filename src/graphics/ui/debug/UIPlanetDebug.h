@@ -2,7 +2,7 @@
 // Created by alastair on 04/04/2020.
 //
 
-#include "UIBaseMenu.h"
+#include "src/graphics/ui/UIBaseMenu.h"
 
 class UIPlanetDebug : public UIBaseMenu
 {

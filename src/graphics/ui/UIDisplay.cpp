@@ -9,12 +9,12 @@
 
 #include <src/engine/Engine.h>
 #include <src/graphics/ui/UIConsoleMenu.h>
-#include <src/graphics/ui/UICollisionDebug.h>
-#include <src/graphics/ui/UIComponentDebug.h>
-#include <src/graphics/ui/UIWorldZoneDebug.h>
-#include <src/graphics/ui/UITerrainDebug.h>
-#include <src/graphics/ui/UIProfilingDebug.h>
-#include <src/graphics/ui/UIPlanetDebug.h>
+#include <src/graphics/ui/debug/UICollisionDebug.h>
+#include <src/graphics/ui/debug/UIComponentDebug.h>
+#include <src/graphics/ui/debug/UIWorldZoneDebug.h>
+#include <src/graphics/ui/debug/UITerrainDebug.h>
+#include <src/graphics/ui/debug/UIProfilingDebug.h>
+#include <src/graphics/ui/debug/UIPlanetDebug.h>
 #include <src/profiling/Profiler.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
