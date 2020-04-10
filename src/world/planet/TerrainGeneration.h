@@ -31,8 +31,6 @@ public:
     static const Planet::Biome& GetBiome(const Planet& _planet, const WorldPosition& _position);
     static void GetClosestBiomes(const Planet& _planet, const WorldPosition& _position, WeightedBiomeArray & _outBiomes);
 
-    static void GenerateFibonacciSphere(u32 _count, std::vector<glm::vec2>& _outPitchYaws);
-
     static f32 ClampDensity(f32 _density);
 
 private:

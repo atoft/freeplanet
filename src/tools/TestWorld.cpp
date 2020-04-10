@@ -4,13 +4,11 @@
 
 #include "TestWorld.h"
 
-#include <random>
-
 #include <src/world/World.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/tools/PropRecipe.h>
 #include <src/world/terrain/TerrainConstants.h>
-#include <src/world/planet/TerrainGeneration.h>
+#include <src/world/planet/PlanetGeneration.h>
 
 std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
 {
@@ -21,34 +19,7 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     }
     else if (_worldName == "terrain")
     {
-        Planet planet;
-        planet.m_TerrainSeed = 1;
-
-        constexpr u32 biomeCount = 100;
-
-        std::mt19937 gen(planet.m_TerrainSeed);
-        std::uniform_real_distribution<> unsignedDistribution(0.f, 1.f);
-        std::uniform_real_distribution<> signedDistribution(-1.f, 1.f);
-
-        std::vector<glm::vec2> pitchYaws;
-        TerrainGeneration::GenerateFibonacciSphere(biomeCount, pitchYaws);
-
-        for (u32 biomeIdx = 0; biomeIdx < biomeCount; ++biomeIdx)
-        {
-            Planet::Biome greenBiome;
-            greenBiome.m_GroundColor = Color(unsignedDistribution(gen), unsignedDistribution(gen), unsignedDistribution(gen), 1);
-            greenBiome.m_PitchRadians = pitchYaws[biomeIdx].x;
-            greenBiome.m_YawRadians = pitchYaws[biomeIdx].y;
-            greenBiome.m_BiomeDirection = MathsHelpers::GenerateNormalFromPitchYaw(greenBiome.m_PitchRadians,
-                                                                                   greenBiome.m_YawRadians);
-
-            for (f32& weight : greenBiome.m_Inputs.m_OctaveWeights)
-            {
-                weight = 1.375f + signedDistribution(gen) * 0.625f;
-            }
-
-            planet.m_Biomes.push_back(greenBiome);
-        }
+        const Planet planet = PlanetGeneration::GenerateFromSeed(1);
 
         world = std::make_shared<World>("Terrain", planet);
 

@@ -136,32 +136,6 @@ void TerrainGeneration::GetClosestBiomes(const Planet& _planet, const WorldPosit
     _outBiomes[2].first = 0.f;
 }
 
-// Generates and even distribution of points across a sphere, based on http://extremelearning.com.au/evenly-distributing-points-on-a-sphere/.
-void TerrainGeneration::GenerateFibonacciSphere(u32 _count, std::vector<glm::vec2>& _outPitchYaws)
-{
-    // The golden ratio.
-    const f32 phi = (1.f + glm::sqrt(5.f)) / 2.f;
-
-    _outPitchYaws.reserve(_count);
-
-    // First point.
-    _outPitchYaws.emplace_back(glm::half_pi<f32>(), 0.f);
-
-    for (u32 index = 1; index < _count - 1; ++index)
-    {
-        const f32 x = (static_cast<f32>(index) + 6.f) / (static_cast<f32>(_count) + 11.f);
-        const f32 y = index / phi;
-
-        const f32 pitch = glm::acos(2.f * x - 1.f) - glm::half_pi<f32>();
-        const f32 yaw = 2.f * glm::pi<f32>() * y;
-
-        _outPitchYaws.emplace_back(pitch, yaw);
-    }
-
-    // Last point.
-    _outPitchYaws.emplace_back(-glm::half_pi<f32>(), 2.f * glm::pi<f32>());
-}
-
 // Keep all densities in the terrain pipeline in this range, so that terrain edits behave predictably.
 f32 TerrainGeneration::ClampDensity(f32 _density)
 {
@@ -170,16 +144,28 @@ f32 TerrainGeneration::ClampDensity(f32 _density)
 
 f32 TerrainGeneration::ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position)
 {
+    constexpr f32 scaleFactor = 16.f;
+
     switch (_planet.m_Shape)
     {
     case Planet::BaseShape::Sphere:
     {
-         constexpr f32 scaleFactor = 16.f;
          const f32 density = (_planet.m_Radius - glm::length(_position.GetPositionRelativeTo(_planet.m_OriginZone))) / scaleFactor;
 
          // Don't clamp here as we want to strictly enforce that there is less density higher up when generating
          // terrain. A later clamp with remove very large values before the final result is returned.
          return density;
+    }
+    case Planet::BaseShape::Torus:
+    {
+        constexpr f32 torusThickness = 256.f;
+
+        const glm::vec3 globalPosition = _position.GetPositionRelativeTo(_planet.m_OriginZone);
+
+        const glm::vec2 torusPosition = glm::vec2(globalPosition.x, globalPosition.y);
+
+        const glm::vec2 circlePosition = glm::vec2(glm::length(torusPosition) - _planet.m_Radius, globalPosition.z);
+        return (torusThickness - glm::length(circlePosition)) / scaleFactor;
     }
     default:
         return 0.f;
