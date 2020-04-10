@@ -207,8 +207,11 @@ f32 TerrainGeneration::ComputeBiomeDensity(const Planet& _planet, const WorldPos
 
     f32 density = 0.f;
 
-    // TODO get blended biome
-    const Planet::Biome& biome = GetBiome(_planet, _position);
+    WeightedBiomeArray biomes;
+    GetClosestBiomes(_planet, _position, biomes);
+    assert(biomes.size() == 3);
+
+    const Planet::BlendableBiomeInputs inputs = BlendBiomeInputs(biomes);
 
     const u32 maxOctaves = GetMaxOctavesForLOD(_lod);
 
@@ -226,11 +229,39 @@ f32 TerrainGeneration::ComputeBiomeDensity(const Planet& _planet, const WorldPos
 
     for (u32 octave = 1; octave <= maxOctaves; ++ octave)
     {
-        density += ClampDensity(glm::perlin(planetaryPosition * frequency) * amplitude * biome.m_OctaveWeights[octave - 1]);
+        density += ClampDensity(glm::perlin(planetaryPosition * frequency) * amplitude * inputs.m_OctaveWeights[octave - 1]);
 
         frequency *= freqMultiplier;
         amplitude *= amplitudeMultiplier;
     }
 
     return ClampDensity(density);
+}
+
+Planet::BlendableBiomeInputs TerrainGeneration::BlendBiomeInputs(const WeightedBiomeArray& _biomes)
+{
+    if (_biomes[0].first == 1.f)
+    {
+        return _biomes[0].second->m_Inputs;
+    }
+
+    Planet::BlendableBiomeInputs resultingInputs;
+
+    for (f32& resultingWeight : resultingInputs.m_OctaveWeights)
+    {
+        resultingWeight = 0.f;
+    }
+
+    for (const auto& biome : _biomes)
+    {
+        u32 octaveIdx = 0;
+        for (f32& resultingWeight : resultingInputs.m_OctaveWeights)
+        {
+            resultingWeight += biome.second->m_Inputs.m_OctaveWeights[octaveIdx] * biome.first;
+
+            ++octaveIdx;
+        }
+    }
+
+    return resultingInputs;
 }

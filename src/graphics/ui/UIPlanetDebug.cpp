@@ -58,8 +58,10 @@ void UIPlanetDebug::Draw(TimeMS _delta, UIDrawInterface& _display, const World* 
         yOffset += 20;
     }
 
+    const Planet::BlendableBiomeInputs inputs = TerrainGeneration::BlendBiomeInputs(biomes);
+
     u32 octaveIdx = 1;
-    for (const f32 weight : biomes[0].second->m_OctaveWeights)
+    for (const f32 weight : inputs.m_OctaveWeights)
     {
         _display.DrawString(
                 glm::ivec2(20, yOffset),

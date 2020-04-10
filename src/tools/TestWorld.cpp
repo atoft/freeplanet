@@ -42,7 +42,7 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
             greenBiome.m_BiomeDirection = MathsHelpers::GenerateNormalFromPitchYaw(greenBiome.m_PitchRadians,
                                                                                    greenBiome.m_YawRadians);
 
-            for (f32& weight : greenBiome.m_OctaveWeights)
+            for (f32& weight : greenBiome.m_Inputs.m_OctaveWeights)
             {
                 weight = 1.375f + signedDistribution(gen) * 0.625f;
             }

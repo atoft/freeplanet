@@ -30,6 +30,11 @@ struct Planet
 
     u32 m_TerrainSeed = 0;
 
+    struct BlendableBiomeInputs
+    {
+        f32 m_OctaveWeights[4] = {1.f, 1.f, 1.f, 1.f};
+    };
+
     struct Biome
     {
         f32 m_PitchRadians = 0.f;
@@ -38,7 +43,7 @@ struct Planet
 
         Color m_GroundColor = Color(0.f,1.f,0.f,1.f);
 
-        f32 m_OctaveWeights[4] = {1.f, 1.f, 1.f, 1.f};
+        BlendableBiomeInputs m_Inputs;
     };
 
     std::vector<Biome> m_Biomes;
