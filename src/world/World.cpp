@@ -19,6 +19,7 @@ World::World(std::string _worldName, std::optional<Planet> _planet)
 {
     m_Name = _worldName;
 
+    m_PlayerHandler = std::make_unique<PlayerHandler>(this);
     m_CollisionHandler = std::make_unique<CollisionHandler>(this);
     m_TerrainHandler = std::make_unique<TerrainHandler>(this);
     m_VistaHandler = std::make_unique<VistaHandler>(this);
@@ -83,6 +84,11 @@ const WorldZone* World::FindZoneAtCoordinates(glm::ivec3 _zoneCoordinates) const
     return nullptr;
 }
 
+void World::RegisterLocalPlayer(u32 _playerIndex)
+{
+    m_PlayerHandler->RegisterLocalPlayer(_playerIndex);
+}
+
 void World::SpawnPlayerInWorldZone(glm::ivec3 _zoneCoordinates)
 {
     WorldZone* targetZone = FindZoneAtCoordinates(_zoneCoordinates);
@@ -133,6 +139,7 @@ void World::Update(TimeMS _delta)
         zone.Update(deltaWithTimeScale);
     }
 
+    m_PlayerHandler->Update();
     m_CollisionHandler->Update(deltaWithTimeScale);
     m_TerrainHandler->Update(deltaWithTimeScale);
     m_VistaHandler->Update(deltaWithTimeScale);
@@ -214,7 +221,7 @@ void World::TransferEntitiesBetweenZones()
 
             if (destinationZone == nullptr)
             {
-                LoadZone(pendingTransfer.m_DestinationZone, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
+                TryLoadZone(pendingTransfer.m_DestinationZone);
                 continue;
             }
 
@@ -285,48 +292,81 @@ void World::TransferEntitiesBetweenZones()
 
 void World::UpdateActiveZones()
 {
-    std::vector<glm::ivec3> playerZones;
-    for (const Player& player : m_ActivePlayers)
+    if (!m_ActivePlayers.empty())
     {
-        const WorldObjectRef objectRef = m_Directory.GetWorldObjectLocation(player.GetControlledWorldObjectID());
-        if (!objectRef.IsValid())
+        std::vector<glm::ivec3> zonesToRemove;
+
+        // @Performance Could get better cache coherence if the list of coordinates was separate from list of zones in general.
+        for (const WorldZone& zone : m_ActiveZones)
         {
-            continue;
+            zonesToRemove.push_back(zone.GetCoordinates());
         }
 
-        playerZones.push_back(objectRef.m_ZoneCoordinates);
-    }
-
-    assert(playerZones.size() == 1);
-
-    m_ActiveZones.erase(std::remove_if(m_ActiveZones.begin(), m_ActiveZones.end(),
-                                       [playerZones](WorldZone& zone)
-                                       {
-                                           glm::ivec3 coordDistance = glm::abs(zone.GetCoordinates() - playerZones[0]);
-
-                                           bool result = coordDistance.x > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x
-                                                         || coordDistance.y > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.y
-                                                         || coordDistance.z > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z;
-
-                                           if (result)
-                                           {
-                                               LogMessage("Removing " + glm::to_string(zone.GetCoordinates()));
-                                               zone.OnRemovedFromWorld();
-                                           }
-                                           return result;
-                                       }), m_ActiveZones.end());
-
-
-    for (s32 z = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z; z <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z; ++z)
-    {
-        for (s32 y = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.y; y <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.y; ++y)
+        // Remove zones which are far from any players.
+        for (const Player& player : m_ActivePlayers)
         {
-            for (s32 x = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x; x <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x; ++x)
+            const WorldObjectRef objectRef = m_Directory.GetWorldObjectLocation(player.GetControlledWorldObjectID());
+            if (!objectRef.IsValid())
             {
-                glm::ivec3 coords = playerZones[0] + glm::ivec3(x, y, z);
-                if (!IsZoneLoaded(coords) && !IsZoneLoading(coords))
+                continue;
+            }
+
+            const glm::ivec3 playerZone = objectRef.m_ZoneCoordinates;
+
+            for (u32 zoneIdx = zonesToRemove.size(); zoneIdx > 0; --zoneIdx)
+            {
+                const glm::ivec3 zone = zonesToRemove[zoneIdx - 1];
+                const glm::ivec3 coordDistance = glm::abs(zone - playerZone);
+
+                bool isFarFromPlayer = coordDistance.x > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x
+                                    || coordDistance.y > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.y
+                                    || coordDistance.z > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z;
+
+                if (!isFarFromPlayer)
                 {
-                    LoadZone(coords, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
+                    zonesToRemove.erase(zonesToRemove.begin() + (zoneIdx - 1));
+                }
+            }
+        }
+
+        m_ActiveZones.erase(std::remove_if(m_ActiveZones.begin(), m_ActiveZones.end(),
+                                           [zonesToRemove](WorldZone &zone)
+                                           {
+                                               const bool shouldRemove = std::find(zonesToRemove.begin(),
+                                                                                   zonesToRemove.end(),
+                                                                                   zone.GetCoordinates()) != zonesToRemove.end();
+
+                                               if (shouldRemove)
+                                               {
+                                                   LogMessage("Removing " + glm::to_string(zone.GetCoordinates()));
+                                                   zone.OnRemovedFromWorld();
+                                               }
+                                               return shouldRemove;
+                                           }), m_ActiveZones.end());
+
+        // Add zones which are close to any players.
+        for (const Player& player : m_ActivePlayers)
+        {
+            const WorldObjectRef objectRef = m_Directory.GetWorldObjectLocation(player.GetControlledWorldObjectID());
+            if (!objectRef.IsValid())
+            {
+                continue;
+            }
+
+            const glm::ivec3 playerZone = objectRef.m_ZoneCoordinates;
+
+            for (s32 z = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z; z <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z; ++z)
+            {
+                for (s32 y = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.y; y <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.y; ++y)
+                {
+                    for (s32 x = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x; x <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x; ++x)
+                    {
+                        const glm::ivec3 coords = playerZone + glm::ivec3(x, y, z);
+                        if (!IsZoneLoaded(coords) && !IsZoneLoading(coords))
+                        {
+                            TryLoadZone(coords);
+                        }
+                    }
                 }
             }
         }
@@ -346,13 +386,11 @@ void World::SendWorldEvents()
     }
 }
 
-void World::LoadZone(glm::ivec3 _position, glm::vec3 _dimensions)
+bool World::TryLoadZone(glm::ivec3 _position)
 {
-    const bool wasLoadPossible = m_ZoneLoaders.RequestLoad(_position, this, _position, _dimensions);
-    if (!wasLoadPossible)
-    {
-        LogMessage("Tried to load a zone when there was no loader available, will try again next frame.");
-    }
+    const bool wasLoadPossible = m_ZoneLoaders.RequestLoad(_position, this, _position, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
+
+    return wasLoadPossible;
 }
 
 bool World::IsZoneLoading(glm::ivec3 _coords) const

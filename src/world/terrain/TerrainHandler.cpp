@@ -144,3 +144,8 @@ f32 TerrainHandler::GetDensity(const WorldPosition& _position) const
     LogWarning("Tried to get density of an unloaded zone (" + glm::to_string(_position.m_ZoneCoordinates) + ")");
     return 0.f;
 }
+
+bool TerrainHandler::IsAllLoaded() const
+{
+    return m_TerrainMeshUpdaters.IsAllLoaded();
+}

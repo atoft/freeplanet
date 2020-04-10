@@ -10,6 +10,7 @@
 #include <src/engine/loader/DynamicLoaderCollection.h>
 #include <src/engine/events/EngineEvent.h>
 #include <src/engine/StartupHelpers.h>
+#include <src/world/PlayerHandler.h>
 #include <src/world/WorldZone.h>
 #include <src/world/WorldObjectDirectory.h>
 #include <src/world/Player.h>
@@ -41,6 +42,8 @@ public:
     std::vector<WorldZone>& GetActiveZones() { return m_ActiveZones; }
     const std::vector<WorldZone>& GetActiveZones() const { return m_ActiveZones; }
 
+    void RegisterLocalPlayer(u32 _playerIndex);
+
     void SpawnPlayerInWorldZone(glm::ivec3 _zoneCoordinates);
     void SpawnPropInWorldZone(const WorldPosition& _worldPosition, const PropRecipe& _propRecipe);
 
@@ -57,7 +60,6 @@ public:
 
     CollisionHandler* GetCollisionHandler() { return m_CollisionHandler.get(); };
     const CollisionHandler* GetCollisionHandler() const { return m_CollisionHandler.get(); };
-    TerrainHandler* GetTerrainHandler() { return m_TerrainHandler.get(); };
     const TerrainHandler* GetTerrainHandler() const { return m_TerrainHandler.get(); };
     const VistaHandler* GetVistaHandler() const { return m_VistaHandler.get(); };
 
@@ -78,6 +80,8 @@ public:
     f32 GetTimeScale() const { return m_TimeScale; };
     f32 GetGravityStrength() const { return m_GravityStrength; };
 
+    bool TryLoadZone(glm::ivec3 _position);
+
 private:
     const WorldObject* FindWorldObject(const WorldObjectRef& _objectRef) const;
 
@@ -87,7 +91,6 @@ private:
 
     bool IsZoneLoading(glm::ivec3 _coords) const;
     bool IsZoneLoaded(glm::ivec3 _coords) const;
-    void LoadZone(glm::ivec3 _position, glm::vec3 _dimensions);
 
 private:
     std::vector<WorldZone> m_ActiveZones;
@@ -104,6 +107,7 @@ private:
     std::vector<Player> m_ActivePlayers;
 
     std::shared_ptr<CollisionHandler> m_CollisionHandler;
+    std::shared_ptr<PlayerHandler> m_PlayerHandler;
     std::shared_ptr<TerrainHandler> m_TerrainHandler;
     std::shared_ptr<VistaHandler> m_VistaHandler;
 

@@ -24,6 +24,8 @@ public:
 
     f32 GetDensity(const WorldPosition& _position) const;
 
+    bool IsAllLoaded() const;
+
 private:
     World* m_World = nullptr;
 

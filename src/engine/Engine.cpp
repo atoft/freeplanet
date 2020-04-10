@@ -121,12 +121,6 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
         AddEvent(event);
     }
 
-    if (m_CommandLineArgs.m_Noclip)
-    {
-        const EngineEvent event = EngineEvent(EngineEvent::Type::UIRequestDebugMenu, m_CommandLineArgs.m_DebugUI);
-        AddEvent(event);
-    }
-
     sf::Clock clock;
     m_IsGameplayRunning = true;
     while (m_IsGameplayRunning) 
@@ -139,6 +133,9 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
                 + (m_RequestedWorld != nullptr? m_RequestedWorld->GetName() : "[none]"));
 
             m_World = m_RequestedWorld;
+
+            m_World->RegisterLocalPlayer(0);
+            m_World->HandleCommandLineArgs(m_CommandLineArgs);
         }
 
         if (m_IsCameraChangePending)
