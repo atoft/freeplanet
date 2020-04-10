@@ -16,6 +16,7 @@
 #include <src/tools/TestWorld.h>
 #include <src/world/World.h>
 #include <src/world/WorldObject.h>
+#include <src/world/planet/PlanetGeneration.h>
 
 Engine& Engine::GetInstance()
 {
@@ -273,6 +274,11 @@ void Engine::HandleEvent(EngineEvent _event)
     case EngineEvent::Type::EngineTestWorld:
     {
         m_RequestedWorld = Test::BuildTestWorld(_event.GetStringData());
+        break;
+    }
+    case EngineEvent::Type::EngineLoadPlanetFromSeed:
+    {
+        m_RequestedWorld = std::make_shared<World>("Generated World", PlanetGeneration::GenerateFromSeed(_event.GetIntData()));
         break;
     }
     case EngineEvent::Type::OnQuit:

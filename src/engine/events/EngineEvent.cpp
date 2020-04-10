@@ -21,6 +21,7 @@ const std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS =
             {EngineEvent::Type::WorldFreezeZones, true, "freeze", "Prevent the active zones from changing (0,1).", EngineEvent::ArgumentType::Int},
             {EngineEvent::Type::EngineRequestQuit, true, "quit", "Request to end any running tasks and quit the engine.", EngineEvent::ArgumentType::Void},
             {EngineEvent::Type::EngineTestWorld, true, "testworld", "Switch world to the specified test world.", EngineEvent::ArgumentType::String},
+            {EngineEvent::Type::EngineLoadPlanetFromSeed, true, "seed", "Generate a world with a planet based on the seed provided.", EngineEvent::ArgumentType::Int},
             {
                 EngineEvent::Type::RenderSetBoundingBoxes,
                 true,

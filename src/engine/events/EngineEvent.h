@@ -23,14 +23,17 @@ public:
         Help,
         UIRequestGameMenu,
         UIRequestDebugMenu,
+
         WorldRequestDestroyWorldObject,
         WorldSetCollision,
         WorldSetPlanetaryRotationSpeedScale,
         WorldSetTimeScale,
         WorldSetGravity,
         WorldFreezeZones,
+
         EngineRequestQuit,
         EngineTestWorld,
+        EngineLoadPlanetFromSeed,
 
         RenderSetBoundingBoxes,
         RenderSetWireframe,
