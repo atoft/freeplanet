@@ -14,6 +14,7 @@ enum class TerrainLevelOfDetail
 {
     ActiveZone,
     NearVista,
+    FarVista,
     Planetary
 };
 

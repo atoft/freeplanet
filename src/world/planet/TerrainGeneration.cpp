@@ -194,10 +194,12 @@ u32 GetMaxOctavesForLOD(TerrainLevelOfDetail _lod)
         return 4;
     case TerrainLevelOfDetail::NearVista:
         return 3;
+    case TerrainLevelOfDetail::FarVista:
+        return 3;
     case TerrainLevelOfDetail::Planetary:
         [[fallthrough]];
     default:
-        return 0;
+        return 1;
     }
 }
 

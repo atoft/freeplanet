@@ -115,12 +115,15 @@ void VistaHandler::Update(TimeMS _dt)
             params.m_LevelOfDetail = TerrainLevelOfDetail::NearVista;
             break;
         case 1:
+            params.m_LevelOfDetail = TerrainLevelOfDetail::FarVista;
+            break;
+        case 2:
             params.m_LevelOfDetail = TerrainLevelOfDetail::Planetary;
             break;
         default:
             break;
         }
-        static_assert(LODS_IN_USE_COUNT == 2);
+        static_assert(LODS_IN_USE_COUNT == 3);
 
         if (request.m_Index == glm::ivec3(0))
         {
@@ -135,7 +138,7 @@ void VistaHandler::Update(TimeMS _dt)
             // the previously suppressed area).
             // Keep a cached LOD version of the currently active zones to swap in on demand.
 
-            const f32 suppressScale = request.m_LOD == 0 ? 1.f : 3.f;
+            const f32 suppressScale = glm::pow(3.f, request.m_LOD);
 
             params.m_Terrain.m_SubtractiveElements.push_back(BoxTerrainElement(glm::vec3(1.5f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), glm::vec3(1.3f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), 0.f));
         }

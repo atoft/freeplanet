@@ -72,7 +72,7 @@ private:
 
     static std::array<u32, 3> VERTS_PER_EDGE_FOR_LOD;
     static std::array<u32, 3> ZONES_PER_EDGE_FOR_LOD;
-    static constexpr u32 LODS_IN_USE_COUNT = 2;
+    static constexpr u32 LODS_IN_USE_COUNT = 3;
 
     static_assert(VistaHandler::VERTS_PER_EDGE_FOR_LOD.size() == VistaHandler::ZONES_PER_EDGE_FOR_LOD.size());
     static_assert(VistaHandler::VERTS_PER_EDGE_FOR_LOD.size() >= LODS_IN_USE_COUNT);
