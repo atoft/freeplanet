@@ -12,8 +12,7 @@
 #include <src/graphics/ui/UIDisplay.h>
 #include <src/world/World.h>
 #include <src/tools/MathsHelpers.h>
-
-static const glm::ivec2 DEFAULT_RES = glm::ivec2(1920,1080);
+#include <src/graphics/ui/menus/UIConstants.h>
 
 glm::ivec2 UIDrawInterface::GetDisplayResolution() const
 {
@@ -57,8 +56,8 @@ void UIDrawInterface::DrawString(
 
     sfText.setCharacterSize(scale);
     sfText.setPosition(
-            _exactPixels ? _position.x : (_position.x / DEFAULT_RES.x) * m_UIDisplay->m_Window->getSize().x,
-            _exactPixels ? _position.y : (_position.y / DEFAULT_RES.y) * m_UIDisplay->m_Window->getSize().y);
+            _exactPixels ? _position.x : (_position.x / UIConstants::UIResolution.x) * m_UIDisplay->m_Window->getSize().x,
+            _exactPixels ? _position.y : (_position.y / UIConstants::UIResolution.y) * m_UIDisplay->m_Window->getSize().y);
 
     sfText.setFillColor(
             sf::Color(
@@ -121,8 +120,8 @@ void UIDrawInterface::DrawSpriteFromDisk(glm::vec2 _position, glm::vec2 _scale, 
         return;
     }
     sf::Sprite sprite;
-    sprite.setOrigin((_position.x / DEFAULT_RES.x) * m_UIDisplay->m_Window->getSize().x,
-                     (_position.y / DEFAULT_RES.y) * m_UIDisplay->m_Window->getSize().y);
+    sprite.setOrigin((_position.x / UIConstants::UIResolution.x) * m_UIDisplay->m_Window->getSize().x,
+                     (_position.y / UIConstants::UIResolution.y) * m_UIDisplay->m_Window->getSize().y);
 
     sprite.setScale(1.f,1.f);//(_scale.x / DEFAULT_RES.x) * m_UIDisplay->m_Window->getSize().x,(_scale.y / DEFAULT_RES.y) * m_UIDisplay->m_Window->getSize().y);
     sprite.setTexture(splashBg);
@@ -184,15 +183,15 @@ void UIDrawInterface::DebugDrawAABB(glm::ivec3 zoneCoordinates, const glm::vec3&
 glm::uvec2 UIDrawInterface::GetScaledVector(u32 x, u32 y) const
 {
     glm::uvec2 result;
-    result.x = (static_cast<f32>(x) / static_cast<f32>(DEFAULT_RES.x)) * m_UIDisplay->m_Window->getSize().x;
-    result.y = (static_cast<f32>(y) / static_cast<f32>(DEFAULT_RES.y)) * m_UIDisplay->m_Window->getSize().y;
+    result.x = (static_cast<f32>(x) / static_cast<f32>(UIConstants::UIResolution.x)) * m_UIDisplay->m_Window->getSize().x;
+    result.y = (static_cast<f32>(y) / static_cast<f32>(UIConstants::UIResolution.y)) * m_UIDisplay->m_Window->getSize().y;
     return result;
 }
 
 sf::Vector2f UIDrawInterface::GetSFMLScaledVector(u32 x, u32 y) const
 {
     sf::Vector2f result;
-    result.x = (static_cast<f32>(x) / static_cast<f32>(DEFAULT_RES.x)) * m_UIDisplay->m_Window->getSize().x;
-    result.y = (static_cast<f32>(y) / static_cast<f32>(DEFAULT_RES.y)) * m_UIDisplay->m_Window->getSize().y;
+    result.x = (static_cast<f32>(x) / static_cast<f32>(UIConstants::UIResolution.x)) * m_UIDisplay->m_Window->getSize().x;
+    result.y = (static_cast<f32>(y) / static_cast<f32>(UIConstants::UIResolution.y)) * m_UIDisplay->m_Window->getSize().y;
     return result;
 }
