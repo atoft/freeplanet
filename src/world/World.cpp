@@ -335,10 +335,7 @@ void World::UpdateActiveZones()
                     for (s32 x = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x; x <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x; ++x)
                     {
                         const glm::ivec3 coords = playerZone + glm::ivec3(x, y, z);
-                        if (!IsZoneLoaded(coords) && !IsZoneLoading(coords))
-                        {
-                            TryLoadZone(coords);
-                        }
+                        RequestZone(coords);
                     }
                 }
             }
@@ -357,6 +354,16 @@ void World::SendWorldEvents()
     {
         m_TerrainHandler->HandleWorldEvent(event);
     }
+}
+
+bool World::RequestZone(glm::ivec3 _position)
+{
+    if (IsZoneLoaded(_position) || IsZoneLoading(_position))
+    {
+        return true;
+    }
+
+    return TryLoadZone(_position);
 }
 
 bool World::TryLoadZone(glm::ivec3 _position)

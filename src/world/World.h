@@ -82,7 +82,7 @@ public:
     f32 GetTimeScale() const { return m_TimeScale; };
     f32 GetGravityStrength() const { return m_GravityStrength; };
 
-    bool TryLoadZone(glm::ivec3 _position);
+    bool RequestZone(glm::ivec3 _position);
 
 private:
     const WorldObject* FindWorldObject(const WorldObjectRef& _objectRef) const;
@@ -90,6 +90,8 @@ private:
     void TransferEntitiesBetweenZones();
     void UpdateActiveZones();
     void SendWorldEvents();
+
+    bool TryLoadZone(glm::ivec3 _position);
 
     bool IsZoneLoading(glm::ivec3 _coords) const;
     bool IsZoneLoaded(glm::ivec3 _coords) const;

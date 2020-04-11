@@ -22,9 +22,9 @@ void PlayerHandler::Update()
         {
         case RequestState::WaitingToLoadZone:
         {
-            const bool isLoading = m_World->TryLoadZone(request.m_Zone);
+            const bool isLoadingOrLoaded = m_World->RequestZone(request.m_Zone);
 
-            if (isLoading)
+            if (isLoadingOrLoaded)
             {
                 request.m_State = RequestState::WaitingForZone;
             }
@@ -32,15 +32,10 @@ void PlayerHandler::Update()
         }
         case RequestState::WaitingForZone:
         {
-            for (WorldZone& zone : m_World->GetActiveZones())
+            if (m_World->FindZoneAtCoordinates(request.m_Zone) != nullptr)
             {
-                if (zone.GetCoordinates() == request.m_Zone)
-                {
-                    request.m_State = RequestState::WaitingForTerrain;
-                    break;
-                }
+                request.m_State = RequestState::WaitingForTerrain;
             }
-
             break;
         }
         case RequestState ::WaitingForTerrain:
@@ -49,17 +44,17 @@ void PlayerHandler::Update()
 
             if (isTerrainLoaded)
             {
-                for (WorldZone& zone : m_World->GetActiveZones())
-                {
-                    if (zone.GetCoordinates() == request.m_Zone)
-                    {
-                        SpawnPlayer(request, zone);
+                WorldZone* zone = m_World->FindZoneAtCoordinates(request.m_Zone);
 
-                        m_Requests.erase(m_Requests.begin() + (requestIdx - 1));
-                    }
+                // We might hit this once there are multiple players. In that case need to fix World
+                // to not unload zones if there's a player requesting them.
+                assert(zone != nullptr);
 
-                    break;
-                }
+                SpawnPlayer(request, *zone);
+
+                m_Requests.erase(m_Requests.begin() + (requestIdx - 1));
+
+                break;
             }
 
             break;
@@ -79,7 +74,7 @@ void PlayerHandler::RegisterLocalPlayer(u32 _index)
         // TODO get from planet.
         spawnZone = glm::ivec3(0, 32, 0);
     }
-    
+
     m_Requests.push_back({spawnZone, _index, RequestState::WaitingToLoadZone});
 }
 
