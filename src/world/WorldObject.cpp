@@ -36,7 +36,6 @@ glm::vec3 WorldObject::GetPosition() const
 
 void WorldObject::SetPosition(const glm::vec3 &m_Position)
 {
-    //WorldObject::m_Position = m_Position;
     m_ZoneTransform[3][0] = m_Position.x / m_ZoneTransform[3][3];
     m_ZoneTransform[3][1] = m_Position.y / m_ZoneTransform[3][3];
     m_ZoneTransform[3][2] = m_Position.z / m_ZoneTransform[3][3];
@@ -103,27 +102,12 @@ void WorldObject::Update(TimeMS _delta)
     assert(m_ZoneTransform[3][3] == 1.f);
 }
 
-void WorldObject::OnMouseInput(float _mouseX, float _mouseY)
-{
-    LogError("Not implemented.");
-}
-
-void WorldObject::OnButtonInput(InputType _type)
-{
-    LogError("Not implemented.");
-}
-
 WorldObject::WorldObject(World *_ownerWorld)
 {
     m_Name = "Unnamed WorldObject";
 
     m_World = _ownerWorld;
     assert(m_World != nullptr);
-
-    m_PlayerComponentRef = REF_INVALID;
-    m_CollisionComponentRef  = REF_INVALID;
-    m_CameraComponentRef = REF_INVALID;
-    m_RenderComponentRef = REF_INVALID;
 
     m_ZoneTransform = glm::mat4x4(1.f);
     m_ZoneTransform[3][3] = 1.f;
@@ -139,7 +123,7 @@ void WorldObject::SetName(std::string _name)
     m_Name = _name;
 }
 
-const std::string &WorldObject::GetName() const
+const std::string& WorldObject::GetName() const
 {
     return m_Name;
 }
@@ -152,44 +136,4 @@ glm::vec3 WorldObject::GetPreviousPosition() const
 WorldPosition WorldObject::GetWorldPosition() const
 {
     return { m_SelfRef.m_ZoneCoordinates, GetPosition() };
-}
-
-const BipedComponent* WorldObject::GetBipedComponent() const
-{
-    return GetWorldZone()->FindBipedComponent(m_PlayerComponentRef);
-}
-
-const ColliderComponent* WorldObject::GetColliderComponent() const
-{
-    return GetWorldZone()->FindColliderComponent(m_CollisionComponentRef);
-}
-
-const FreelookCameraComponent* WorldObject::GetFreelookCameraComponent() const
-{
-    return GetWorldZone()->FindCameraComponent(m_CameraComponentRef);
-}
-
-const RenderComponent* WorldObject::GetRenderComponent() const
-{
-    return GetWorldZone()->FindRenderComponent(m_RenderComponentRef);
-}
-
-BipedComponent* WorldObject::GetBipedComponent()
-{
-    return GetWorldZone()->FindBipedComponent(m_PlayerComponentRef);
-}
-
-ColliderComponent* WorldObject::GetColliderComponent()
-{
-    return GetWorldZone()->FindColliderComponent(m_CollisionComponentRef);
-}
-
-FreelookCameraComponent* WorldObject::GetFreelookCameraComponent()
-{
-    return GetWorldZone()->FindCameraComponent(m_CameraComponentRef);
-}
-
-RenderComponent* WorldObject::GetRenderComponent()
-{
-    return GetWorldZone()->FindRenderComponent(m_RenderComponentRef);
 }

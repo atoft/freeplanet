@@ -176,7 +176,7 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
         sceneToRender.m_AmbientLight.m_Color = world->GetEnvironmentState().GetAmbientColor();
         sceneToRender.m_AmbientLight.m_Intensity = world->GetEnvironmentState().GetAmbientIntensity();
 
-        for (const RenderComponent& component : zone.GetRenderComponents())
+        for (const RenderComponent& component : zone.GetComponents<RenderComponent>())
         {
             const WorldObject* worldObject = component.GetOwnerObject();
             assert(worldObject != nullptr);
@@ -293,7 +293,7 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* world, const Freelook
 
         if (m_BoundingBoxMode == BoundingBoxMode::Components)
         {
-            for (const ColliderComponent& collider : zone.GetColliderComponents())
+            for (const ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
             {
                 const WorldObject* worldObject = collider.GetOwnerObject();
                 assert(worldObject != nullptr);

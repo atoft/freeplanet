@@ -14,6 +14,7 @@
 #include <src/world/WorldObjectID.h>
 #include <src/world/WorldObjectRef.h>
 #include <src/world/WorldPosition.h>
+#include <src/world/ComponentConstants.h>
 
 class WorldZone;
 class World;
@@ -29,45 +30,32 @@ class WorldObject
 {
 public:
     template<typename T>
-    LocalComponentRef& GetComponentRef()
+    const LocalComponentRef& GetComponentRef() const
     {
-        if(std::is_same<T, BipedComponent>())
+        if constexpr (std::is_same<T, BipedComponent>())
         {
             return m_PlayerComponentRef;
         }
-        else if(std::is_same<T, ColliderComponent>())
+        else if constexpr (std::is_same<T, ColliderComponent>())
         {
             return m_CollisionComponentRef;
         }
-        else if(std::is_same<T, FreelookCameraComponent>())
+        else if constexpr (std::is_same<T, FreelookCameraComponent>())
         {
             return m_CameraComponentRef;
         }
-        else if(std::is_same<T, RenderComponent>())
+        else // if constexpr (std::is_same<T, RenderComponent>())
         {
             return m_RenderComponentRef;
         }
-
-        assert(false);
-        return m_RenderComponentRef;
+        static_assert(ComponentConstants::ComponentCount == 4);
     }
 
-
-    const BipedComponent* GetBipedComponent() const;
-
-    const ColliderComponent* GetColliderComponent() const;
-
-    const FreelookCameraComponent* GetFreelookCameraComponent() const;
-
-    const RenderComponent* GetRenderComponent() const;
-
-    BipedComponent* GetBipedComponent();
-
-    ColliderComponent* GetColliderComponent();
-
-    FreelookCameraComponent* GetFreelookCameraComponent();
-
-    RenderComponent* GetRenderComponent();
+    template<typename T>
+    LocalComponentRef& GetComponentRef()
+    {
+        return const_cast<LocalComponentRef&>(static_cast<const WorldObject*>(this)->GetComponentRef<T>());
+    }
 
     const WorldObjectRef& GetRef() const
     {
@@ -112,8 +100,6 @@ public:
     void SetScale(const glm::vec3 &_scale);
 
     void Update(TimeMS _delta);
-    void OnButtonInput(InputType _type);
-    void OnMouseInput(float _mouseX, float _mouseY);
 
     const glm::vec3 GetRightVector() const;
 
@@ -124,7 +110,6 @@ public:
 
     const glm::vec3 GetUpVector() const;
 
-private:
     WorldZone* GetWorldZone();
     const WorldZone* GetWorldZone() const;
 
@@ -140,8 +125,9 @@ private:
     glm::mat4 m_ZoneTransform;
     glm::mat4 m_PreviousZoneTransform;
 
-    LocalComponentRef m_PlayerComponentRef;
-    LocalComponentRef m_CollisionComponentRef;
-    LocalComponentRef m_CameraComponentRef;
-    LocalComponentRef m_RenderComponentRef;
+    LocalComponentRef m_PlayerComponentRef = REF_INVALID;
+    LocalComponentRef m_CollisionComponentRef = REF_INVALID;
+    LocalComponentRef m_CameraComponentRef = REF_INVALID;
+    LocalComponentRef m_RenderComponentRef = REF_INVALID;
+    static_assert(ComponentConstants::ComponentCount == 4);
 };

@@ -27,6 +27,7 @@ WorldZone::WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions)
     m_ColliderComponents.reserve(INITIAL_COMPONENT_COUNT);
     m_CameraComponents.reserve(INITIAL_COMPONENT_COUNT);
     m_RenderComponents.reserve(INITIAL_COMPONENT_COUNT);
+    static_assert(ComponentConstants::ComponentCount == 4);
 
     // TODO either remove this requirement or replace dimensions with f32
     assert(_dimensions.x == _dimensions.y && _dimensions.y == _dimensions.z);
@@ -44,6 +45,7 @@ void WorldZone::OnRemovedFromWorld()
         DestroyComponentOfObject(m_ColliderComponents, object.GetWorldObjectID(), true);
         DestroyComponentOfObject(m_CameraComponents, object.GetWorldObjectID(), true);
         DestroyComponentOfObject(m_RenderComponents, object.GetWorldObjectID(), true);
+        static_assert(ComponentConstants::ComponentCount == 4);
     }
 
     m_TerrainComponent.m_DynamicMesh.RequestDestruction();
@@ -162,8 +164,6 @@ bool WorldZone::TransferWorldObjectOutOfZone(WorldObjectID _objectID)
 
 bool WorldZone::DestroyWorldObject_Internal(WorldObjectID _objectID, bool _removedFromWorld)
 {
-    // TODO queue all destructions to end of frame to avoid references becoming invalid
-
     WorldObject* swapObject = m_OwnerWorld->GetWorldObject(_objectID);
     if (swapObject == nullptr || swapObject->GetRef().m_ZoneCoordinates != m_Coordinates)
     {
@@ -177,7 +177,7 @@ bool WorldZone::DestroyWorldObject_Internal(WorldObjectID _objectID, bool _remov
     DestroyComponentOfObject(m_ColliderComponents, _objectID, _removedFromWorld);
     DestroyComponentOfObject(m_CameraComponents, _objectID, _removedFromWorld);
     DestroyComponentOfObject(m_RenderComponents, _objectID, _removedFromWorld);
-
+    static_assert(ComponentConstants::ComponentCount == 4);
 
     WorldObjectRef ref = swapObject->GetRef();
     *swapObject = m_WorldObjects.back();
@@ -199,24 +199,17 @@ void WorldZone::Update(TimeMS delta)
 {
     ProfileCurrentFunction();
 
-    for (auto& object : m_WorldObjects)
+    for (WorldObject& object : m_WorldObjects)
     {
         object.Update(delta);
     }
 
+    // TODO finish removing Update methods from components.
     for (auto& component : m_BipedComponents)
     {
         component.Update(delta);
     }
-    for (auto& component : m_ColliderComponents)
-    {
-        component.Update(delta);
-    }
     for (auto& component : m_CameraComponents)
-    {
-        component.Update(delta);
-    }
-    for (auto& component : m_RenderComponents)
     {
         component.Update(delta);
     }

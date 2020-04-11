@@ -17,7 +17,7 @@ void UITerrainDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _world
 
     for (const WorldZone& zone : _world->GetActiveZones())
     {
-        for (const BipedComponent& component : zone.GetBipedComponents())
+        for (const BipedComponent& component : zone.GetComponents<BipedComponent>())
         {
             std::string displayString;
 

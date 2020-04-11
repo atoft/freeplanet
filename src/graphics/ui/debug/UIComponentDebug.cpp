@@ -23,7 +23,7 @@ void UIComponentDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _wor
 
         std::string objectList = "WorldObjects in this zone: \n";
 
-        for (const auto& component : zone.GetBipedComponents())
+        for (const auto& component : zone.GetComponents<BipedComponent>())
         {
             component.DebugDraw(_display);
         }
@@ -35,7 +35,7 @@ void UIComponentDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _wor
 
         objectList += "\nMovable ColliderComponents in this zone: \n";
         u32 idx = 0;
-        for (const auto& component : zone.GetColliderComponents())
+        for (const auto& component : zone.GetComponents<ColliderComponent>())
         {
             if (component.m_MovementType != MovementType::Movable)
             {

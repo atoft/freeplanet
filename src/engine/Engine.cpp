@@ -17,6 +17,7 @@
 #include <src/world/World.h>
 #include <src/world/WorldObject.h>
 #include <src/world/planet/PlanetGeneration.h>
+#include <src/world/ComponentAccess.h>
 
 Engine& Engine::GetInstance()
 {
@@ -198,7 +199,7 @@ const FreelookCameraComponent* Engine::GetActiveCamera()
         return nullptr;
     }
 
-    return cameraObject->GetFreelookCameraComponent();
+    return ComponentAccess::GetComponent<FreelookCameraComponent>(*cameraObject);
 }
 
 void Engine::RunFrame(TimeMS delta)
@@ -271,6 +272,7 @@ void Engine::HandleEvent(EngineEvent _event)
     case EngineEvent::Type::EngineTestWorld:
     {
         m_RequestedWorld = Test::BuildTestWorld(_event.GetStringData());
+        m_UIDisplay->CloseGameMenu();
         break;
     }
     case EngineEvent::Type::EngineLoadPlanetFromSeed:

@@ -231,38 +231,11 @@ void World::TransferEntitiesBetweenZones()
             WorldObject& destinationObject = destinationZone->GetWorldObjects().back();
             destinationObject.SetName(destinationObject.GetName());
 
-            BipedComponent* bipedComponent = pendingTransfer.m_Object->GetBipedComponent();
-            if (bipedComponent != nullptr)
-            {
-                destinationZone->GetBipedComponents().push_back(*bipedComponent);
-                destinationObject.GetComponentRef<BipedComponent>() = destinationZone->GetBipedComponents().size() - 1;
-            }
-
-            ColliderComponent* colliderComponent = pendingTransfer.m_Object->GetColliderComponent();
-            if (colliderComponent != nullptr)
-            {
-                destinationZone->GetColliderComponents().push_back(*colliderComponent);
-                destinationObject.GetComponentRef<ColliderComponent>() =
-                        destinationZone->GetColliderComponents().size() - 1;
-            }
-
-            FreelookCameraComponent* cameraComponent = pendingTransfer.m_Object->GetFreelookCameraComponent();
-            if (cameraComponent != nullptr)
-            {
-                destinationZone->GetCameraComponents().push_back(*cameraComponent);
-                destinationObject.GetComponentRef<FreelookCameraComponent>() =
-                        destinationZone->GetCameraComponents().size() - 1;
-            }
-
-            RenderComponent* renderComponent = pendingTransfer.m_Object->GetRenderComponent();
-            if (renderComponent != nullptr)
-            {
-                destinationZone->GetRenderComponents().push_back(*renderComponent);
-                destinationObject.GetComponentRef<RenderComponent>() =
-                        destinationZone->GetRenderComponents().size() - 1;
-            }
-
-            // TODO Other components
+            TransferComponent<BipedComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
+            TransferComponent<ColliderComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
+            TransferComponent<FreelookCameraComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
+            TransferComponent<RenderComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
+            static_assert(ComponentConstants::ComponentCount == 4);
 
             glm::vec3 positionOffset =
                     static_cast<glm::vec3>(destinationZone->GetCoordinates() - sourceZone->GetCoordinates()) *

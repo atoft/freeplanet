@@ -24,13 +24,13 @@ void CollisionHandler::Update(TimeMS _dt)
 
     for(WorldZone& zone : m_World->GetActiveZones())
     {
-        if(zone.GetColliderComponents().empty())
+        if(zone.GetComponents<ColliderComponent>().empty())
         {
             continue;
         }
 
         // Prepare colliders
-        for(ColliderComponent& collider : zone.GetColliderComponents())
+        for(ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
         {
             collider.m_CollisionsLastFrame.clear();
 
@@ -65,12 +65,12 @@ void CollisionHandler::Update(TimeMS _dt)
         }
 
         // Collision between WorldObjects
-        for(u32 firstIdx = 0; firstIdx < zone.GetColliderComponents().size() - 1; ++firstIdx)
+        for(u32 firstIdx = 0; firstIdx < zone.GetComponents<ColliderComponent>().size() - 1; ++firstIdx)
         {
-            for(u32 secondIdx = firstIdx + 1; secondIdx < zone.GetColliderComponents().size(); ++secondIdx)
+            for(u32 secondIdx = firstIdx + 1; secondIdx < zone.GetComponents<ColliderComponent>().size(); ++secondIdx)
             {
-                ColliderComponent& collider1 = zone.GetColliderComponents()[firstIdx];
-                ColliderComponent& collider2 = zone.GetColliderComponents()[secondIdx];
+                ColliderComponent& collider1 = zone.GetComponents<ColliderComponent>()[firstIdx];
+                ColliderComponent& collider2 = zone.GetComponents<ColliderComponent>()[secondIdx];
 
                 if(   collider1.m_MovementType == MovementType::Fixed
                    && collider2.m_MovementType == MovementType::Fixed)
@@ -123,7 +123,7 @@ void CollisionHandler::Update(TimeMS _dt)
         }
 
         // Collision with terrain
-        for(ColliderComponent& collider : zone.GetColliderComponents())
+        for(ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
         {
             if(collider.m_MovementType == MovementType::Fixed)
             {
@@ -246,7 +246,7 @@ void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
     u32 collisionCount = 0;
     for (const WorldZone& zone : m_World->GetActiveZones())
     {
-        for (const ColliderComponent& collider : zone.GetColliderComponents())
+        for (const ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
         {
             const WorldObject* owner = collider.GetOwnerObject();
 

@@ -8,6 +8,7 @@
 
 #include <src/tools/globals.h>
 #include <src/world/terrain/TerrainComponent.h>
+#include <src/world/ComponentConstants.h>
 #include <src/world/WorldObject.h>
 
 #include <src/world/BipedComponent.h>
@@ -44,69 +45,52 @@ public:
     void OnMouseInput(f32 _mouseX, f32 _mouseY);
     void OnRemovedFromWorld();
 
-    const BipedComponent* FindBipedComponent(LocalComponentRef _ref) const
+    template<typename T>
+    const T* FindComponent(LocalComponentRef _ref) const
     {
-        if(_ref < m_BipedComponents.size())
+        if(_ref < GetComponents<T>().size())
         {
-            return &m_BipedComponents[_ref];
+            return &GetComponents<T>()[_ref];
         }
         return nullptr;
     }
 
-    const ColliderComponent* FindColliderComponent(LocalComponentRef _ref) const
+    template<typename T>
+    T* FindComponent(LocalComponentRef _ref)
     {
-        if(_ref < m_ColliderComponents.size())
+        return const_cast<T*>(static_cast<const WorldZone*>(this)->FindComponent<T>(_ref));
+    }
+
+    template<typename T>
+    const std::vector<T>& GetComponents() const
+    {
+        if constexpr (std::is_same<T, BipedComponent>())
         {
-            return &m_ColliderComponents[_ref];
+            return m_BipedComponents;
         }
-        return nullptr;
-    }
-
-    const FreelookCameraComponent* FindCameraComponent(LocalComponentRef _ref) const
-    {
-        if(_ref < m_CameraComponents.size())
+        else if constexpr (std::is_same<T, ColliderComponent>())
         {
-            return &m_CameraComponents[_ref];
+            return m_ColliderComponents;
         }
-        return nullptr;
-    }
-
-    const RenderComponent* FindRenderComponent(LocalComponentRef _ref) const
-    {
-        if(_ref < m_RenderComponents.size())
+        else if constexpr (std::is_same<T, FreelookCameraComponent>())
         {
-            return &m_RenderComponents[_ref];
+            return m_CameraComponents;
         }
-        return nullptr;
+        else //if constexpr (std::is_same<T, RenderComponent>())
+        {
+            return m_RenderComponents;
+        }
+        static_assert(ComponentConstants::ComponentCount == 4);
     }
 
-    BipedComponent* FindBipedComponent(LocalComponentRef _ref)
+    template<typename T>
+    std::vector<T>& GetComponents()
     {
-        return const_cast<BipedComponent*>(static_cast<const WorldZone*>(this)->FindBipedComponent(_ref));
-    }
-    ColliderComponent* FindColliderComponent(LocalComponentRef _ref)
-    {
-        return const_cast<ColliderComponent*>(static_cast<const WorldZone*>(this)->FindColliderComponent(_ref));
-    }
-    FreelookCameraComponent* FindCameraComponent(LocalComponentRef _ref)
-    {
-        return const_cast<FreelookCameraComponent*>(static_cast<const WorldZone*>(this)->FindCameraComponent(_ref));
-    }
-    RenderComponent* FindRenderComponent(LocalComponentRef _ref)
-    {
-        return const_cast<RenderComponent*>(static_cast<const WorldZone*>(this)->FindRenderComponent(_ref));
+        return const_cast<std::vector<T>&>(static_cast<const WorldZone*>(this)->GetComponents<T>());
+
     }
 
-    const std::vector<RenderComponent>& GetRenderComponents() const { return m_RenderComponents; };
-    const std::vector<BipedComponent>& GetBipedComponents() const { return m_BipedComponents; };
-    const std::vector<ColliderComponent>& GetColliderComponents() const { return m_ColliderComponents; };
-    const std::vector<FreelookCameraComponent>& GetCameraComponents() const { return m_CameraComponents; };
     const std::vector<WorldObject>& GetWorldObjects() const { return m_WorldObjects; };
-
-    std::vector<RenderComponent>& GetRenderComponents() { return m_RenderComponents; };
-    std::vector<BipedComponent>& GetBipedComponents() { return m_BipedComponents; };
-    std::vector<ColliderComponent>& GetColliderComponents() { return m_ColliderComponents; };
-    std::vector<FreelookCameraComponent>& GetCameraComponents() { return m_CameraComponents; };
     std::vector<WorldObject>& GetWorldObjects() { return m_WorldObjects; };
 
     const TerrainComponent& GetTerrainComponent() const { return m_TerrainComponent; };
@@ -122,8 +106,6 @@ private:
 private:
     static constexpr u32 INITIAL_WORLDOBJECT_COUNT = 64;
     static constexpr u32 INITIAL_COMPONENT_COUNT = 32;
-    static constexpr u32 MAX_WORLDOBJECT_COUNT = 128;
-    static constexpr u32 MAX_COMPONENT_COUNT = 128;
 
     glm::ivec3 m_Coordinates;
     glm::vec3 m_Dimensions;
@@ -138,4 +120,5 @@ private:
     std::vector<ColliderComponent>         m_ColliderComponents;
     std::vector<FreelookCameraComponent>   m_CameraComponents;
     std::vector<RenderComponent>           m_RenderComponents;
+    static_assert(ComponentConstants::ComponentCount == 4);
 };

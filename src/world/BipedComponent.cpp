@@ -3,6 +3,7 @@
 //
 
 #include "BipedComponent.h"
+#include "ComponentAccess.h"
 
 #include <src/engine/Engine.h>
 #include <src/profiling/Profiler.h>
@@ -92,7 +93,9 @@ void BipedComponent::Update(TimeMS _delta)
     m_IsSprinting = false;
 
     // TODO Only do the raycast if an action is requested. For now it's every frame for the debug display.
-    const glm::vec3 lookDirection = self->GetFreelookCameraComponent()->GetLookDirection();
+    const FreelookCameraComponent* camera = ComponentAccess::GetComponent<FreelookCameraComponent>(*self);
+
+    const glm::vec3 lookDirection = camera->GetLookDirection();
     std::optional<f32> rayIntersect = m_World->GetCollisionHandler()->DoRaycast(self->GetWorldPosition(), lookDirection);
 
     if (rayIntersect.has_value())
@@ -202,7 +205,7 @@ bool BipedComponent::IsStandingOnGround(const WorldObject* self) const
 {
     bool isStanding = false;
 
-    const ColliderComponent* collider = self->GetColliderComponent();
+    const ColliderComponent* collider = ComponentAccess::GetComponent<ColliderComponent>(*self);
 
     if(collider != nullptr)
     {
@@ -236,9 +239,11 @@ void BipedComponent::DebugDraw(UIDrawInterface& _interface) const
 
     _interface.DrawString(glm::ivec2(20, 20), debugInfoString, 32.f);
 
+    const FreelookCameraComponent* camera = ComponentAccess::GetComponent<FreelookCameraComponent>(*self);
+
     // TODO don't we have a better way to ask for our zone?
     _interface.DebugDrawSphere(GetOwnerObject()->GetWorldPosition().m_ZoneCoordinates,
                                GetOwnerObject()->GetPosition()
-                                   + GetOwnerObject()->GetFreelookCameraComponent()->GetLookDirection() * m_DebugLastRaycastDistance,
+                                   + camera->GetLookDirection() * m_DebugLastRaycastDistance,
                                1.f);
 }

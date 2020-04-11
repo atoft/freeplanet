@@ -10,6 +10,7 @@
 #include <src/engine/loader/DynamicLoaderCollection.h>
 #include <src/engine/events/EngineEvent.h>
 #include <src/engine/StartupHelpers.h>
+#include <src/world/ComponentAccess.h>
 #include <src/world/PlayerHandler.h>
 #include <src/world/WorldZone.h>
 #include <src/world/WorldObjectDirectory.h>
@@ -91,6 +92,19 @@ private:
 
     bool IsZoneLoading(glm::ivec3 _coords) const;
     bool IsZoneLoaded(glm::ivec3 _coords) const;
+
+
+    template<typename T>
+    void TransferComponent(WorldObject& _sourceObject, WorldZone& _destinationZone, WorldObject& _destinationObject)
+    {
+        T* component = ComponentAccess::GetComponent<T>(_sourceObject);
+
+        if (component != nullptr)
+        {
+            _destinationZone.GetComponents<T>().push_back(*component);
+            _destinationObject.GetComponentRef<BipedComponent>() = _destinationZone.GetComponents<T>().size() - 1;
+        }
+    }
 
 private:
     std::vector<WorldZone> m_ActiveZones;
