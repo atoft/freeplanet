@@ -34,7 +34,7 @@ public:
     ~RenderHandler();
 
     void HandleEvent(EngineEvent _event);
-    void Render(const World *world, const FreelookCameraComponent *c, const std::shared_ptr<UIDisplay> _uiDisplay);
+    void Render(const World* _world, std::shared_ptr<const UIDisplay> _uiDisplay);
 
 private:
     void GenerateScenes(const World *world, const FreelookCameraComponent *c, std::vector<Renderable::Scene>& _scenes);

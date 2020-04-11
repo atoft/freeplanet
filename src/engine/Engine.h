@@ -32,8 +32,6 @@ public:
 
     s32 Run(const CommandLineArgs& _commandLineArgs);
 
-    void RequestCameraChange(WorldObjectID _cameraObjectID);
-    void OnCameraDestroyed(WorldObjectID _cameraObjectID);
     void RequestQuit();
     void AddEvent(EngineEvent _event);
 
@@ -47,9 +45,6 @@ private:
     void RunFrame(TimeMS delta);
     void HandleEvents(TimeMS _delta);
     void HandleEvent(EngineEvent _event);
-
-    void ChangeCamera();
-    const FreelookCameraComponent* GetActiveCamera();
 
 private:
     CommandLineArgs m_CommandLineArgs;
@@ -66,10 +61,6 @@ private:
     EventHandler<EngineEvent> m_EventHandler;
 
     u64 m_FrameCount = 0;
-
-    WorldObjectID m_ActiveCameraObject = WORLDOBJECTID_INVALID;
-    WorldObjectID m_RequestedCameraObject = WORLDOBJECTID_INVALID;
-    bool m_IsCameraChangePending = false;
 
     Input* m_Input = nullptr;
 

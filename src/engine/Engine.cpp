@@ -98,7 +98,7 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     m_UIDisplay = std::make_shared<UIDisplay>(m_Window.get());
     m_UIDisplay->UpdateSplashScreen();
 
-    m_RenderHandler->Render(nullptr, nullptr, m_UIDisplay);
+    m_RenderHandler->Render(nullptr, m_UIDisplay);
 
     if (m_CommandLineArgs.m_UseStandardInput)
     {
@@ -139,11 +139,6 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
             m_World->HandleCommandLineArgs(m_CommandLineArgs);
         }
 
-        if (m_IsCameraChangePending)
-        {
-            ChangeCamera();
-        }
-
         TimeMS delta = clock.getElapsedTime().asSeconds() * 1000.f;
         clock.restart();
 
@@ -180,28 +175,6 @@ void Engine::AddEvent(EngineEvent _event)
     m_EventHandler.PushEvent(_event);
 }
 
-const FreelookCameraComponent* Engine::GetActiveCamera()
-{
-    if (m_World == nullptr)
-    {
-        return nullptr;
-    }
-
-    if (m_ActiveCameraObject == WORLDOBJECTID_INVALID)
-    {
-        return nullptr;
-    }
-
-    const WorldObject* cameraObject = m_World->GetWorldObject(m_ActiveCameraObject);
-    if (cameraObject == nullptr)
-    {
-        LogError("Couldn't find the active camera in the world.");
-        return nullptr;
-    }
-
-    return ComponentAccess::GetComponent<FreelookCameraComponent>(*cameraObject);
-}
-
 void Engine::RunFrame(TimeMS delta)
 {
     // TODO Input to the World should go via Players
@@ -219,9 +192,7 @@ void Engine::RunFrame(TimeMS delta)
 
     HandleEvents(delta);
 
-    const FreelookCameraComponent* cameraComponent = GetActiveCamera();
-
-    m_RenderHandler->Render(m_World.get(), cameraComponent, m_UIDisplay);
+    m_RenderHandler->Render(m_World.get(), m_UIDisplay);
 
     ++m_FrameCount;
 }
@@ -291,38 +262,6 @@ void Engine::HandleEvent(EngineEvent _event)
     default:
         break;
     }
-}
-
-void Engine::RequestCameraChange(WorldObjectID _cameraObjectID)
-{
-    m_RequestedCameraObject = _cameraObjectID;
-    m_IsCameraChangePending = true;
-}
-
-void Engine::OnCameraDestroyed(WorldObjectID _cameraObjectID)
-{
-    if (m_ActiveCameraObject == _cameraObjectID)
-    {
-        m_ActiveCameraObject = WORLDOBJECTID_INVALID;
-    }
-    if (m_RequestedCameraObject == _cameraObjectID)
-    {
-        m_RequestedCameraObject = WORLDOBJECTID_INVALID;
-    }
-}
-
-void Engine::ChangeCamera()
-{
-    if (!m_IsGameplayRunning || !m_World)
-    {
-        LogError("Tried to set camera when no world gameplay is running.");
-        return;
-    }
-
-    LogMessage("Changing camera...");
-
-    m_ActiveCameraObject = m_RequestedCameraObject;
-    m_IsCameraChangePending = false;
 }
 
 bool Engine::IsInMenu() const

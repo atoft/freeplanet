@@ -74,6 +74,7 @@ public:
     bool IsPlayerInZone(glm::ivec3 _coords) const;
     std::vector<WorldObjectID> GetLocalPlayers() const;
     bool IsControlledByLocalPlayer(WorldObjectID _id) const;
+    const FreelookCameraComponent* GetLocalCamera() const;
 
     const Planet* GetPlanet() const { return m_Planet.has_value() ? &m_Planet.value() : nullptr; };
     const EnvironmentState& GetEnvironmentState() const { return m_EnvironmentState; };

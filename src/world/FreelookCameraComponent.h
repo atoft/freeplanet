@@ -24,12 +24,8 @@ public:
     glm::mat4 GetCameraZoneTransform() const;
     glm::vec3 GetLookDirection() const;
 
-    void RequestMakeActive();
-
 private:
     glm::vec3 m_AngularVelocity = glm::vec3();
 
     f32 m_VerticalRotation = 0.f;
-
-    bool m_MakeActive = false;
 };

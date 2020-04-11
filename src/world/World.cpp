@@ -470,6 +470,25 @@ bool World::IsControlledByLocalPlayer(WorldObjectID _id) const
     return false;
 }
 
+const FreelookCameraComponent* World::GetLocalCamera() const
+{
+    if (m_ActivePlayers.empty())
+    {
+        return nullptr;
+    }
+
+    // To support splitscreen, return a list of cameras here.
+    const WorldObject* worldObject = GetWorldObject(m_ActivePlayers[0].GetControlledWorldObjectID());
+
+    if (worldObject == nullptr)
+    {
+        return nullptr;
+    }
+
+    // To support players using a remote camera, add a controlled camera ID to the player struct.
+    return ComponentAccess::GetComponent<FreelookCameraComponent>(*worldObject);
+}
+
 void World::HandleEvent(EngineEvent _event)
 {
     switch (_event.GetType())

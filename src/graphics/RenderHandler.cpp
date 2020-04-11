@@ -88,7 +88,7 @@ void RenderHandler::HandleEvent(EngineEvent _event)
 
 }
 
-void RenderHandler::Render(const World* world, const FreelookCameraComponent* c, const std::shared_ptr<UIDisplay> _uiDisplay)
+void RenderHandler::Render(const World* _world, std::shared_ptr<const UIDisplay> _uiDisplay)
 {
     ProfileCurrentFunction();
 
@@ -100,13 +100,19 @@ void RenderHandler::Render(const World* world, const FreelookCameraComponent* c,
     std::vector<Renderable::Scene> pendingScenes;
     std::vector<Renderable::DrawableVariant> pendingUIElements;
 
-    if (world != nullptr && c != nullptr)
+    if (_world != nullptr)
     {
-        GenerateBackgroundScene(world, c, pendingScenes);
-        GenerateScenes(world, c, pendingScenes);
+        const FreelookCameraComponent* camera = _world->GetLocalCamera();
 
-        GenerateBoundingBoxScenes(world, c, _uiDisplay->m_Debug3DDrawingQueue, pendingScenes);
+        if (camera != nullptr)
+        {
+            GenerateBackgroundScene(_world, camera, pendingScenes);
+            GenerateScenes(_world, camera, pendingScenes);
+
+            GenerateBoundingBoxScenes(_world, camera, _uiDisplay->m_Debug3DDrawingQueue, pendingScenes);
+        }
     }
+
     if (_uiDisplay != nullptr)
     {
         pendingUIElements = _uiDisplay->m_DrawingQueue;

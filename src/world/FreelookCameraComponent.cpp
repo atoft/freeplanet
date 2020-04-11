@@ -13,12 +13,10 @@ FreelookCameraComponent::FreelookCameraComponent(World *ownerWorld, WorldObjectI
 {
     m_World = ownerWorld;
     m_WorldObjectID = _ownerID;
-    m_MakeActive = false;
 }
 
 void FreelookCameraComponent::OnRemovedFromWorld()
 {
-    Engine::GetInstance().OnCameraDestroyed(m_WorldObjectID);
 }
 
 void FreelookCameraComponent::OnMouseInput(float _mouseX, float _mouseY)
@@ -34,12 +32,6 @@ void FreelookCameraComponent::Update(TimeMS _delta)
     ProfileCurrentFunction();
 
     const glm::vec3 LOCAL_UP = glm::vec3(0,1,0);
-
-    if(m_MakeActive)
-    {
-        Engine::GetInstance().RequestCameraChange(m_WorldObjectID);
-        m_MakeActive = false;
-    }
 
     // Freelook left and right causes the parent object to rotate,
     // but up and down should only rotate the camera view
@@ -62,11 +54,6 @@ float FreelookCameraComponent::GetFarClipDistance() const
 const WorldObject* FreelookCameraComponent::GetParentWorldObject() const
 {
     return GetOwnerObject();
-}
-
-void FreelookCameraComponent::RequestMakeActive()
-{
-    m_MakeActive = true;
 }
 
 glm::mat4 FreelookCameraComponent::GetCameraZoneTransform() const

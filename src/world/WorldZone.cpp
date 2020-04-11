@@ -74,10 +74,7 @@ WorldObjectID WorldZone::ConstructPlayerInZone(std::string _name)
     newObject.GetComponentRef<ColliderComponent>() = m_ColliderComponents.size() - 1;
 
     m_CameraComponents.emplace_back(m_OwnerWorld, newID);
-    FreelookCameraComponent& cameraComponent = m_CameraComponents.back();
-    cameraComponent.RequestMakeActive();
     newObject.GetComponentRef<FreelookCameraComponent>() = m_CameraComponents.size() - 1;
-
 
     ComponentRef cameraRef;
     cameraRef.m_ZoneCoordinates = m_Coordinates;
