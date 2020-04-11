@@ -163,7 +163,7 @@ void UIDisplay::OnTextEntered(std::string _value)
         return;
     }
 
-    if (m_GameMenu != nullptr)
+    if (m_GameMenu != nullptr && !m_DisplayLog)
     {
         m_GameMenu->OnTextEntered(_value);
     }
@@ -173,7 +173,7 @@ void UIDisplay::OnTextEntered(std::string _value)
         m_DebugMenu->OnTextEntered(_value);
     }
 
-    if (m_Console != nullptr)
+    if (m_Console != nullptr && m_DisplayLog)
     {
         m_Console->OnTextEntered(_value);
     }
