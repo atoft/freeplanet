@@ -27,9 +27,6 @@ public:
 
     void Update(TimeMS delta);
 
-    WorldObjectID ConstructPlayerInZone(std::string _name);
-    void ConstructPropInZone(glm::vec3 _localCoordinates, const PropRecipe& _propRecipe);
-
     const WorldObject* GetWorldObject(LocalWorldObjectRef _ref) const;
     bool DestroyWorldObject(WorldObjectID _objectID);
     bool TransferWorldObjectOutOfZone(WorldObjectID _objectID);
@@ -87,7 +84,17 @@ public:
     std::vector<T>& GetComponents()
     {
         return const_cast<std::vector<T>&>(static_cast<const WorldZone*>(this)->GetComponents<T>());
+    }
 
+    template<typename T, typename... Args>
+    T& AddComponent(WorldObject& _object, Args... _args)
+    {
+        std::vector<T>& components = GetComponents<T>();
+        components.emplace_back(m_OwnerWorld, _object.GetWorldObjectID(), _args...);
+        _object.GetComponentRef<T>() = components.size() - 1;
+        assert(_object.GetWorldZone() == this);
+
+        return components.back();
     }
 
     const std::vector<WorldObject>& GetWorldObjects() const { return m_WorldObjects; };

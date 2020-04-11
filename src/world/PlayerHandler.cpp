@@ -80,12 +80,83 @@ void PlayerHandler::RegisterLocalPlayer(u32 _index)
 
 bool PlayerHandler::AreLocalPlayersSpawned() const
 {
-    return m_Requests.empty() && !m_World->GetLocalPlayers().empty();
+    return m_Requests.empty() && !m_LocalPlayers.empty();
 }
 
 void PlayerHandler::SpawnPlayer(const PlayerRequest& _request, WorldZone& _zone)
 {
-    // TODO handle the spawning here.
-    // TODO find a safe space to spawn in.
-    m_World->SpawnPlayerInWorldZone(_zone.GetCoordinates());
+    WorldObject& worldObject = m_World->ConstructWorldObject(_zone, "Player");
+    _zone.AddComponent<BipedComponent>(worldObject);
+    _zone.AddComponent<FreelookCameraComponent>(worldObject);
+
+    ColliderComponent& collider = _zone.AddComponent<ColliderComponent>(worldObject, CollisionPrimitiveType::OBB, MovementType::Movable);
+    collider.m_Bounds = glm::vec3(.5f, 1.f, .5f);
+    collider.m_KeepUpright = true;
+
+    Player player;
+    player.AttachWorldObject(worldObject.GetWorldObjectID());
+    m_LocalPlayers.push_back(player);
+
+    m_World->OnPlayerSpawned(worldObject);
+}
+
+bool PlayerHandler::IsPlayerInZone(glm::ivec3 _coords) const
+{
+    for (const Player& player : m_LocalPlayers)
+    {
+        WorldObjectID playerControlledObjectID = player.GetControlledWorldObjectID();
+
+        if (playerControlledObjectID != WORLDOBJECTID_INVALID)
+        {
+            return m_World->LocateWorldObject(playerControlledObjectID) == _coords;
+        }
+    }
+
+    return false;
+}
+
+std::vector<WorldObjectID> PlayerHandler::GetLocalPlayers() const
+{
+    std::vector<WorldObjectID> result;
+
+    for (const Player& player : m_LocalPlayers)
+    {
+        if (player.m_IsLocal)
+        {
+            result.push_back(player.GetControlledWorldObjectID());
+        }
+    }
+    return result;
+}
+
+bool PlayerHandler::IsControlledByLocalPlayer(WorldObjectID _id) const
+{
+    for (const Player& player : m_LocalPlayers)
+    {
+        if (player.m_IsLocal && player.GetControlledWorldObjectID() == _id)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+const FreelookCameraComponent* PlayerHandler::GetLocalCamera() const
+{
+    if (m_LocalPlayers.empty())
+    {
+        return nullptr;
+    }
+
+    // To support splitscreen, return a list of cameras here.
+    const WorldObject* worldObject = m_World->GetWorldObject(m_LocalPlayers[0].GetControlledWorldObjectID());
+
+    if (worldObject == nullptr)
+    {
+        return nullptr;
+    }
+
+    // To support players using a remote camera, add a controlled camera ID to the player struct.
+    return ComponentAccess::GetComponent<FreelookCameraComponent>(*worldObject);
 }

@@ -35,6 +35,10 @@ public:
 
     const WorldObject* GetWorldObject(WorldObjectID _objectID) const;
     WorldObject* GetWorldObject(WorldObjectID _objectID);
+
+    glm::ivec3 LocateWorldObject(WorldObjectID _objectID) const;
+
+    WorldObject& ConstructWorldObject(WorldZone& _zone, const std::string& _name);
     void DestroyWorldObject(WorldObjectID _objectID);
 
     WorldZone* FindZoneAtCoordinates(glm::ivec3 _zoneCoordinates);
@@ -45,7 +49,6 @@ public:
 
     void RegisterLocalPlayer(u32 _playerIndex);
 
-    void SpawnPlayerInWorldZone(glm::ivec3 _zoneCoordinates);
     void SpawnPropInWorldZone(const WorldPosition& _worldPosition, const PropRecipe& _propRecipe);
 
     std::string GetName();
@@ -53,16 +56,15 @@ public:
     void OnButtonInput(InputType _inputType);
     void OnMouseInput(f32 _mouseX, f32 _mouseY);
 
-    // TODO Neither of these should be public - this is because WorldObject management is not being consistently owned,
-    // instead it's spread between World and WorldZone. This needs to be fixed, but is also a bit dependent on how
-    // WorldObjects will generally be created outside of debugging.
-    WorldObjectID RegisterWorldObject(WorldObjectRef _objectRef) { return m_Directory.RegisterWorldObject(_objectRef); };
     void OnWorldObjectTransferred(WorldObjectID _objectID, WorldObjectRef _newLocation) { m_Directory.OnWorldObjectTransferred(_objectID, _newLocation); };
+
+    void OnPlayerSpawned(const WorldObject& _controlledObject);
 
     CollisionHandler* GetCollisionHandler() { return m_CollisionHandler.get(); };
     const CollisionHandler* GetCollisionHandler() const { return m_CollisionHandler.get(); };
     const TerrainHandler* GetTerrainHandler() const { return m_TerrainHandler.get(); };
     const VistaHandler* GetVistaHandler() const { return m_VistaHandler.get(); };
+    const PlayerHandler* GetPlayerHandler() const { return m_PlayerHandler.get(); };
 
     void HandleEvent(EngineEvent _event);
     void HandleCommandLineArgs(const CommandLineArgs& _args);
@@ -70,11 +72,6 @@ public:
     void AddWorldEvent(WorldEvent _event);
 
     void DebugDraw(UIDrawInterface& _interface) const;
-
-    bool IsPlayerInZone(glm::ivec3 _coords) const;
-    std::vector<WorldObjectID> GetLocalPlayers() const;
-    bool IsControlledByLocalPlayer(WorldObjectID _id) const;
-    const FreelookCameraComponent* GetLocalCamera() const;
 
     const Planet* GetPlanet() const { return m_Planet.has_value() ? &m_Planet.value() : nullptr; };
     const EnvironmentState& GetEnvironmentState() const { return m_EnvironmentState; };
@@ -120,8 +117,6 @@ private:
     WorldZoneRegion m_WorldBounds;
 
     WorldObjectDirectory m_Directory;
-
-    std::vector<Player> m_ActivePlayers;
 
     std::shared_ptr<CollisionHandler> m_CollisionHandler;
     std::shared_ptr<PlayerHandler> m_PlayerHandler;

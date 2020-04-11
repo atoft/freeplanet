@@ -30,7 +30,7 @@ void UIPlanetDebug::Draw(TimeMS _delta, UIDrawInterface& _display, const World* 
 
     // HACK as the zone from which we want to draw the arrow is not loaded, the debug draw function doesn't work.
     // Need to fix in the renderer to draw scenes that don't have loaded zones.
-    const WorldObjectID localPlayer = _world->GetLocalPlayers()[0];
+    const WorldObjectID localPlayer = _world->GetPlayerHandler()->GetLocalPlayers()[0];
     const WorldObject* player = _world->GetWorldObject(localPlayer);
     assert(player != nullptr);
 

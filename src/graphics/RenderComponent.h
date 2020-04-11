@@ -17,8 +17,8 @@ struct Triangle;
 class RenderComponent : public WorldObjectComponent
 {
 public:
-    RenderComponent(AssetHandle<StaticMesh> _mesh, AssetHandle<ShaderProgram> _shader, AssetHandle<Texture> _texture,
-                    World* _world, WorldObjectID _ownerID);
+    RenderComponent(World* _world, WorldObjectID _ownerID, AssetHandle<StaticMesh> _mesh, AssetHandle<ShaderProgram> _shader, AssetHandle<Texture> _texture
+                    );
 
     AssetHandle<ShaderProgram> GetShader() const { return m_Shader; };
     AssetHandle<Texture> GetTexture() const { return m_Texture; };

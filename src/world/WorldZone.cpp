@@ -51,77 +51,6 @@ void WorldZone::OnRemovedFromWorld()
     m_TerrainComponent.m_DynamicMesh.RequestDestruction();
 }
 
-WorldObjectID WorldZone::ConstructPlayerInZone(std::string _name)
-{
-    // TODO Make encapsulated methods for generic worldObject construction
-
-    m_WorldObjects.emplace_back(m_OwnerWorld);
-    WorldObject& newObject = m_WorldObjects.back();
-
-    // Create a unique reference for this WorldObject
-    newObject.GetRef().m_ZoneCoordinates = m_Coordinates;
-    newObject.GetRef().m_LocalRef = m_WorldObjects.size() - 1;
-
-    const WorldObjectID newID = m_OwnerWorld->RegisterWorldObject(newObject.GetRef());
-
-    newObject.SetWorldObjectID(newID);
-    newObject.SetName(_name);
-    newObject.SetInitialPosition(glm::vec3(0, 2, 0));
-
-    m_ColliderComponents.emplace_back(m_OwnerWorld, newID, CollisionPrimitiveType::OBB, MovementType::Movable);
-    m_ColliderComponents.back().m_Bounds = glm::vec3(.5f, 1.f, .5f);
-    m_ColliderComponents.back().m_KeepUpright = true;
-    newObject.GetComponentRef<ColliderComponent>() = m_ColliderComponents.size() - 1;
-
-    m_CameraComponents.emplace_back(m_OwnerWorld, newID);
-    newObject.GetComponentRef<FreelookCameraComponent>() = m_CameraComponents.size() - 1;
-
-    ComponentRef cameraRef;
-    cameraRef.m_ZoneCoordinates = m_Coordinates;
-    cameraRef.m_LocalRef = newObject.GetComponentRef<FreelookCameraComponent>();
-
-    m_BipedComponents.emplace_back(m_OwnerWorld, newID);
-    newObject.GetComponentRef<BipedComponent>() = m_BipedComponents.size() - 1;
-
-    return newID;
-}
-
-void WorldZone::ConstructPropInZone(glm::vec3 _localCoordinates, const PropRecipe& _propRecipe)
-{
-    m_WorldObjects.emplace_back(m_OwnerWorld);
-    WorldObject& newObject = m_WorldObjects.back();
-
-    // Create a unique reference for this WorldObject
-    newObject.GetRef().m_ZoneCoordinates = m_Coordinates;
-    newObject.GetRef().m_LocalRef = m_WorldObjects.size() - 1;
-
-    const WorldObjectID newID = m_OwnerWorld->RegisterWorldObject(newObject.GetRef());
-
-    newObject.SetWorldObjectID(newID);
-    newObject.SetName(_propRecipe.m_Name);
-    newObject.SetInitialPosition(_localCoordinates);
-
-    // Do we want this as a method on WorldObject, or do we not want euler angles to be generally used?
-    newObject.Rotate(glm::vec3(1,0,0), _propRecipe.m_PitchYawRoll.x);
-    newObject.Rotate(glm::vec3(0,1,0), _propRecipe.m_PitchYawRoll.y);
-    newObject.Rotate(glm::vec3(0,0,1), _propRecipe.m_PitchYawRoll.z);
-
-    // TODO Scale must be applied after rotation otherwise we will get a skew from non-uniform scales.
-    // Don't want to ban non-uniform scale as it's useful for testing so we should make the WorldObject API
-    // able to handle it correctly.
-    newObject.SetScale(_propRecipe.m_Scale);
-
-    m_ColliderComponents.emplace_back(m_OwnerWorld, newID, CollisionPrimitiveType::OBB, MovementType::Fixed);
-    newObject.GetComponentRef<ColliderComponent>() = m_ColliderComponents.size() - 1;
-
-    m_ColliderComponents.back().m_Bounds = _propRecipe.m_Scale / 2.f;
-
-    m_RenderComponents.emplace_back(AssetHandle<StaticMesh>(_propRecipe.m_MeshID),
-                                    AssetHandle<ShaderProgram>(_propRecipe.m_ShaderID),
-                                    AssetHandle<Texture>(_propRecipe.m_TextureID), m_OwnerWorld, newID);
-    newObject.GetComponentRef<RenderComponent>() = m_RenderComponents.size() - 1;
-}
-
 template<typename Type>
 bool DestroyComponentOfObject(std::vector<Type>& _components, WorldObjectID _objectID, bool _isBeingRemovedFromWorld)
 {
@@ -261,5 +190,5 @@ glm::ivec3 WorldZone::ComputeRelativeCoordinates(glm::vec3 _zonePosition) const
 
 bool WorldZone::ContainsPlayer() const
 {
-    return m_OwnerWorld->IsPlayerInZone(m_Coordinates);
+    return m_OwnerWorld->GetPlayerHandler()->IsPlayerInZone(m_Coordinates);
 }

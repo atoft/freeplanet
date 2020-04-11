@@ -8,11 +8,11 @@
 #include <src/tools/globals.h>
 
 RenderComponent::RenderComponent(
+    World* _world,
+    WorldObjectID _ownerID,
     AssetHandle<StaticMesh> _mesh,
     AssetHandle<ShaderProgram> _shader,
-    AssetHandle<Texture> _texture,
-    World* _world,
-    WorldObjectID _ownerID)
+    AssetHandle<Texture> _texture)
 {
     m_World = _world;
     m_WorldObjectID = _ownerID;

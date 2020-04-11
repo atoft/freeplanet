@@ -16,7 +16,7 @@ void UIComponentDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _wor
     // TODO Implement iterators over components for world
     for(const auto& zone : _world->GetActiveZones())
     {
-        if (!_world->IsPlayerInZone(zone.GetCoordinates()))
+        if (!_world->GetPlayerHandler()->IsPlayerInZone(zone.GetCoordinates()))
         {
             continue;
         }

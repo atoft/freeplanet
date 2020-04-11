@@ -89,38 +89,34 @@ void World::RegisterLocalPlayer(u32 _playerIndex)
     m_PlayerHandler->RegisterLocalPlayer(_playerIndex);
 }
 
-void World::SpawnPlayerInWorldZone(glm::ivec3 _zoneCoordinates)
-{
-    WorldZone* targetZone = FindZoneAtCoordinates(_zoneCoordinates);
-    if (targetZone == nullptr)
-    {
-        // TODO If the zone is nullptr, activate the zone and its surroundings
-
-        return;
-    }
-
-    WorldObjectID targetID = targetZone->ConstructPlayerInZone("Player");
-
-    Player player;
-    player.AttachWorldObject(targetID);
-
-    m_VistaHandler->OnLocalPlayerWorldZoneChanged(_zoneCoordinates);
-
-    m_ActivePlayers.push_back(player);
-}
-
+// TODO remove this entirely and send test world props through a similar flow to procedural objects.
 void World::SpawnPropInWorldZone(const WorldPosition& _worldPosition, const PropRecipe& _propRecipe)
 {
     WorldZone* targetZone = FindZoneAtCoordinates(_worldPosition.m_ZoneCoordinates);
     if (targetZone == nullptr)
     {
-        // TODO If the zone is nullptr, activate the zone and its surroundings
-
         return;
     }
 
-    targetZone->ConstructPropInZone(_worldPosition.m_LocalPosition, _propRecipe);
+    WorldObject& newObject = ConstructWorldObject(*targetZone, _propRecipe.m_Name);
+    newObject.SetInitialPosition(_worldPosition.m_LocalPosition);
 
+    // Do we want this as a method on WorldObject, or do we not want euler angles to be generally used?
+    newObject.Rotate(glm::vec3(1,0,0), _propRecipe.m_PitchYawRoll.x);
+    newObject.Rotate(glm::vec3(0,1,0), _propRecipe.m_PitchYawRoll.y);
+    newObject.Rotate(glm::vec3(0,0,1), _propRecipe.m_PitchYawRoll.z);
+
+    // TODO Scale must be applied after rotation otherwise we will get a skew from non-uniform scales.
+    // Don't want to ban non-uniform scale as it's useful for testing so we should make the WorldObject API
+    // able to handle it correctly.
+    newObject.SetScale(_propRecipe.m_Scale);
+
+    ColliderComponent& collider = targetZone->AddComponent<ColliderComponent>(newObject, CollisionPrimitiveType::OBB, MovementType::Fixed);
+    collider.m_Bounds = _propRecipe.m_Scale / 2.f;
+
+    targetZone->AddComponent<RenderComponent>(newObject, AssetHandle<StaticMesh>(_propRecipe.m_MeshID),
+                                    AssetHandle<ShaderProgram>(_propRecipe.m_ShaderID),
+                                    AssetHandle<Texture>(_propRecipe.m_TextureID));
 }
 
 void World::Update(TimeMS _delta)
@@ -195,7 +191,7 @@ void World::TransferEntitiesBetweenZones()
                 PendingZoneTransfer zoneTransfer;
                 zoneTransfer.m_SourceZone = zone.GetCoordinates();
                 zoneTransfer.m_DestinationZone = destinationCoords;
-                zoneTransfer.m_ShouldDelete = destinationZone == nullptr && !IsControlledByLocalPlayer(worldObject.GetWorldObjectID());
+                zoneTransfer.m_ShouldDelete = destinationZone == nullptr && !m_PlayerHandler->IsControlledByLocalPlayer(worldObject.GetWorldObjectID());
                 zoneTransfer.m_Object = &worldObject;
                 worldObjectsToTransfer.push_back(zoneTransfer);
 
@@ -248,7 +244,7 @@ void World::TransferEntitiesBetweenZones()
 
             m_Directory.OnWorldObjectTransferred(destinationObject.GetWorldObjectID(), destinationObject.GetRef());
 
-            if (IsControlledByLocalPlayer(destinationObject.GetWorldObjectID()))
+            if (m_PlayerHandler->IsControlledByLocalPlayer(destinationObject.GetWorldObjectID()))
             {
                 m_VistaHandler->OnLocalPlayerWorldZoneChanged(pendingTransfer.m_DestinationZone);
             }
@@ -265,7 +261,7 @@ void World::TransferEntitiesBetweenZones()
 
 void World::UpdateActiveZones()
 {
-    if (!m_ActivePlayers.empty())
+    if (!m_PlayerHandler->GetLocalPlayers().empty())
     {
         std::vector<glm::ivec3> zonesToRemove;
 
@@ -276,15 +272,9 @@ void World::UpdateActiveZones()
         }
 
         // Remove zones which are far from any players.
-        for (const Player& player : m_ActivePlayers)
+        for (const WorldObjectID& playerControlledObjectID : m_PlayerHandler->GetLocalPlayers())
         {
-            const WorldObjectRef objectRef = m_Directory.GetWorldObjectLocation(player.GetControlledWorldObjectID());
-            if (!objectRef.IsValid())
-            {
-                continue;
-            }
-
-            const glm::ivec3 playerZone = objectRef.m_ZoneCoordinates;
+            const glm::ivec3 playerZone = LocateWorldObject(playerControlledObjectID);
 
             for (u32 zoneIdx = zonesToRemove.size(); zoneIdx > 0; --zoneIdx)
             {
@@ -318,15 +308,9 @@ void World::UpdateActiveZones()
                                            }), m_ActiveZones.end());
 
         // Add zones which are close to any players.
-        for (const Player& player : m_ActivePlayers)
+        for (const WorldObjectID& playerControlledObjectID : m_PlayerHandler->GetLocalPlayers())
         {
-            const WorldObjectRef objectRef = m_Directory.GetWorldObjectLocation(player.GetControlledWorldObjectID());
-            if (!objectRef.IsValid())
-            {
-                continue;
-            }
-
-            const glm::ivec3 playerZone = objectRef.m_ZoneCoordinates;
+            const glm::ivec3 playerZone = LocateWorldObject(playerControlledObjectID);
 
             for (s32 z = -TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z; z <= TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z; ++z)
             {
@@ -420,6 +404,29 @@ WorldObject* World::GetWorldObject(WorldObjectID _objectID)
     return const_cast<WorldObject*>(const_cast<const World*>(this)->GetWorldObject(_objectID));
 }
 
+glm::ivec3 World::LocateWorldObject(WorldObjectID _objectID) const
+{
+    return m_Directory.GetWorldObjectLocation(_objectID).m_ZoneCoordinates;
+}
+
+WorldObject& World::ConstructWorldObject(WorldZone& _zone, const std::string& _name)
+{
+    _zone.GetWorldObjects().emplace_back(this);
+    WorldObject& newObject = _zone.GetWorldObjects().back();
+
+    // Create a unique reference for this WorldObject.
+    newObject.GetRef().m_ZoneCoordinates = _zone.GetCoordinates();
+    newObject.GetRef().m_LocalRef = _zone.GetWorldObjects().size() - 1;
+
+    const WorldObjectID newID = m_Directory.RegisterWorldObject(newObject.GetRef());
+
+    newObject.SetWorldObjectID(newID);
+    newObject.SetName(_name);
+    newObject.SetInitialPosition(glm::vec3(0.f));
+
+    return newObject;
+}
+
 void World::DestroyWorldObject(WorldObjectID _objectID)
 {
     for (WorldZone& zone : m_ActiveZones)
@@ -435,65 +442,9 @@ void World::DestroyWorldObject(WorldObjectID _objectID)
     assert(false);
 }
 
-bool World::IsPlayerInZone(glm::ivec3 _coords) const
+void World::OnPlayerSpawned(const WorldObject& _controlledObject)
 {
-    for (const Player& player : m_ActivePlayers)
-    {
-        WorldObjectID playerControlledObjectID = player.GetControlledWorldObjectID();
-
-        if (playerControlledObjectID != WORLDOBJECTID_INVALID)
-        {
-            return m_Directory.GetWorldObjectLocation(playerControlledObjectID).m_ZoneCoordinates == _coords;
-        }
-    }
-
-    return false;
-}
-
-std::vector<WorldObjectID> World::GetLocalPlayers() const
-{
-    std::vector<WorldObjectID> result;
-
-    for (const Player& player : m_ActivePlayers)
-    {
-        if (player.m_IsLocal)
-        {
-            result.push_back(player.GetControlledWorldObjectID());
-        }
-    }
-    return result;
-}
-
-bool World::IsControlledByLocalPlayer(WorldObjectID _id) const
-{
-    for (const Player& player : m_ActivePlayers)
-    {
-        if (player.m_IsLocal && player.GetControlledWorldObjectID() == _id)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-const FreelookCameraComponent* World::GetLocalCamera() const
-{
-    if (m_ActivePlayers.empty())
-    {
-        return nullptr;
-    }
-
-    // To support splitscreen, return a list of cameras here.
-    const WorldObject* worldObject = GetWorldObject(m_ActivePlayers[0].GetControlledWorldObjectID());
-
-    if (worldObject == nullptr)
-    {
-        return nullptr;
-    }
-
-    // To support players using a remote camera, add a controlled camera ID to the player struct.
-    return ComponentAccess::GetComponent<FreelookCameraComponent>(*worldObject);
+    m_VistaHandler->OnLocalPlayerWorldZoneChanged(_controlledObject.GetWorldPosition().m_ZoneCoordinates);
 }
 
 void World::HandleEvent(EngineEvent _event)

@@ -102,7 +102,7 @@ void RenderHandler::Render(const World* _world, std::shared_ptr<const UIDisplay>
 
     if (_world != nullptr)
     {
-        const FreelookCameraComponent* camera = _world->GetLocalCamera();
+        const FreelookCameraComponent* camera = _world->GetPlayerHandler()->GetLocalCamera();
 
         if (camera != nullptr)
         {
