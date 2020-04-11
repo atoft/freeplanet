@@ -129,7 +129,7 @@ private:
     EnvironmentState m_EnvironmentState;
 
     f32 m_TimeScale = 1.f;
-    f32 m_GravityStrength = 9.81f;
+    f32 m_GravityStrength = 20.f;
 
     bool m_FreezeZones = false;
 };
