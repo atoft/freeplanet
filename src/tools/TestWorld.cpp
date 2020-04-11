@@ -28,8 +28,6 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
         // zones, and decide when everything's ready to spawn the player.
         const glm::ivec3 spawnZoneCoordinates = glm::ivec3(0, planet.m_Radius / TerrainConstants::WORLD_ZONE_SIZE, 0);
 
-        world->SpawnPlayerInWorldZone(spawnZoneCoordinates);
-
         PropRecipe boxRecipe;
         boxRecipe.m_TextureID = TextureAsset_Dev_512;
         boxRecipe.m_ShaderID = ShaderAsset_Default;
@@ -42,7 +40,6 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     else if (_worldName == "empty")
     {
         world = std::make_shared<World>("Empty", std::nullopt);
-        world->SpawnPlayerInWorldZone(glm::ivec3(0,0,0));
 
         PropRecipe planeRecipe;
         planeRecipe.m_TextureID = TextureAsset_Dev_512;
@@ -56,7 +53,6 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     else if (_worldName == "collision")
     {
         world = std::make_shared<World>("Collision", std::nullopt);
-        world->SpawnPlayerInWorldZone(glm::ivec3(0,0,0));
 
         {
             PropRecipe planeRecipe;

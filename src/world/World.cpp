@@ -43,7 +43,7 @@ World::World(std::string _worldName, std::optional<Planet> _planet)
     m_WorldBounds.m_Min = glm::ivec3(-zonesRadius, -zonesRadius, -zonesRadius);
     m_WorldBounds.m_Max = glm::ivec3( zonesRadius,  zonesRadius,  zonesRadius);
 
-    // Construct an initial zone so it's possible to start spawning right away.
+    // Construct an initial zone so it's possible to start spawning right away in TestWorlds.
     // Normally zones are built async by a DynamicLoader.
     m_ActiveZones.emplace_back(this, spawnZoneCoordinates, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
 }

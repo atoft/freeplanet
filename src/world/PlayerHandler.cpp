@@ -72,9 +72,14 @@ void PlayerHandler::Update()
 
 void PlayerHandler::RegisterLocalPlayer(u32 _index)
 {
-    // TODO get from planet.
-    const glm::ivec3 spawnZone = glm::ivec3(0, 32, 0);
+    glm::ivec3 spawnZone = glm::ivec3(0, 0, 0);
 
+    if (m_World->GetPlanet() != nullptr)
+    {
+        // TODO get from planet.
+        spawnZone = glm::ivec3(0, 32, 0);
+    }
+    
     m_Requests.push_back({spawnZone, _index, RequestState::WaitingToLoadZone});
 }
 
