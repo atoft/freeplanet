@@ -191,8 +191,6 @@ u32 GetMaxOctavesForLOD(TerrainLevelOfDetail _lod)
 
 f32 TerrainGeneration::ComputeBiomeDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
 {
-    srand(_planet.m_TerrainSeed);
-
     f32 density = 0.f;
 
     WeightedBiomeArray biomes;

@@ -13,10 +13,15 @@ WorldPosition::WorldPosition(const glm::ivec3& _zoneCoordinates, const glm::vec3
     , m_LocalPosition(_localPosition)
 {}
 
-WorldPosition WorldPosition::operator+(glm::vec3 _other)
+WorldPosition WorldPosition::operator+(glm::vec3 _other) const
 {
     // HACK Need to handle the case where the offset pushes the position into a different zone!
     return {this->m_ZoneCoordinates, this->m_LocalPosition + _other};
+}
+
+WorldPosition WorldPosition::operator-(glm::vec3 _other) const
+{
+    return operator+(-_other);
 }
 
 glm::vec3 WorldPosition::GetPositionRelativeTo(glm::ivec3 _zoneCoordinates) const

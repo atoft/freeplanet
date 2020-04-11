@@ -5,7 +5,10 @@
 #include "PlayerHandler.h"
 
 #include <src/world/World.h>
+#include <src/world/collision/CollisionHandler.h>
 #include <src/world/terrain/TerrainHandler.h>
+#include <src/world/planet/PlanetGeneration.h>
+#include <src/world/terrain/TerrainConstants.h>
 
 PlayerHandler::PlayerHandler(World* _world)
     : m_World(_world)
@@ -85,7 +88,41 @@ bool PlayerHandler::AreLocalPlayersSpawned() const
 
 void PlayerHandler::SpawnPlayer(const PlayerRequest& _request, WorldZone& _zone)
 {
+    // Try to find a safe spawn point.
+    glm::vec3 targetPosition = glm::vec3(0.f);
+
+    const Planet* planet = m_World->GetPlanet();
+    if (planet != nullptr)
+    {
+        const WorldPosition desiredWorldPosition = WorldPosition(_zone.GetCoordinates(), targetPosition);
+        const glm::vec3 upDirection = PlanetGeneration::GetUpDirection(*planet, desiredWorldPosition);
+
+        // Cast from a position on the sphere bounding the zone.
+        const f32 radiusSqr = (TerrainConstants::WORLD_ZONE_SIZE / 2.f) * (TerrainConstants::WORLD_ZONE_SIZE / 2.f);
+        const f32 raycastStartOffset = glm::sqrt(radiusSqr * 3.f);
+
+        const glm::vec3 raycastStartPosition = upDirection * raycastStartOffset;
+
+        std::optional<f32> raycastResult = m_World->GetCollisionHandler()->DoRaycast(
+                desiredWorldPosition + (raycastStartPosition),
+                -upDirection,
+                CollisionHandler::RaycastRange::InitialZoneOnly);
+
+        if (raycastResult == std::nullopt)
+        {
+            LogWarning("Couldn't find a free space to spawn at.");
+            // TODO Try some other points, then move to a higher zone.
+        }
+        else
+        {
+            // Player origin is at center, not at feet, probably want to change that.
+            targetPosition = raycastStartPosition -upDirection * (raycastResult.value() - 1.f);
+        }
+    }
+
     WorldObject& worldObject = m_World->ConstructWorldObject(_zone, "Player");
+    worldObject.SetInitialPosition(targetPosition);
+
     _zone.AddComponent<BipedComponent>(worldObject);
     _zone.AddComponent<FreelookCameraComponent>(worldObject);
 

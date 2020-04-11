@@ -7,6 +7,7 @@
 #include <random>
 
 #include <src/tools/MathsHelpers.h>
+#include <src/world/WorldPosition.h>
 
 // TODO At some point we will need extra context passed in, if we are generating a solar system
 // with several planets.
@@ -45,7 +46,12 @@ Planet PlanetGeneration::GenerateFromSeed(u32 _seed)
     return planet;
 }
 
-// Generates and even distribution of points across a sphere, based on http://extremelearning.com.au/evenly-distributing-points-on-a-sphere/.
+glm::vec3 PlanetGeneration::GetUpDirection(const Planet& _planet, const WorldPosition& _position)
+{
+    return glm::normalize(_position.GetPositionRelativeTo(_planet.m_OriginZone));
+}
+
+// Generates an even distribution of points across a sphere, based on http://extremelearning.com.au/evenly-distributing-points-on-a-sphere/.
 void PlanetGeneration::GenerateFibonacciSphere(u32 _count, std::vector<glm::vec2>& _outPitchYaws)
 {
     // The golden ratio.

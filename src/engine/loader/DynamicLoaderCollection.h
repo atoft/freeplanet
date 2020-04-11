@@ -129,4 +129,17 @@ public:
 
         return true;
     }
+
+    bool IsEmpty() const
+    {
+        for (const Loader& loader : m_Loaders)
+        {
+            if (!loader.IsEmpty())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 };

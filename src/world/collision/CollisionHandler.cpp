@@ -12,6 +12,7 @@
 #include <src/world/collision/CollisionHelpers.h>
 #include <src/world/collision/RaycastAlgorithms.h>
 #include <src/world/World.h>
+#include <src/world/planet/PlanetGeneration.h>
 
 CollisionHandler::CollisionHandler(World* _world)
     : m_World(_world)
@@ -39,7 +40,7 @@ void CollisionHandler::Update(TimeMS _dt)
                 WorldObject* owner = collider.GetOwnerObject();
 
                 const glm::vec3 currentUp = owner->GetUpVector();
-                const glm::vec3 desiredUp = glm::normalize(owner->GetWorldPosition().GetPositionRelativeTo(m_World->GetPlanet()->m_OriginZone));
+                const glm::vec3 desiredUp = PlanetGeneration::GetUpDirection(*m_World->GetPlanet(), owner->GetWorldPosition());
 
                 const f32 dotProduct = glm::dot(currentUp, desiredUp);
                 if (dotProduct < 1.f - glm::epsilon<f32>())
@@ -205,7 +206,7 @@ std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderCompo
     }
 }
 
-std::optional<f32> CollisionHandler::DoRaycast(WorldPosition _origin, glm::vec3 _direction)
+std::optional<f32> CollisionHandler::DoRaycast(WorldPosition _origin, glm::vec3 _direction, RaycastRange _range)
 {
     ProfileCurrentFunction();
 
@@ -218,6 +219,14 @@ std::optional<f32> CollisionHandler::DoRaycast(WorldPosition _origin, glm::vec3 
 
     for (const WorldZone& zone : m_World->GetActiveZones())
     {
+        if (_range == RaycastRange::InitialZoneOnly)
+        {
+            if (zone.GetCoordinates() != _origin.m_ZoneCoordinates)
+            {
+                continue;
+            }
+        }
+
         const glm::vec3 localOrigin = _origin.GetPositionRelativeTo(zone) - MathsHelpers::GetPosition(zone.GetTerrainModelTransform());
 
         // TODO Raycast AABB before terrain

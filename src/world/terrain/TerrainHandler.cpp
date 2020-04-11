@@ -147,5 +147,15 @@ f32 TerrainHandler::GetDensity(const WorldPosition& _position) const
 
 bool TerrainHandler::IsAllLoaded() const
 {
-    return m_TerrainMeshUpdaters.IsAllLoaded();
+    for (const WorldZone& zone : m_World->GetActiveZones())
+    {
+        if (zone.GetTerrainComponent().m_DirtyRegion != std::nullopt)
+        {
+            // There's an update we haven't handled.
+            return false;
+        }
+    }
+
+    // Is there an update in flight?
+    return m_TerrainMeshUpdaters.IsEmpty();
 }

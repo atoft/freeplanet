@@ -25,7 +25,13 @@ public:
 
     void Update(TimeMS _dt);
 
-    std::optional<f32> DoRaycast(WorldPosition _origin, glm::vec3 _direction);
+    enum class RaycastRange
+    {
+        AllLoadedZones,
+        InitialZoneOnly
+    };
+
+    std::optional<f32> DoRaycast(WorldPosition _origin, glm::vec3 _direction, RaycastRange _range = RaycastRange::AllLoadedZones);
 
     void SetShouldResolveCollisions(bool _shouldResolve) { m_ShouldResolveCollisions = _shouldResolve; };
 
