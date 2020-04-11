@@ -43,6 +43,12 @@ Planet PlanetGeneration::GenerateFromSeed(u32 _seed)
         planet.m_Biomes.push_back(biome);
     }
 
+    constexpr f32 noiseOffsetRange = 100.f;
+    for (glm::vec3& offset : planet.m_OctaveOffsets)
+    {
+        offset = glm::vec3(signedDistribution(gen), signedDistribution(gen), signedDistribution(gen)) * noiseOffsetRange;
+    }
+
     return planet;
 }
 

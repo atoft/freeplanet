@@ -30,6 +30,8 @@ struct Planet
 
     u32 m_TerrainSeed = 0;
 
+    glm::vec3 m_OctaveOffsets[4];
+
     struct BlendableBiomeInputs
     {
         f32 m_OctaveWeights[4] = {1.f, 1.f, 1.f, 1.f};

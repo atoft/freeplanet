@@ -213,9 +213,9 @@ f32 TerrainGeneration::ComputeBiomeDensity(const Planet& _planet, const WorldPos
     f32 frequency = baseFrequency;
     f32 amplitude = baseAmplitude;
 
-    for (u32 octave = 1; octave <= maxOctaves; ++ octave)
+    for (u32 octave = 1; octave <= maxOctaves; ++octave)
     {
-        density += ClampDensity(glm::perlin(planetaryPosition * frequency) * amplitude * inputs.m_OctaveWeights[octave - 1]);
+        density += ClampDensity(glm::perlin(planetaryPosition * frequency + _planet.m_OctaveOffsets[octave - 1]) * amplitude * inputs.m_OctaveWeights[octave - 1]);
 
         frequency *= freqMultiplier;
         amplitude *= amplitudeMultiplier;
