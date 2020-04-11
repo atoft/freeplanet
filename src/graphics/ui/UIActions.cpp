@@ -4,6 +4,8 @@
 
 #include "UIActions.h"
 
+#include <functional>
+
 #include <src/graphics/ui/UIDisplay.h>
 
 #include <src/graphics/ui/menus/UINewPlanetMenu.h>
@@ -27,9 +29,14 @@ void UIActions::Quit()
 
 void UIActions::CreatePlanetFromSeed(std::string _seedString)
 {
-    LogMessage(_seedString);
+    u64 intSeed = atoi(_seedString.c_str());
 
-    const u64 intSeed = atoi(_seedString.c_str());
+    if (intSeed == 0)
+    {
+        intSeed = std::hash<std::string>{}(_seedString);
+    }
+
+    LogMessage("Requesting planet with parsed seed " + std::to_string(static_cast<u32>(intSeed)) + " from string " + _seedString);
 
     m_UIDisplay->AddEvent(EngineEvent(EngineEvent::Type::EngineLoadPlanetFromSeed, intSeed));
     m_UIDisplay->CloseGameMenu();
