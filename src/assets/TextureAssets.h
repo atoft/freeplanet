@@ -13,6 +13,7 @@ enum TextureAsset
     TextureAsset_Invalid = 0,
     TextureAsset_Dev_512,
     TextureAsset_Cubemap_Dev,
+    TextureAsset_Tree,
     TextureAsset_Count
 };
 

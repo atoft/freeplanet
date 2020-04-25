@@ -14,11 +14,13 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
             return "Dev_512.png";
         case TextureAsset_Cubemap_Dev:
             return "cubemaps/dev/";
+        case TextureAsset_Tree:
+            return "Tree.jpg";
         case TextureAsset_Invalid:
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 3);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 4);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -30,10 +32,13 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
         case TextureAsset_Cubemap_Dev:
             return TextureAssetType::Cubemap;
         case TextureAsset_Dev_512:
+            [[fallthrough]];
+        case TextureAsset_Tree:
+            [[fallthrough]];
         case TextureAsset_Invalid:
         default:
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 3);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 4);
 }

@@ -10,7 +10,6 @@
 #include <src/world/terrain/elements/PlaneTerrainElement.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/profiling/Profiler.h>
-#include <src/tools/PropRecipe.h>
 
 template<typename Type>
 bool DestroyComponentOfObject(std::vector<Type>& _components, WorldObjectID _objectID, bool _isBeingRemovedFromWorld);

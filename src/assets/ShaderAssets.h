@@ -15,6 +15,7 @@ enum ShaderAsset
     ShaderAsset_Default,
     ShaderAsset_Unlit_ShowNormals,
     ShaderAsset_Unlit_Untextured,
+    ShaderAsset_Lit_Textured,
     ShaderAsset_Skybox,
 
     ShaderAsset_Terrain_Base,

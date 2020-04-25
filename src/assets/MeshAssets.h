@@ -15,6 +15,9 @@ enum MeshAsset
     MeshAsset_UnitUVSphere,
     MeshAsset_UnitCylinder,
     MeshAsset_Arrow,
+
+    MeshAsset_Tree,
+
     MeshAsset_Count
 };
 

@@ -29,13 +29,13 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
         const glm::ivec3 spawnZoneCoordinates = glm::ivec3(0, planet.m_Radius / TerrainConstants::WORLD_ZONE_SIZE, 0);
 
         PropRecipe boxRecipe;
-        boxRecipe.m_TextureID = TextureAsset_Dev_512;
-        boxRecipe.m_ShaderID = ShaderAsset_Default;
-        boxRecipe.m_MeshID = MeshAsset_UnitCube;
-        boxRecipe.m_Name = "Box";
+        boxRecipe.m_TextureID = TextureAsset_Tree;
+        boxRecipe.m_ShaderID = ShaderAsset_Lit_Textured;
+        boxRecipe.m_MeshID = MeshAsset_Tree;
+        boxRecipe.m_Name = "Tree";
 
-        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(10.f,2.25f,-5.25f)), boxRecipe);
-        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(0.f, 1.f, -5.f)), boxRecipe);
+        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(0.f,-4.5f,-15.f)), boxRecipe);
+        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(-2.f, -3.5f, -5.f)), boxRecipe);
     }
     else if (_worldName == "empty")
     {

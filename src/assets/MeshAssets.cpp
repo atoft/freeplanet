@@ -20,8 +20,10 @@ std::string Assets::GetMeshAssetName(MeshAssetID _assetID)
             return "UnitCylinder";
 		case MeshAsset_Arrow:
 			return "Arrow";
+        case MeshAsset_Tree:
+            return "Tree";
         default:
             return "INVALID";
     }
-    static_assert(MeshAsset_Count == 6);
+    static_assert(MeshAsset_Count == 7);
 }
