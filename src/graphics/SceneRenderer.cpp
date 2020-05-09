@@ -76,8 +76,6 @@ void SceneRenderer::Run(std::shared_ptr<sf::RenderWindow> _window)
             m_StartRenderCV.notify_one();
         }
     }
-
-    _window->close();
 }
 
 void SceneRenderer::HandleEvent(EngineEvent _event)

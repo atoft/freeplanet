@@ -51,7 +51,7 @@ void UIPlanetDebug::Draw(TimeMS _delta, UIDrawInterface& _display, const World* 
     TerrainGeneration::GetClosestBiomes(*planet, player->GetWorldPosition(), biomes);
 
     u32 yOffset = 100;
-    for (const auto biome : biomes)
+    for (const auto& biome : biomes)
     {
         _display.DrawString(glm::ivec2(20, yOffset), "Biome weight: " + std::to_string(biome.first), 16.f, biome.second->m_GroundColor, FontStyle::Sans, true);
 
