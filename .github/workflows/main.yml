@@ -40,7 +40,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: Setup Dependencies
       run: |
-        bash ./scripts/ubuntu-prerequisites.sh
+        export DEBIAN_FRONTEND="noninteractive"; bash ./scripts/ubuntu-prerequisites.sh
         export CXX="clang++"; bash ./setup.sh
     - name: Build Debug
       run: |
