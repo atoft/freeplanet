@@ -125,7 +125,7 @@ void CollisionHandler::Update(TimeMS _dt)
                 WorldObject* object2 = collider2.GetOwnerObject();
                 assert(object1 != nullptr && object2 != nullptr);
 
-                DoCollision(collider1, *object1, collider2, *object2);
+                DoCollision(collider1, *object1, collider2, *object2, glm::vec3(0.f));
             }
         }
 
@@ -161,7 +161,7 @@ void CollisionHandler::Update(TimeMS _dt)
                 WorldObject *object2 = otherCollider.GetOwnerObject();
                 assert(object1 != nullptr && object2 != nullptr);
 
-                DoCollision(*request.m_Collider, *object1, otherCollider, *object2);
+                DoCollision(*request.m_Collider, *object1, otherCollider, *object2, positionOffset);
             }
         }
 
@@ -184,7 +184,8 @@ void CollisionHandler::Update(TimeMS _dt)
 bool CollisionHandler::DoCollision(ColliderComponent& _collider1,
         WorldObject& _object1,
         ColliderComponent& _collider2,
-        WorldObject& _object2)
+        WorldObject& _object2,
+        const glm::vec3& _object1PositionOffset)
 {
     if(   _collider1.m_MovementType == MovementType::Fixed
        && _collider2.m_MovementType == MovementType::Fixed)
@@ -200,13 +201,16 @@ bool CollisionHandler::DoCollision(ColliderComponent& _collider1,
         return false;
     }
 
+    glm::mat4x4 zoneTransform1 = _object1.GetZoneTransform();
+    MathsHelpers::TranslateWorldSpace(zoneTransform1, _object1PositionOffset);
+
     std::optional<CollisionResult> collision;
 
     if(   _collider1.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB
        && _collider2.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
         collision = CollideOBBOBB::Collide(
-                _object1.GetZoneTransform(),
+                zoneTransform1,
                 _collider1.m_Bounds,
                 _object2.GetZoneTransform(),
                 _collider2.m_Bounds);
@@ -268,12 +272,15 @@ bool CollisionHandler::DoCollision(ColliderComponent& _collider,
         return false;
     }
 
+    glm::mat4x4 zoneTransform = _object.GetZoneTransform();
+    MathsHelpers::TranslateWorldSpace(zoneTransform, _objectPositionOffset);
+
     std::optional<CollisionResult> collision;
 
     if(_collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
         collision = CollideOBBTerrain::Collide(
-                glm::translate(_object.GetZoneTransform(), _objectPositionOffset),
+                zoneTransform,
                 _collider.m_Bounds,
                 _terrain,
                 _terrainOffset);

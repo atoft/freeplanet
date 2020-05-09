@@ -41,7 +41,8 @@ private:
     bool DoCollision(ColliderComponent& _collider1,
                      WorldObject& _object1,
                      ColliderComponent& _collider2,
-                     WorldObject& _object2);
+                     WorldObject& _object2,
+                     const glm::vec3& _object1PositionOffset);
 
     bool DoCollision(ColliderComponent& _collider,
                      WorldObject& _object,

@@ -36,9 +36,7 @@ glm::vec3 WorldObject::GetPosition() const
 
 void WorldObject::SetPosition(const glm::vec3& _position)
 {
-    m_ZoneTransform[3][0] = _position.x / m_ZoneTransform[3][3];
-    m_ZoneTransform[3][1] = _position.y / m_ZoneTransform[3][3];
-    m_ZoneTransform[3][2] = _position.z / m_ZoneTransform[3][3];
+    MathsHelpers::SetPosition(m_ZoneTransform, _position);
 }
 
 void WorldObject::SetInitialPosition(const glm::vec3& _position)

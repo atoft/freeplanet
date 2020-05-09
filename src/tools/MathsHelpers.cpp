@@ -66,7 +66,17 @@ glm::vec3 MathsHelpers::GetPosition(glm::mat4x4 _transform)
     return _transform[3] * _transform[3][3];
 }
 
-void SetPosition(glm::mat4x4& _inOutTransform, glm::vec3 _position);
+void MathsHelpers::SetPosition(glm::mat4x4& _inOutTransform, glm::vec3 _position)
+{
+    _inOutTransform[3][0] = _position.x / _inOutTransform[3][3];
+    _inOutTransform[3][1] = _position.y / _inOutTransform[3][3];
+    _inOutTransform[3][2] = _position.z / _inOutTransform[3][3];
+}
+
+void MathsHelpers::TranslateWorldSpace(glm::mat4x4& _inOutTransform, glm::vec3 _translation)
+{
+    SetPosition(_inOutTransform, GetPosition(_inOutTransform) + _translation);
+}
 
 glm::vec3 MathsHelpers::GetForwardVector(glm::mat4x4 _transform)
 {

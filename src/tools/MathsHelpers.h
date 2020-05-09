@@ -24,6 +24,8 @@ public:
 
     static void SetPosition(glm::mat4x4& _inOutTransform, glm::vec3 _position);
 
+    static void TranslateWorldSpace(glm::mat4x4& _inOutTransform, glm::vec3 _translation);
+
     static glm::vec3 GetForwardVector(glm::mat4x4 _transform);
 
     static glm::vec3 GetRightVector(glm::mat4x4 _transform);
