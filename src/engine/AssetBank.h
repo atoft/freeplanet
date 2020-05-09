@@ -40,7 +40,7 @@ private:
     static constexpr u32 ASSETBANK_CAPACITY = 32;
 
     // Could split this into access to map and access to data if needed
-    std::mutex m_AccessMutex;
+    mutable std::mutex m_AccessMutex;
 
     std::vector<AssetID> m_AssetsToCreate;
     std::vector<AssetID> m_AssetsToDestroy;
