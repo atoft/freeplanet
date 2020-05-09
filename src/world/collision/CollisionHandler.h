@@ -38,15 +38,16 @@ public:
     void DebugDraw(UIDrawInterface& _interface) const;
 
 private:
-    static std::optional<CollisionResult> DoCollision(const ColliderComponent& _collider1,
-                                                      const WorldObject& _object1,
-                                                      const ColliderComponent& _collider2,
-                                                      const WorldObject& _object2);
+    bool DoCollision(ColliderComponent& _collider1,
+                     WorldObject& _object1,
+                     ColliderComponent& _collider2,
+                     WorldObject& _object2);
 
-    static std::optional<CollisionResult> DoCollision(const ColliderComponent& _collider,
-                                                      const WorldObject& _object,
-                                                      const TerrainComponent& _terrain,
-                                                      const glm::vec3 _terrainOffset);
+    bool DoCollision(ColliderComponent& _collider,
+                     WorldObject& _object,
+                     const glm::vec3& _objectPositionOffset,
+                     const TerrainComponent& _terrain,
+                     const glm::vec3& _terrainOffset);
 
 private:
     World* m_World = nullptr;

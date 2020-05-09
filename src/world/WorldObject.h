@@ -87,7 +87,7 @@ public:
 
     WorldPosition GetWorldPosition() const;
 
-    void SetPosition(const glm::vec3 &m_Position);
+    void SetPosition(const glm::vec3& _position);
 
     const glm::vec3 GetRotation() const;
 

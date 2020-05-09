@@ -34,14 +34,14 @@ glm::vec3 WorldObject::GetPosition() const
     return MathsHelpers::GetPosition(m_ZoneTransform);
 }
 
-void WorldObject::SetPosition(const glm::vec3 &m_Position)
+void WorldObject::SetPosition(const glm::vec3& _position)
 {
-    m_ZoneTransform[3][0] = m_Position.x / m_ZoneTransform[3][3];
-    m_ZoneTransform[3][1] = m_Position.y / m_ZoneTransform[3][3];
-    m_ZoneTransform[3][2] = m_Position.z / m_ZoneTransform[3][3];
+    m_ZoneTransform[3][0] = _position.x / m_ZoneTransform[3][3];
+    m_ZoneTransform[3][1] = _position.y / m_ZoneTransform[3][3];
+    m_ZoneTransform[3][2] = _position.z / m_ZoneTransform[3][3];
 }
 
-void WorldObject::SetInitialPosition(const glm::vec3 &_position)
+void WorldObject::SetInitialPosition(const glm::vec3& _position)
 {
     SetPosition(_position);
 

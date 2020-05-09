@@ -13,6 +13,7 @@
 #include <src/world/collision/RaycastAlgorithms.h>
 #include <src/world/World.h>
 #include <src/world/planet/PlanetGeneration.h>
+#include <src/world/terrain/TerrainConstants.h>
 
 CollisionHandler::CollisionHandler(World* _world)
     : m_World(_world)
@@ -22,6 +23,15 @@ CollisionHandler::CollisionHandler(World* _world)
 void CollisionHandler::Update(TimeMS _dt)
 {
     ProfileCurrentFunction();
+
+    struct DifferentZoneCollisionRequest
+    {
+        ColliderComponent* m_Collider = nullptr;
+        WorldZone* m_OtherZone = nullptr;
+        bool m_WithTerrainOnly = false;
+    };
+
+    std::vector<DifferentZoneCollisionRequest> requestedCollisions;
 
     for(WorldZone& zone : m_World->GetActiveZones())
     {
@@ -34,11 +44,10 @@ void CollisionHandler::Update(TimeMS _dt)
         for(ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
         {
             collider.m_CollisionsLastFrame.clear();
+            WorldObject* owner = collider.GetOwnerObject();
 
             if (collider.m_KeepUpright && m_World->GetPlanet() != nullptr)
             {
-                WorldObject* owner = collider.GetOwnerObject();
-
                 const glm::vec3 currentUp = owner->GetUpVector();
                 const glm::vec3 desiredUp = PlanetGeneration::GetUpDirection(*m_World->GetPlanet(), owner->GetWorldPosition());
 
@@ -63,9 +72,48 @@ void CollisionHandler::Update(TimeMS _dt)
                     MathsHelpers::SetRotationPart(owner->GetZoneTransform(), newX, desiredUp, newZ);
                 }
             }
+
+            // Check if the object is overlapping any neighbouring zones.
+
+            // TODO Need to support other collision primitives.
+            assert(collider.m_CollisionPrimitiveType == CollisionPrimitiveType::AABB || collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB);
+            const AABB aabb = CollisionHelpers::GetAABBForOBB(MathsHelpers::GetRotationMatrix(owner->GetZoneTransform()), collider.m_Bounds);
+
+            AABB otherZoneAABB;
+            otherZoneAABB.m_Dimensions = glm::vec3(TerrainConstants::WORLD_ZONE_SIZE)  / 2.f;
+
+            for (s32 z = -1; z <= 1; ++z)
+            {
+                for (s32 y = -1; y <= 1; ++y)
+                {
+                    for (s32 x = -1; x <= 1; ++x)
+                    {
+                        // Skip the object's own zone.
+                        if (x == 0 && y == 0 && z == 0)
+                        {
+                            continue;
+                        }
+
+                        // Make sure we don't double up object collisions - we only need to test each pair once.
+                        const bool isPreviousZone = x < 0 || y < 0 || z < 0;
+
+                        if (CollisionHelpers::IsIntersecting(owner->GetPosition(), aabb, TerrainConstants::WORLD_ZONE_SIZE * glm::vec3(x, y, z), otherZoneAABB))
+                        {
+                            WorldZone* otherZone = m_World->FindZoneAtCoordinates(zone.GetCoordinates() + glm::ivec3(x, y, z));
+
+                            LogMessage("Overlapping neighbour " + glm::to_string(zone.GetCoordinates() + glm::ivec3(x, y, z)));
+
+                            if (otherZone != nullptr)
+                            {
+                                requestedCollisions.push_back({&collider, otherZone, isPreviousZone});
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        // Collision between WorldObjects
+        // Collision between WorldObjects.
         for(u32 firstIdx = 0; firstIdx < zone.GetComponents<ColliderComponent>().size() - 1; ++firstIdx)
         {
             for(u32 secondIdx = firstIdx + 1; secondIdx < zone.GetComponents<ColliderComponent>().size(); ++secondIdx)
@@ -73,107 +121,91 @@ void CollisionHandler::Update(TimeMS _dt)
                 ColliderComponent& collider1 = zone.GetComponents<ColliderComponent>()[firstIdx];
                 ColliderComponent& collider2 = zone.GetComponents<ColliderComponent>()[secondIdx];
 
-                if(   collider1.m_MovementType == MovementType::Fixed
-                   && collider2.m_MovementType == MovementType::Fixed)
-                {
-                    // No point testing for collisions if we can't resolve.
-                    continue;
-                }
-
-                if(   !collider1.m_CollisionEnabled
-                   || !collider2.m_CollisionEnabled)
-                {
-                    // No point testing for collisions if either of the pair has been disabled.
-                    continue;
-                }
-
                 WorldObject* object1 = collider1.GetOwnerObject();
                 WorldObject* object2 = collider2.GetOwnerObject();
                 assert(object1 != nullptr && object2 != nullptr);
 
-                std::optional<CollisionResult> collision = DoCollision(collider1, *object1, collider2, *object2);
-
-                if(collision != std::nullopt)
-                {
-                    const f32 object1Movability = collider1.m_MovementType == MovementType::Movable ? 1.f : 0.f;
-                    const f32 object2Movability = collider2.m_MovementType == MovementType::Movable ? 1.f : 0.f;
-
-                    const f32 object1Distance = object1Movability * collision->m_Distance * collider1.m_MassScale /
-                                          ((collider1.m_MassScale * object1Movability) +
-                                           (collider2.m_MassScale * object2Movability));
-                    const f32 object2Distance = object2Movability * collision->m_Distance * collider2.m_MassScale /
-                                          ((collider1.m_MassScale * object1Movability) +
-                                           (collider2.m_MassScale * object2Movability));
-
-                    if (m_ShouldResolveCollisions)
-                    {
-                        object1->SetPosition(object1->GetPosition() + object1Distance * collision->m_Normal);
-                        object2->SetPosition(object2->GetPosition() - object2Distance * collision->m_Normal);
-                    }
-
-                    const CollisionResult collider1Result = *collision;
-
-                    // Normal is in the opposite direction for the second of the pair.
-                    CollisionResult collider2Result = *collision;
-                    collider2Result.m_Normal = - collider2Result.m_Normal;
-
-                    collider1.m_CollisionsLastFrame.push_back(collider1Result);
-                    collider2.m_CollisionsLastFrame.push_back(collider2Result);
-                }
+                DoCollision(collider1, *object1, collider2, *object2);
             }
         }
 
-        // Collision with terrain
+        // Collision with terrain.
         for(ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
         {
-            if(collider.m_MovementType == MovementType::Fixed)
-            {
-                continue;
-            }
-
-            if(!collider.m_CollisionEnabled)
-            {
-                // No point testing for collisions if either of the pair has been disabled.
-                continue;
-            }
-
             WorldObject* object = collider.GetOwnerObject();
             assert(object != nullptr);
 
             const TerrainComponent& terrainComponent = zone.GetTerrainComponent();
 
-            std::optional<CollisionResult> collision = DoCollision(
+            DoCollision(
                     collider,
                     *object,
+                    glm::vec3(),
                     terrainComponent,
                     MathsHelpers::GetPosition(zone.GetTerrainModelTransform()));
+        }
+    }
 
-            if(collision != std::nullopt)
+
+    // Collision with other zones.
+    for (const DifferentZoneCollisionRequest& request : requestedCollisions)
+    {
+        WorldObject *object1 = request.m_Collider->GetOwnerObject();
+
+        const glm::vec3 positionOffset = object1->GetWorldPosition().GetPositionRelativeTo(*request.m_OtherZone) - object1->GetPosition();
+
+        if (!request.m_WithTerrainOnly)
+        {
+            for (ColliderComponent& otherCollider : request.m_OtherZone->GetComponents<ColliderComponent>())
             {
-                if (m_ShouldResolveCollisions)
-                {
-                    object->SetPosition(object->GetPosition() + collision->m_Normal * collision->m_Distance);
-                }
+                WorldObject *object2 = otherCollider.GetOwnerObject();
+                assert(object1 != nullptr && object2 != nullptr);
 
-                collider.m_CollisionsLastFrame.push_back(*collision);
+                DoCollision(*request.m_Collider, *object1, otherCollider, *object2);
             }
         }
 
-        // TODO Keep track of objects crossing the WorldZone boundaries
-    }
+        const TerrainComponent& terrainComponent = request.m_OtherZone->GetTerrainComponent();
 
-    // TODO Resolve collisions across boundaries
+        const bool terrainCollision = DoCollision(
+                *request.m_Collider,
+                *object1,
+                positionOffset,
+                terrainComponent,
+                MathsHelpers::GetPosition(request.m_OtherZone->GetTerrainModelTransform()));
+
+        if (terrainCollision)
+        {
+            LogMessage("Collision with other zone's terrain.");
+        }
+    }
 }
 
-std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderComponent& _collider1,
-        const WorldObject& _object1,
-        const ColliderComponent& _collider2,
-        const WorldObject& _object2)
+bool CollisionHandler::DoCollision(ColliderComponent& _collider1,
+        WorldObject& _object1,
+        ColliderComponent& _collider2,
+        WorldObject& _object2)
 {
+    if(   _collider1.m_MovementType == MovementType::Fixed
+       && _collider2.m_MovementType == MovementType::Fixed)
+    {
+        // No point testing for collisions if we can't resolve.
+        return false;
+    }
+
+    if(   !_collider1.m_CollisionEnabled
+       || !_collider2.m_CollisionEnabled)
+    {
+        // No point testing for collisions if either of the pair has been disabled.
+        return false;
+    }
+
+    std::optional<CollisionResult> collision;
+
     if(   _collider1.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB
        && _collider2.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
-        return CollideOBBOBB::Collide(
+        collision = CollideOBBOBB::Collide(
                 _object1.GetZoneTransform(),
                 _collider1.m_Bounds,
                 _object2.GetZoneTransform(),
@@ -182,19 +214,66 @@ std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderCompo
     else
     {
         LogWarning("Unsupported collision (" + _object1.GetName() + " and " + _object2.GetName() + ") was skipped.");
-        return std::nullopt;
+        collision = std::nullopt;
     }
+
+    if(collision != std::nullopt)
+    {
+        const f32 object1Movability = _collider1.m_MovementType == MovementType::Movable ? 1.f : 0.f;
+        const f32 object2Movability = _collider2.m_MovementType == MovementType::Movable ? 1.f : 0.f;
+
+        const f32 object1Distance = object1Movability * collision->m_Distance * _collider1.m_MassScale /
+                                    ((_collider1.m_MassScale * object1Movability) +
+                                     (_collider2.m_MassScale * object2Movability));
+
+        const f32 object2Distance = object2Movability * collision->m_Distance * _collider2.m_MassScale /
+                                    ((_collider1.m_MassScale * object1Movability) +
+                                     (_collider2.m_MassScale * object2Movability));
+
+        if (m_ShouldResolveCollisions)
+        {
+            _object1.SetPosition(_object1.GetPosition() + object1Distance * collision->m_Normal);
+            _object2.SetPosition(_object2.GetPosition() - object2Distance * collision->m_Normal);
+        }
+
+        const CollisionResult collider1Result = *collision;
+
+        // Normal is in the opposite direction for the second of the pair.
+        CollisionResult collider2Result = *collision;
+        collider2Result.m_Normal = - collider2Result.m_Normal;
+
+        _collider1.m_CollisionsLastFrame.push_back(collider1Result);
+        _collider2.m_CollisionsLastFrame.push_back(collider2Result);
+
+        return true;
+    }
+
+    return false;
 }
 
-std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderComponent& _collider,
-                                                             const WorldObject& _object,
-                                                             const TerrainComponent& _terrain,
-                                                             const glm::vec3 _terrainOffset)
+bool CollisionHandler::DoCollision(ColliderComponent& _collider,
+                                   WorldObject& _object,
+                                   const glm::vec3& _objectPositionOffset,
+                                   const TerrainComponent& _terrain,
+                                   const glm::vec3& _terrainOffset)
 {
+    if(_collider.m_MovementType == MovementType::Fixed)
+    {
+        return false;
+    }
+
+    if(!_collider.m_CollisionEnabled)
+    {
+        // No point testing for collisions if either of the pair has been disabled.
+        return false;
+    }
+
+    std::optional<CollisionResult> collision;
+
     if(_collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
-        return CollideOBBTerrain::Collide(
-                _object.GetZoneTransform(),
+        collision = CollideOBBTerrain::Collide(
+                glm::translate(_object.GetZoneTransform(), _objectPositionOffset),
                 _collider.m_Bounds,
                 _terrain,
                 _terrainOffset);
@@ -202,8 +281,21 @@ std::optional<CollisionResult> CollisionHandler::DoCollision(const ColliderCompo
     else
     {
         LogWarning("Unsupported collision (" + _object.GetName() + " and terrain) was skipped.");
-        return std::nullopt;
+        collision = std::nullopt;
     }
+
+    if(collision != std::nullopt)
+    {
+        if (m_ShouldResolveCollisions)
+        {
+            _object.SetPosition(_object.GetPosition() + collision->m_Normal * collision->m_Distance);
+        }
+
+        _collider.m_CollisionsLastFrame.push_back(*collision);
+        return true;
+    }
+
+    return false;
 }
 
 std::optional<f32> CollisionHandler::DoRaycast(WorldPosition _origin, glm::vec3 _direction, RaycastRange _range)

@@ -66,6 +66,8 @@ glm::vec3 MathsHelpers::GetPosition(glm::mat4x4 _transform)
     return _transform[3] * _transform[3][3];
 }
 
+void SetPosition(glm::mat4x4& _inOutTransform, glm::vec3 _position);
+
 glm::vec3 MathsHelpers::GetForwardVector(glm::mat4x4 _transform)
 {
     return glm::vec4(0,0,-1.f, 1) * glm::inverse(MathsHelpers::GetRotationMatrix(_transform));
