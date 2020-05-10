@@ -7,10 +7,15 @@
 #include "UIConstants.h"
 
 
-void UIMainMenu::Init()
+void UIMainMenu::Init(bool _startFocused)
 {
     m_List.AddButton("New Planet", [](UIActions& actions){ actions.GoToNewPlanetMenu();});
     m_List.AddButton("Quit", [](UIActions& actions){actions.Quit();});
+
+    if (_startFocused)
+    {
+        m_List.Focus();
+    }
 }
 
 void UIMainMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world)
@@ -24,4 +29,9 @@ void UIMainMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _wo
 void UIMainMenu::OnButtonReleased(InputType _type, UIActions& _actions)
 {
     m_List.OnButtonReleased(_type, _actions);
+}
+
+void UIMainMenu::OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y)
+{
+    m_List.OnMouseHover(_display, _x, _y);
 }

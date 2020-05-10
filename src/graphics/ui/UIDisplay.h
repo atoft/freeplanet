@@ -40,6 +40,8 @@ public:
 
     void OnButtonInput(InputType _type);
     void OnTextEntered(std::string _value);
+    void OnMouseHover(f32 _x, f32 _y);
+    void OnInputDeviceChanged(bool _isUsingMouseInput) { m_IsUsingMouseInput = _isUsingMouseInput; };
 
     void UpdateSplashScreen();
 
@@ -70,6 +72,7 @@ private:
 
     UIDrawInterface m_Interface;
     UIActions m_Actions;
+    bool m_IsUsingMouseInput = false;
 
     std::unique_ptr<UIBaseMenu> m_GameMenu;
     std::unique_ptr<UIBaseMenu> m_DebugMenu;

@@ -34,21 +34,60 @@ void UIList::OnButtonReleased(InputType _type, UIActions& _actions)
     {
     case InputType::MenuDown:
     {
-        m_ActiveIndex = (m_ActiveIndex + 1) % m_Widgets.size();
+        if (m_ActiveIndex != std::nullopt)
+        {
+            m_ActiveIndex = (*m_ActiveIndex + 1) % m_Widgets.size();
+        }
+        else
+        {
+            m_ActiveIndex = 0;
+        }
+
         break;
     }
     case InputType::MenuUp:
     {
-        m_ActiveIndex = (m_ActiveIndex == 0) ? m_Widgets.size() - 1 : m_ActiveIndex - 1;
+        if (m_ActiveIndex != std::nullopt)
+        {
+            m_ActiveIndex = (*m_ActiveIndex == 0) ? m_Widgets.size() - 1 : *m_ActiveIndex - 1;
+        }
+        else
+        {
+            m_ActiveIndex = 0;
+        }
+
         break;
     }
     case InputType::MenuAccept:
     {
-        std::visit([&_actions](auto&& value){value.OnPressed(_actions);}, m_Widgets[m_ActiveIndex]);
+        if (m_ActiveIndex != std::nullopt)
+        {
+            std::visit([&_actions](auto&& value){value.OnPressed(_actions);}, m_Widgets[*m_ActiveIndex]);
+        }
+
         break;
     }
     default:
         break;
+    }
+}
+
+void UIList::OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y)
+{
+    m_ActiveIndex = std::nullopt;
+
+    u32 index = 0;
+    for (const UIWidgetVariant& widget : m_Widgets)
+    {
+        const bool isHovered = std::visit([&_display, _x, _y](auto&& value){return value.IsHovered(_display, _x, _y);}, widget);
+
+        if (isHovered)
+        {
+            m_ActiveIndex = index;
+            break;
+        }
+
+        ++index;
     }
 }
 

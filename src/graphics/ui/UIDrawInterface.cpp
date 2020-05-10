@@ -230,3 +230,16 @@ void UIDrawInterface::DebugDrawAABB(glm::ivec3 zoneCoordinates, const glm::vec3&
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
     }
 }
+
+bool UIDrawInterface::IsInAABB(glm::uvec2 _point, glm::uvec2 _boxPosition, glm::uvec2 _boxScale, UIAnchorPosition _anchor) const
+{
+    const glm::ivec2 displayResolution = GetDisplayResolution();
+
+    const glm::uvec2 displayedPosition = GetScaledPosition<glm::uvec2>(displayResolution, _boxPosition.x, _boxPosition.y, _anchor);
+    const glm::uvec2 displayedScale = GetScaledSize<glm::uvec2>(displayResolution, _boxScale.x, _boxScale.y);
+
+    return _point.x >= displayedPosition.x
+        && _point.y >= displayedPosition.y
+        && _point.x <= displayedPosition.x + displayedScale.x
+        && _point.y <= displayedPosition.y + displayedScale.y;
+}

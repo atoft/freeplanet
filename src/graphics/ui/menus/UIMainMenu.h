@@ -8,10 +8,12 @@
 class UIMainMenu : public UIBaseMenu
 {
 public:
-    void Init() override;
+    void Init(bool _startFocused) override;
 
     void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
     void OnButtonReleased(InputType _type, UIActions& _actions) override;
+    void OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y) override;
+    bool ShouldTakeFocus() const override { return true; };
 
 private:
     UIList m_List;

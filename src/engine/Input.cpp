@@ -43,6 +43,7 @@ const std::vector<InputMouseButtonMapping> DEFAULT_MOUSE_BUTTON_MAPPINGS
         {
                 {InputType::Interact, InputContext::Gameplay, sf::Mouse::Left, InputButtonInteraction::OnReleased},
                 {InputType::InteractAlternate, InputContext::Gameplay, sf::Mouse::Right, InputButtonInteraction::OnReleased},
+                {InputType::MenuAccept, InputContext::UI, sf::Mouse::Left, InputButtonInteraction::OnReleased},
         };
 
 Input::Input(std::shared_ptr<sf::Window> _window)
@@ -62,6 +63,8 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
     {
         return;
     }
+
+    const bool previousMouseInput = m_IsUsingMouseInput;
 
     sf::Event windowEvent;
     while (m_Window->pollEvent(windowEvent))
@@ -87,11 +90,6 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
             }
             case sf::Event::MouseButtonReleased:
             {
-                if(Engine::GetInstance().IsInMenu())
-                {
-                    break;
-                }
-
                 HandleMouseButtonInput(windowEvent.mouseButton.button, InputButtonInteraction::OnReleased, _world, _display);
 
                 break;
@@ -123,45 +121,57 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
 
     const sf::Vector2i pos = sf::Mouse::getPosition(*m_Window);
 
-    const f32 pX = pos.x / static_cast<f32>(m_Window->getSize().x) - 0.5f;
-    const f32 pY = pos.y / static_cast<f32>(m_Window->getSize().y) - 0.5f;
-
     const Engine& engine = Engine::GetInstance();
     if (!engine.IsInMenu() && !engine.GetCommandLineArgs().m_ForceUnlockedMouse && _world != nullptr)
     {
+        const f32 pX = pos.x / static_cast<f32>(m_Window->getSize().x) - 0.5f;
+        const f32 pY = pos.y / static_cast<f32>(m_Window->getSize().y) - 0.5f;
+
         _world->OnMouseInput(pX, pY);
 
         RecenterMouse();
     }
+    else
+    {
+        if (pos != m_PreviousMousePosition)
+        {
+            m_IsUsingMouseInput = true;
+            _display->OnMouseHover(pos.x, pos.y);
+        }
+    }
+
+    if (previousMouseInput != m_IsUsingMouseInput)
+    {
+        _display->OnInputDeviceChanged(m_IsUsingMouseInput);
+    }
+
+    m_PreviousMousePosition = pos;
 }
 
 void Input::HandleKeyInput(sf::Keyboard::Key _key, InputButtonInteraction _interaction, World* _world, UIDisplay* _display)
 {
-    const auto& it = std::find_if(m_KeyMappings.begin(), m_KeyMappings.end(),
-                                  [_key, _interaction](const InputKeyMapping& _mapping)
-                                  {
-                                      return _mapping.m_Key  == _key
-                                         && _mapping.m_Interaction == _interaction;
-                                  });
-
-    if (it != m_KeyMappings.end())
+    for (const InputKeyMapping& mapping : m_KeyMappings)
     {
-        HandleInput(it->m_InputType, it->m_InputContext, _world, _display);
+        if (mapping.m_Key == _key && mapping.m_Interaction == _interaction)
+        {
+            if (mapping.m_InputContext == InputContext::UI && Engine::GetInstance().IsInMenu())
+            {
+                m_IsUsingMouseInput = false;
+            }
+
+            HandleInput(mapping.m_InputType, mapping.m_InputContext, _world, _display);
+        }
     }
 }
 
 void Input::HandleMouseButtonInput(sf::Mouse::Button _button, InputButtonInteraction _interaction, World* _world, UIDisplay* _display)
 {
-    const auto& it = std::find_if(m_MouseButtonMappings.begin(), m_MouseButtonMappings.end(),
-                                  [_button, _interaction](const InputMouseButtonMapping& _mapping)
-                                  {
-                                      return _mapping.m_Button  == _button
-                                         && _mapping.m_Interaction == _interaction;
-                                  });
-
-    if (it != m_MouseButtonMappings.end())
+    for (const InputMouseButtonMapping& mapping : m_MouseButtonMappings)
     {
-        HandleInput(it->m_InputType, it->m_InputContext, _world, _display);
+        if (mapping.m_Button == _button && mapping.m_Interaction == _interaction)
+        {
+            HandleInput(mapping.m_InputType, mapping.m_InputContext, _world, _display);
+        }
     }
 }
 
@@ -182,6 +192,11 @@ void Input::HandleInput(InputType _inputType, InputContext _context, World* _wor
     }
     case InputContext::Gameplay:
     {
+        if(Engine::GetInstance().IsInMenu())
+        {
+            break;
+        }
+
         if (_world != nullptr)
         {
             _world->OnButtonInput(_inputType);

@@ -22,6 +22,9 @@ public:
     void Draw(TimeMS _delta, UIDrawInterface& _display, bool _isFocused);
     void OnPressed(UIActions& _actions) {};
 
+    // TODO support focus for TextInput.
+    bool IsHovered(const UIDrawInterface& _display, f32 _x, f32 _y) const { return false; };
+
 public:
     glm::ivec2 m_Position = glm::ivec2();
     glm::ivec2 m_Dimensions = glm::ivec2();

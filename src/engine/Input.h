@@ -40,4 +40,7 @@ private:
 
     std::vector<InputKeyMapping> m_KeyMappings;
     std::vector<InputMouseButtonMapping> m_MouseButtonMappings;
+
+    sf::Vector2i m_PreviousMousePosition = sf::Vector2i(0, 0);
+    bool m_IsUsingMouseInput = false;
 };

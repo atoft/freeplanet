@@ -32,7 +32,12 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
     if (m_RequestedGameMenu != nullptr)
     {
         m_GameMenu = std::move(m_RequestedGameMenu);
-        m_GameMenu->Init();
+
+        // When we open a new menu, if using a keyboard/controller, the first item should already be focused.
+        // If using a mouse, focus should depend on cursor movement.
+        const bool shouldStartFocused = !m_IsUsingMouseInput;
+        m_GameMenu->Init(shouldStartFocused);
+
         m_RequestedGameMenu = nullptr;
     }
 
@@ -91,16 +96,9 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         m_GameMenu->Draw(delta, m_Interface, _world);
     }
 
-    if (m_DisplayLog)
+    if (m_DisplayLog && m_Console != nullptr)
     {
-        m_Window->setMouseCursorVisible(true);
-        m_Window->setMouseCursorGrabbed(false);
-
-        if (m_Console != nullptr)
-        {
-            m_Console->Draw(delta, m_Interface, _world);
-        }
-
+        m_Console->Draw(delta, m_Interface, _world);
     }
     else
     {
@@ -110,12 +108,17 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         {
             m_DebugMenu->Draw(delta, m_Interface, _world);
         }
+    }
 
-        if (!Engine::GetInstance().GetCommandLineArgs().m_ForceUnlockedMouse)
-        {
-            m_Window->setMouseCursorVisible(false);
-            m_Window->setMouseCursorGrabbed(true);
-        }
+    if (m_DisplayLog || (m_GameMenu != nullptr && m_GameMenu->ShouldTakeFocus()) || Engine::GetInstance().GetCommandLineArgs().m_ForceUnlockedMouse)
+    {
+        m_Window->setMouseCursorVisible(true);
+        m_Window->setMouseCursorGrabbed(false);
+    }
+    else
+    {
+        m_Window->setMouseCursorVisible(false);
+        m_Window->setMouseCursorGrabbed(true);
     }
 }
 
@@ -182,6 +185,19 @@ void UIDisplay::OnTextEntered(std::string _value)
     if (m_Console != nullptr && m_DisplayLog)
     {
         m_Console->OnTextEntered(_value);
+    }
+}
+
+void UIDisplay::OnMouseHover(f32 _x, f32 _y)
+{
+    if (m_DebugMenu != nullptr)
+    {
+        m_DebugMenu->OnMouseHover(m_Interface, _x, _y);
+    }
+
+    if (m_GameMenu != nullptr)
+    {
+        m_GameMenu->OnMouseHover(m_Interface, _x, _y);
     }
 }
 

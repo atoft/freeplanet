@@ -19,11 +19,14 @@ public:
     void AddTextInput(std::string _label);
 
     void OnButtonReleased(InputType _type, UIActions& _actions);
+    void OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y);
+
     void Draw(TimeMS _delta, UIDrawInterface& _display);
+    void Focus() { m_ActiveIndex = 0; };
 
 public:
     std::vector<UIWidgetVariant> m_Widgets;
 
 private:
-    u32 m_ActiveIndex = 0;
+    std::optional<u32> m_ActiveIndex;
 };

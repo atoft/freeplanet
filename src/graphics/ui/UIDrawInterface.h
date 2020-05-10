@@ -41,6 +41,8 @@ public:
 
     glm::ivec2 GetDisplayResolution() const;
 
+    bool IsInAABB(glm::uvec2 _point, glm::uvec2 _boxPosition, glm::uvec2 _boxScale, UIAnchorPosition _anchor) const;
+
 private:
     UIDisplay* m_UIDisplay = nullptr;
 };

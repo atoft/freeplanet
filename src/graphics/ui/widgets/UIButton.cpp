@@ -21,3 +21,8 @@ void UIButton::OnPressed(UIActions& _actions)
 {
     m_OnPressed(_actions);
 }
+
+bool UIButton::IsHovered(const UIDrawInterface& _display, f32 _x, f32 _y) const
+{
+    return _display.IsInAABB(glm::uvec2(_x, _y), m_Position, m_Dimensions, UIAnchorPosition::Centered);
+}
