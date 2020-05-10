@@ -10,6 +10,7 @@
 #include <src/engine/Engine.h>
 #include <src/graphics/ui/UIActions.h>
 #include <src/graphics/ui/UIConsoleMenu.h>
+#include <src/graphics/ui/debug/UIAspectRatioDebug.h>
 #include <src/graphics/ui/debug/UICollisionDebug.h>
 #include <src/graphics/ui/debug/UIComponentDebug.h>
 #include <src/graphics/ui/debug/UIWorldZoneDebug.h>
@@ -66,6 +67,11 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
         else if (m_RequestedDebugMenu == "planet")
         {
             auto debugMenu = std::make_unique<UIPlanetDebug>();
+            m_DebugMenu = std::move(debugMenu);
+        }
+        else if (m_RequestedDebugMenu == "aspect")
+        {
+            auto debugMenu = std::make_unique<UIAspectRatioDebug>();
             m_DebugMenu = std::move(debugMenu);
         }
         else if (m_RequestedDebugMenu == "none" || m_RequestedDebugMenu == "off")

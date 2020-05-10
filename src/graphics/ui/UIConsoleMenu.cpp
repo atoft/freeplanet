@@ -26,7 +26,7 @@ long lineCount(std::string inString)
 
 void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World*)
 {
-    _display.DrawRectangle(glm::vec2(0), glm::ivec2(1920,1080), Color(0,0,0,0.5f));
+    _display.FillScreen(Color(0,0,0,0.5f));
 
     const std::vector<std::pair<LogType ,std::string>> log = MessageLog::GetInstance().GetMessageBuffer();
     float currentY = _display.GetDisplayResolution().y - 32;
@@ -70,7 +70,7 @@ void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World*)
 
         }
 
-        _display.DrawString(glm::vec2(10.f, currentY), logDisplay, CONSOLE_LOG_SIZE, fontColor, FontStyle::Sans, true);
+        _display.DrawString(glm::vec2(10.f, currentY), logDisplay, CONSOLE_LOG_SIZE, fontColor, FontStyle::Sans, UIAnchorPosition::Centered, true);
 
     }
 }

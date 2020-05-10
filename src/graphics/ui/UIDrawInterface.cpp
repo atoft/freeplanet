@@ -19,12 +19,60 @@ glm::ivec2 UIDrawInterface::GetDisplayResolution() const
     return glm::ivec2(m_UIDisplay->m_Window->getSize().x, m_UIDisplay->m_Window->getSize().y);
 }
 
+template<typename Vector2DType>
+Vector2DType GetScaledSize(const glm::ivec2& _displayResolution, u32 x, u32 y)
+{
+    const f32 xRatio = static_cast<f32>(UIConstants::UIResolution.x) / static_cast<f32>(_displayResolution.x);
+    const f32 yRatio = static_cast<f32>(UIConstants::UIResolution.y) / static_cast<f32>(_displayResolution.y);
+
+    const f32 scaleRatio = glm::max(xRatio, yRatio);
+
+    Vector2DType result;
+    result.x = static_cast<f32>(x) / scaleRatio;
+    result.y = static_cast<f32>(y) / scaleRatio;
+    return result;
+}
+
+template<typename Vector2DType>
+Vector2DType GetScaledPosition(const glm::ivec2& _displayResolution, u32 x, u32 y, UIAnchorPosition _anchor)
+{
+    const f32 xRatio = static_cast<f32>(UIConstants::UIResolution.x) / static_cast<f32>(_displayResolution.x);
+    const f32 yRatio = static_cast<f32>(UIConstants::UIResolution.y) / static_cast<f32>(_displayResolution.y);
+
+    const f32 scaleRatio = glm::max(xRatio, yRatio);
+
+    Vector2DType result;
+    result.x = static_cast<f32>(x) / scaleRatio;
+    result.y = static_cast<f32>(y) / scaleRatio;
+
+    switch (_anchor)
+    {
+        case UIAnchorPosition::Centered:
+        {
+            result.x += static_cast<f32>(_displayResolution.x - static_cast<f32>(UIConstants::UIResolution.x) / scaleRatio) / 2.f;
+            result.y += static_cast<f32>(_displayResolution.y - static_cast<f32>(UIConstants::UIResolution.y) / scaleRatio) / 2.f;
+            break;
+        }
+        case UIAnchorPosition::TopLeft:
+            // No corrections needed.
+            break;
+        case UIAnchorPosition::BottomLeft:
+        {
+            result.y += _displayResolution.y - static_cast<f32>(UIConstants::UIResolution.y) / scaleRatio;
+        }
+        default:
+            break;
+    }
+    return result;
+}
+
 void UIDrawInterface::DrawString(
         glm::vec2 _position,
         std::string _text,
         f32 _scale,
         Color _color,
         FontStyle _style,
+        UIAnchorPosition _anchor,
         bool _exactPixels,
         s32 _caretPos)
 {
@@ -32,7 +80,6 @@ void UIDrawInterface::DrawString(
     assert(m_UIDisplay->m_Window != nullptr);
 
     sf::String sfString(_text);
-
 
     sf::Text sfText;
     switch(_style)
@@ -52,12 +99,19 @@ void UIDrawInterface::DrawString(
     }
     static_assert(static_cast<u32>(FontStyle::Count) == 2);
 
-    const f32 scale = _exactPixels ? _scale : GetScaledVector(_scale, _scale).y;
+    // TODO Consider removing the exactPixels rendering. It doesn't play very nicely with
+    // UI scaling and anchoring.
+
+    const glm::ivec2 displayResolution = GetDisplayResolution();
+
+    const f32 scale = _exactPixels ? _scale : GetScaledSize<glm::uvec2>(displayResolution, _scale, _scale).y;
+
+    const glm::uvec2 scaledPosition = GetScaledPosition<glm::uvec2>(displayResolution, _position.x, _position.y, _anchor);
 
     sfText.setCharacterSize(scale);
     sfText.setPosition(
-            _exactPixels ? _position.x : (_position.x / UIConstants::UIResolution.x) * m_UIDisplay->m_Window->getSize().x,
-            _exactPixels ? _position.y : (_position.y / UIConstants::UIResolution.y) * m_UIDisplay->m_Window->getSize().y);
+            _exactPixels ? _position.x : scaledPosition.x,
+            _exactPixels ? _position.y : scaledPosition.y);
 
     sfText.setFillColor(
             sf::Color(
@@ -80,18 +134,20 @@ void UIDrawInterface::DrawString(
                         0.9f * UIDisplay::MAX_COLOR));
 
         sfRectangle.setPosition(sfText.findCharacterPos(_caretPos).x,
-                                _exactPixels ? _position.y : GetScaledVector(_position.x, _position.y).y);
+                                _exactPixels ? _position.y : GetScaledPosition<glm::uvec2>(displayResolution, _position.x, _position.y, _anchor).y);
 
         m_UIDisplay->m_DrawingQueue.push_back(sfRectangle);
     }
 }
 
-void UIDrawInterface::DrawRectangle(glm::vec2 _position, glm::vec2 _scale, Color _color)
+void UIDrawInterface::DrawRectangle(glm::vec2 _position, glm::vec2 _scale, Color _color, UIAnchorPosition _anchor)
 {
     assert(m_UIDisplay != nullptr);
     assert(m_UIDisplay->m_Window != nullptr);
 
-    sf::RectangleShape sfRectangle(GetSFMLScaledVector(_scale.x, _scale.y));
+    const glm::ivec2 displayResolution = GetDisplayResolution();
+
+    sf::RectangleShape sfRectangle(GetScaledSize<sf::Vector2f>(displayResolution, _scale.x, _scale.y));
 
     sfRectangle.setFillColor(
             sf::Color(
@@ -102,31 +158,26 @@ void UIDrawInterface::DrawRectangle(glm::vec2 _position, glm::vec2 _scale, Color
 
 
 
-    sfRectangle.setPosition(GetSFMLScaledVector(_position.x, _position.y));
+    sfRectangle.setPosition(GetScaledPosition<sf::Vector2f>(displayResolution, _position.x, _position.y, _anchor));
 
     m_UIDisplay->m_DrawingQueue.push_back(sfRectangle);
 }
 
-// This is a slow function as the image is not cached.
-// In future we could add Asset handling for SFML textures if we're using it a lot
-void UIDrawInterface::DrawSpriteFromDisk(glm::vec2 _position, glm::vec2 _scale, std::string _path)
+void UIDrawInterface::FillScreen(Color _color)
 {
-    // TODO I think this is broken because the texture needs to be created on the Render thread
-    sf::Texture splashBg;
-    bool loadSuccess = splashBg.loadFromFile(Globals::FREEPLANET_ASSET_PATH + _path);
-    if(!loadSuccess)
-    {
-        LogError("Failed to load UI texture " + _path);
-        return;
-    }
-    sf::Sprite sprite;
-    sprite.setOrigin((_position.x / UIConstants::UIResolution.x) * m_UIDisplay->m_Window->getSize().x,
-                     (_position.y / UIConstants::UIResolution.y) * m_UIDisplay->m_Window->getSize().y);
+    assert(m_UIDisplay != nullptr);
+    assert(m_UIDisplay->m_Window != nullptr);
 
-    sprite.setScale(1.f,1.f);//(_scale.x / DEFAULT_RES.x) * m_UIDisplay->m_Window->getSize().x,(_scale.y / DEFAULT_RES.y) * m_UIDisplay->m_Window->getSize().y);
-    sprite.setTexture(splashBg);
+    sf::RectangleShape sfRectangle(static_cast<sf::Vector2f>(m_UIDisplay->m_Window->getSize()));
 
-    m_UIDisplay->m_DrawingQueue.push_back(sprite);
+    sfRectangle.setFillColor(
+            sf::Color(
+                    _color.r * UIDisplay::MAX_COLOR,
+                    _color.g * UIDisplay::MAX_COLOR,
+                    _color.b * UIDisplay::MAX_COLOR,
+                    _color.a * UIDisplay::MAX_COLOR));
+
+    m_UIDisplay->m_DrawingQueue.push_back(sfRectangle);
 }
 
 void UIDrawInterface::DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _position, f32 _radius, Color _color)
@@ -178,20 +229,4 @@ void UIDrawInterface::DebugDrawAABB(glm::ivec3 zoneCoordinates, const glm::vec3&
 
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
     }
-}
-
-glm::uvec2 UIDrawInterface::GetScaledVector(u32 x, u32 y) const
-{
-    glm::uvec2 result;
-    result.x = (static_cast<f32>(x) / static_cast<f32>(UIConstants::UIResolution.x)) * m_UIDisplay->m_Window->getSize().x;
-    result.y = (static_cast<f32>(y) / static_cast<f32>(UIConstants::UIResolution.y)) * m_UIDisplay->m_Window->getSize().y;
-    return result;
-}
-
-sf::Vector2f UIDrawInterface::GetSFMLScaledVector(u32 x, u32 y) const
-{
-    sf::Vector2f result;
-    result.x = (static_cast<f32>(x) / static_cast<f32>(UIConstants::UIResolution.x)) * m_UIDisplay->m_Window->getSize().x;
-    result.y = (static_cast<f32>(y) / static_cast<f32>(UIConstants::UIResolution.y)) * m_UIDisplay->m_Window->getSize().y;
-    return result;
 }

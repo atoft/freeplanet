@@ -361,8 +361,7 @@ void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
                         "Collider: " + owner->GetName() + "\nChosen axis: " + result.m_DebugInfo,
                         16.f,
                         Color(1.f,0.f,0.f,1.f),
-                        FontStyle::Sans,
-                        true);
+                        FontStyle::Sans);
 
                 ++collisionCount;
             }
@@ -378,8 +377,7 @@ void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
     _interface.DrawString(
             glm::vec2(20, 20),
             std::to_string(collisionCount) + " collisions this frame.",
-            16.f,
+            32.f,
             Color(0.f,0.f,0.f,1.f),
-            FontStyle::Sans,
-            true);
+            FontStyle::Sans);
 }

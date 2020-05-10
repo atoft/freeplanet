@@ -15,7 +15,7 @@ void UIMainMenu::Init()
 
 void UIMainMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world)
 {
-    _display.DrawRectangle(glm::ivec2(0,0), UIConstants::UIResolution, UIConstants::BackgroundColor);
+    _display.FillScreen(UIConstants::BackgroundColor);
     _display.DrawString(UIConstants::ListStartPosition - glm::ivec2(0,200), "freeplanet", 48.f);
 
     m_List.Draw(_delta, _display);
