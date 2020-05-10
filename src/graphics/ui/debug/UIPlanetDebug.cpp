@@ -53,7 +53,7 @@ void UIPlanetDebug::Draw(TimeMS _delta, UIDrawInterface& _display, const World* 
     u32 yOffset = 100;
     for (const auto& biome : biomes)
     {
-        _display.DrawString(glm::ivec2(20, yOffset), "Biome weight: " + std::to_string(biome.first), 32.f, biome.second->m_GroundColor);
+        _display.DrawString(glm::ivec2(20, yOffset), "Biome weight: " + std::to_string(biome.first), 16.f, biome.second->m_GroundColor);
 
         yOffset += 20;
     }
@@ -66,7 +66,7 @@ void UIPlanetDebug::Draw(TimeMS _delta, UIDrawInterface& _display, const World* 
         _display.DrawString(
                 glm::ivec2(20, yOffset),
                 "Octave: " + std::to_string(octaveIdx) + " Weight: " + std::to_string(weight),
-                32.f,
+                16.f,
                 Color(0.f, 0.f, 0.f, 1.f),
                 FontStyle::Sans);
 
