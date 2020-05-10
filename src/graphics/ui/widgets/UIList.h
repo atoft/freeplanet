@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <optional>
 #include <variant>
 
 #include <src/graphics/ui/widgets/UIButton.h>
