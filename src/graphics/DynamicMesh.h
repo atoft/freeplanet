@@ -19,14 +19,10 @@ public:
     DynamicMesh() = default;
     ~DynamicMesh() = default;
 
-    void SetupForShader(const ShaderProgram& _shader);
-
     const Renderable::Mesh& GetMesh() const { return m_Mesh; };
 
     void LoadToGPU(const RawMesh& _mesh);
     void ReleaseFromGPU();
-private:
-    void LoadToGPU(const GLfloat* _vertices, u32 _sizeofVertices, const GLuint* _elements, u32 _sizeofElements);
 
 private:
     Renderable::Mesh m_Mesh;

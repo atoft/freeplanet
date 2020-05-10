@@ -93,12 +93,12 @@ void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params
                     u32 triangleVertexIndex = 0;
                     for (const glm::vec3& vert : triangle.m_Vertices)
                     {
-                        const auto& it = std::find(
+                        auto it = std::find(
                                 _outRawMesh.m_Vertices.begin(),
                                 _outRawMesh.m_Vertices.end(),
                                 vert);
 
-                        if(it != _outRawMesh.m_Vertices.end())
+                        if (it != _outRawMesh.m_Vertices.end())
                         {
                             // An identical vertex has been added before, use the index of that one.
                             const u32 vertIdx = std::distance(_outRawMesh.m_Vertices.begin(), it);

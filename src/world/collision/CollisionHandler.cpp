@@ -101,8 +101,6 @@ void CollisionHandler::Update(TimeMS _dt)
                         {
                             WorldZone* otherZone = m_World->FindZoneAtCoordinates(zone.GetCoordinates() + glm::ivec3(x, y, z));
 
-                            LogMessage("Overlapping neighbour " + glm::to_string(zone.GetCoordinates() + glm::ivec3(x, y, z)));
-
                             if (otherZone != nullptr)
                             {
                                 requestedCollisions.push_back({&collider, otherZone, isPreviousZone});
@@ -167,17 +165,12 @@ void CollisionHandler::Update(TimeMS _dt)
 
         const TerrainComponent& terrainComponent = request.m_OtherZone->GetTerrainComponent();
 
-        const bool terrainCollision = DoCollision(
+        DoCollision(
                 *request.m_Collider,
                 *object1,
                 positionOffset,
                 terrainComponent,
                 MathsHelpers::GetPosition(request.m_OtherZone->GetTerrainModelTransform()));
-
-        if (terrainCollision)
-        {
-            LogMessage("Collision with other zone's terrain.");
-        }
     }
 }
 

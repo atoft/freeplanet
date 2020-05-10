@@ -60,7 +60,7 @@ namespace Renderable
 
         std::vector<GLint> m_VertexAttribs;
 
-        u32 m_SizeofElements = 0;
+        u32 m_NumberOfElements = 0;
     };
 
     struct SceneObject

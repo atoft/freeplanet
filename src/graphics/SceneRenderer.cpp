@@ -124,6 +124,7 @@ void SceneRenderer::RequestTerminate()
 
 DynamicMeshID SceneRenderer::RequestDynamicMeshCreation(const RawMesh &_mesh)
 {
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Main);
     assert(m_NextAvailableID < std::numeric_limits<DynamicMeshID >::max());
 
     std::unique_lock<std::mutex> lock(m_RenderMutex);   // TODO Separate lock for dynamic requests?
@@ -134,6 +135,8 @@ DynamicMeshID SceneRenderer::RequestDynamicMeshCreation(const RawMesh &_mesh)
 
 void SceneRenderer::RequestDynamicMeshDestruction(DynamicMeshID _meshID)
 {
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Main);
+
     std::unique_lock<std::mutex> lock(m_RenderMutex);   // TODO Separate lock for dynamic requests?
     m_MeshDestructionRequests.push_back(_meshID);
 }
@@ -317,7 +320,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
             static_assert(static_cast<u32>(TextureAssetType::Count) == 2);
         }
 
-        glDrawElements(GL_TRIANGLES, mesh.m_SizeofElements, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, 0);
 
         if(texture != nullptr)
         {

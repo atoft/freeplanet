@@ -19,11 +19,7 @@ public:
     void AcquireResources(MeshAssetID _asset);
     void ReleaseResources();
 
-    void SetupForShader(const ShaderProgram& _shader);
-
     const Renderable::Mesh& GetMesh() const { return m_Mesh; };
-private:
-    void LoadToGPU(const GLfloat* _vertices, u32 _sizeofVertices, const GLuint* _elements, u32 _sizeofElements);
 
 private:
     Renderable::Mesh m_Mesh;
