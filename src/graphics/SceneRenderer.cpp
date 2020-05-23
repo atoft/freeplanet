@@ -273,24 +273,12 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         }
 
         shaderProgram->SetUniformMat4("frplTransform", _scene.m_CameraTransform * sceneObject.m_Transform);
+        shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
         shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
-
 
         shaderProgram->SetUniformMat4("frplModelTransform", sceneObject.m_Transform);
 
-        glm::mat4 normalMatrix;
-        if (_scene.m_RenderMode == Renderable::RenderMode::Background)
-        {
-            // Special case for the background, we need the camera's rotation for the normal, rather than the object.
-            // We'll probably end up needing this anyway so it may become a different uniform
-            normalMatrix = _scene.m_CameraRotation;
-        }
-        else
-        {
-            normalMatrix = MathsHelpers::GetRotationMatrix(sceneObject.m_Transform);
-        }
-
-        shaderProgram->SetUniformMat4("frplNormalTransform", normalMatrix);
+        shaderProgram->SetUniformMat4("frplNormalTransform", MathsHelpers::GetRotationMatrix(sceneObject.m_Transform));
         // TODO
         shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_BaseColor);
         shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
@@ -301,6 +289,11 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
 
         shaderProgram->SetUniformFloat3("frplAmbientLight.color", _scene.m_AmbientLight.m_Color);
         shaderProgram->SetUniformFloat("frplAmbientLight.intensity", _scene.m_AmbientLight.m_Intensity);
+
+        shaderProgram->SetUniformFloat3("frplAtmosphere.origin", _scene.m_Atmosphere.m_Origin);
+        shaderProgram->SetUniformFloat("frplAtmosphere.groundRadius", _scene.m_Atmosphere.m_GroundRadius);
+        shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
+        shaderProgram->SetUniformFloat("frplAtmosphere.blendOutHeight", _scene.m_Atmosphere.m_AtmosphereBlendOutHeight);
 
         Texture* texture = sceneObject.m_Texture.GetAsset();
 

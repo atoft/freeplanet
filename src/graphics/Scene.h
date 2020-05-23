@@ -52,6 +52,14 @@ namespace Renderable
         float m_Intensity;
     };
 
+    struct Atmosphere
+    {
+        glm::vec3 m_Origin;
+        f32 m_GroundRadius;
+        f32 m_AtmosphereHeight;
+        f32 m_AtmosphereBlendOutHeight;
+    };
+
     struct Mesh
     {
         GLuint m_VaoHandle = 0;
@@ -85,9 +93,12 @@ namespace Renderable
         glm::mat4 m_CameraTransform;
         glm::vec3 m_CameraRelativePosition;
 
+        glm::mat4 m_CameraInverseProjection;
+
         DirectionalLight m_DirectionalLight;
         AmbientLight m_AmbientLight;
         std::vector<PointLight> m_PointLights;
+        Atmosphere m_Atmosphere;
 
         std::vector<SceneObject> m_SceneObjects;
 

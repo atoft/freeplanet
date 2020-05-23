@@ -42,14 +42,14 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     else
     {
         const sf::VideoMode defaultMode = sf::VideoMode::getDesktopMode();
-        m_EngineConfig.m_Resolution.x = defaultMode.width;
-        m_EngineConfig.m_Resolution.y = defaultMode.height;
+        m_EngineConfig.m_GraphicsConfig.m_Resolution.x = defaultMode.width;
+        m_EngineConfig.m_GraphicsConfig.m_Resolution.y = defaultMode.height;
     }
 
     if (m_CommandLineArgs.m_ForceWindowed)
     {
-        m_EngineConfig.m_Resolution.x = 1280;
-        m_EngineConfig.m_Resolution.y = 720;
+        m_EngineConfig.m_GraphicsConfig.m_Resolution.x = 1280;
+        m_EngineConfig.m_GraphicsConfig.m_Resolution.y = 720;
     }
 
     sf::ContextSettings settings;
@@ -57,11 +57,11 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     LogMessage("SFML OpenGL context: " + std::to_string(settings.majorVersion) + "." + std::to_string(settings.minorVersion));
     settings.depthBits = 24;
     settings.stencilBits = 8;
-    settings.antialiasingLevel = m_EngineConfig.m_AntialiasingLevel;
+    settings.antialiasingLevel = m_EngineConfig.m_GraphicsConfig.m_AntialiasingLevel;
 
-    m_Window = std::make_shared<sf::RenderWindow>(sf::VideoMode(m_EngineConfig.m_Resolution.x, m_EngineConfig.m_Resolution.y),
+    m_Window = std::make_shared<sf::RenderWindow>(sf::VideoMode(m_EngineConfig.m_GraphicsConfig.m_Resolution.x, m_EngineConfig.m_GraphicsConfig.m_Resolution.y),
                                                   freeplanet_APP_NAME_PRETTY,
-                                                  (m_EngineConfig.m_IsFullscreen && !m_CommandLineArgs.m_ForceWindowed ? sf::Style::Fullscreen : sf::Style::Close),
+                                                  (m_EngineConfig.m_GraphicsConfig.m_IsFullscreen && !m_CommandLineArgs.m_ForceWindowed ? sf::Style::Fullscreen : sf::Style::Close),
                                                   settings);
 
     if (m_Window->getSettings().minorVersion != settings.minorVersion || m_Window->getSettings().majorVersion != settings.majorVersion)
@@ -70,7 +70,7 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
                    + "." + std::to_string(m_Window->getSettings().minorVersion));
     }
 
-    m_Window->setVerticalSyncEnabled(m_EngineConfig.m_IsVsyncEnabled);
+    m_Window->setVerticalSyncEnabled(m_EngineConfig.m_GraphicsConfig.m_IsVsyncEnabled);
 
     if (!m_CommandLineArgs.m_ForceUnlockedMouse)
     {
@@ -84,15 +84,15 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
         // Avoids issues where SFML is detecting multiple monitor resolutions incorrectly on Linux.
         LogMessage("No engineconfig.txt found, creating.");
 
-        m_EngineConfig.m_Resolution.x = m_Window->getSize().x;
-        m_EngineConfig.m_Resolution.y = m_Window->getSize().y;
+        m_EngineConfig.m_GraphicsConfig.m_Resolution.x = m_Window->getSize().x;
+        m_EngineConfig.m_GraphicsConfig.m_Resolution.y = m_Window->getSize().y;
 
         InspectionHelpers::SaveToText(m_EngineConfig, "engineconfig.txt");
     }
     
     m_Window->setActive(false);
 
-    m_RenderHandler = std::make_shared<RenderHandler>(m_Window);
+    m_RenderHandler = std::make_shared<RenderHandler>(m_Window, m_EngineConfig.m_GraphicsConfig);
 
     m_Input = new Input(m_Window);
     m_UIDisplay = std::make_shared<UIDisplay>(m_Window.get());

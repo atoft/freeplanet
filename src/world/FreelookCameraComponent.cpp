@@ -43,7 +43,8 @@ void FreelookCameraComponent::Update(TimeMS _delta)
 
 float FreelookCameraComponent::GetFieldOfView() const
 {
-    return Globals::FREEPLANET_FOV_DEGREES;
+    assert(false && "Unused, reimplement to support FOV modifiers for zooming.");
+    return 0.f;
 }
 
 float FreelookCameraComponent::GetFarClipDistance() const

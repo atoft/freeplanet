@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include <src/engine/EngineConfig.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/world/FreelookCameraComponent.h>
 #include <src/world/World.h>
@@ -14,7 +15,7 @@
 #include <src/world/vista/VistaHandler.h>
 #include <src/profiling/Profiler.h>
 
-RenderHandler::RenderHandler(std::shared_ptr<sf::RenderWindow> _window)
+RenderHandler::RenderHandler(std::shared_ptr<sf::RenderWindow> _window, GraphicsConfig _config)
 {
     m_UnitCube = AssetHandle<StaticMesh>(MeshAsset_UnitCube);
     m_UnitSphere = AssetHandle<StaticMesh>(MeshAsset_UnitUVSphere);
@@ -37,6 +38,7 @@ RenderHandler::RenderHandler(std::shared_ptr<sf::RenderWindow> _window)
 
     m_WindowResolution.x = _window->getSize().x;
     m_WindowResolution.y = _window->getSize().y;
+    m_DefaultFov = glm::radians(glm::clamp(_config.m_FieldOfViewDegrees, 45.f, 170.f));
 }
 
 RenderHandler::~RenderHandler()
@@ -137,7 +139,7 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
                                                              : Renderable::RenderMode::Vista;
 
         glm::mat4 view = glm::inverse(c->GetCameraZoneTransform());
-        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()),
+        glm::mat4 projection = glm::perspective(m_DefaultFov,
             static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
             0.1f,
             c->GetFarClipDistance());
@@ -165,7 +167,7 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
                                                              : Renderable::RenderMode::Normal;
 
         glm::mat4 view = glm::inverse(c->GetCameraZoneTransform());
-        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()),
+        glm::mat4 projection = glm::perspective(m_DefaultFov,
             static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
             0.1f,
             c->GetFarClipDistance());
@@ -289,7 +291,7 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* world, const Freelook
         Renderable::Scene sceneToRender;
         sceneToRender.m_RenderMode = Renderable::RenderMode::Wireframe;
         glm::mat4 view = glm::inverse(c->GetCameraZoneTransform());
-        glm::mat4 projection = glm::perspective(glm::radians(c->GetFieldOfView()),
+        glm::mat4 projection = glm::perspective(m_DefaultFov,
                 static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
                 0.1f,
                 c->GetFarClipDistance());
@@ -471,12 +473,29 @@ void RenderHandler::GenerateBackgroundScene(const World* world, const FreelookCa
     sceneToRender.m_CameraTransform = glm::mat4(1.f);
     sceneToRender.m_CameraRotation = MathsHelpers::GetRotationMatrix(c->GetCameraZoneTransform());
 
+    sceneToRender.m_CameraInverseProjection = glm::inverse(glm::perspective(m_DefaultFov,
+                                                               static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
+                                                               0.1f,
+                                                               c->GetFarClipDistance()) * glm::inverse(sceneToRender.m_CameraRotation));
+
     sceneToRender.m_DirectionalLight.m_Direction = world->GetEnvironmentState().GetSunDirection();
     sceneToRender.m_DirectionalLight.m_Color = world->GetEnvironmentState().GetSunColor();
     sceneToRender.m_DirectionalLight.m_Intensity = world->GetEnvironmentState().GetSunIntensity();
 
     sceneToRender.m_AmbientLight.m_Color = world->GetEnvironmentState().GetAmbientColor();
     sceneToRender.m_AmbientLight.m_Intensity = world->GetEnvironmentState().GetAmbientIntensity();
+
+    const Planet* planet = world->GetPlanet();
+
+    if (planet != nullptr)
+    {
+        // TODO clean up this calculation.
+        sceneToRender.m_Atmosphere.m_Origin = WorldPosition(planet->m_OriginZone, glm::vec3(0.f)).GetPositionRelativeTo(c->GetOwnerObject()->GetRef().m_ZoneCoordinates)
+                - c->GetOwnerObject()->GetPosition();
+        sceneToRender.m_Atmosphere.m_GroundRadius = planet->m_Radius;
+        sceneToRender.m_Atmosphere.m_AtmosphereHeight = planet->m_AtmosphereHeight;
+        sceneToRender.m_Atmosphere.m_AtmosphereBlendOutHeight = planet->m_BlendOutHeight;
+    }
 
     Renderable::SceneObject sceneObject;
     sceneObject.m_Transform = glm::mat4(1.f);

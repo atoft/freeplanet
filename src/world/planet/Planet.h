@@ -22,7 +22,8 @@ struct Planet
 
     BaseShape m_Shape = BaseShape::Sphere;
     f32 m_Radius = 1024.f;
-    f32 m_AtmosphereHeight = 128.f;
+    f32 m_AtmosphereHeight = 96.f;
+    f32 m_BlendOutHeight = 32.f;
     glm::ivec3 m_OriginZone = glm::ivec3(0);
 
     // How much extra space there is outside the planet's atmosphere in which WorldZones can exist.

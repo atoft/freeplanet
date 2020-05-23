@@ -15,6 +15,7 @@
 class World;
 class FreelookCameraComponent;
 class DynamicMeshHandle;
+struct GraphicsConfig;
 
 // Manages the active SceneRenderer and acts as an interface between gameplay types
 // and rendering
@@ -30,7 +31,7 @@ public:
         Normals = 4
     };
 
-    explicit RenderHandler(std::shared_ptr<sf::RenderWindow> _window);
+    explicit RenderHandler(std::shared_ptr<sf::RenderWindow> _window, GraphicsConfig _config);
     ~RenderHandler();
 
     void HandleEvent(EngineEvent _event);
@@ -72,8 +73,9 @@ private:
     SceneRenderer m_SceneRenderer;
 
     glm::uvec2 m_WindowResolution;
+    f32 m_DefaultFov = 0.f;
 
-    bool m_WaitingToQuit;
+    bool m_WaitingToQuit = false;
 
     // Keeping this around so we can generate debug information on the CPU.
     // It's a big waste of memory to have this here all the time, maybe we
