@@ -113,6 +113,7 @@ void InspectionContext::AppendNameAndValue(std::string _name, std::string _value
 {
     if (!m_InsideContainer.back())
     {
+        AppendNewlineWithIndent();
         *m_TextBuffer += _name + ": ";
     }
 
@@ -120,7 +121,17 @@ void InspectionContext::AppendNameAndValue(std::string _name, std::string _value
 
     if (!m_InsideContainer.back())
     {
-        *m_TextBuffer += ";\n";
+        *m_TextBuffer += ";";
+    }
+}
+
+void InspectionContext::AppendNewlineWithIndent()
+{
+    *m_TextBuffer += "\n";
+
+    for (u32 idx = 0; idx < m_Depth; ++idx)
+    {
+        *m_TextBuffer += "\t";
     }
 }
 
@@ -135,21 +146,22 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
                 assert(m_Depth == 0);
 
                 // Just starting, emit the type identifier
-                *m_TextBuffer += InspectionTypeToString(_type) + " v" + std::to_string(_version) + "\n{\n";
+                *m_TextBuffer += InspectionTypeToString(_type) + " v" + std::to_string(_version) + "\n{";
             }
             else
             {
                 if (!m_InsideContainer.back())
                 {
-                    *m_TextBuffer += _name + ":\n{\n";
+                    AppendNewlineWithIndent();
+                    *m_TextBuffer += _name + ":";
                 }
-                else
-                {
-                    *m_TextBuffer += "\n{\n";
-                }
+
+                AppendNewlineWithIndent();
+                *m_TextBuffer += "{";
             }
 
             ++m_Depth;
+
             m_InsideContainer.push_back(false);
             break;
         }
@@ -159,9 +171,7 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
             {
                 {
                     const std::string expectedTypeIdentifier = InspectionTypeToString(_type);
-                    assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedTypeIdentifier));
-
-                    m_TextIt += expectedTypeIdentifier.size();
+                    SkipSingleToken(m_TextIt, m_TextEnd, expectedTypeIdentifier);
                 }
 
                 SkipWhitespace(m_TextIt, m_TextEnd);
@@ -169,9 +179,7 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
 
                 {
                     const std::string expectedVersionIdentifier = "v" + std::to_string(_version);
-                    assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedVersionIdentifier));
-
-                    m_TextIt += expectedVersionIdentifier.size();
+                    SkipSingleToken(m_TextIt, m_TextEnd, expectedVersionIdentifier);
                 }
             }
             else
@@ -179,19 +187,14 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
                 if (!m_InsideContainer.back())
                 {
                     const std::string expectedPropertyIdentifier = _name + ":";
-                    assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedPropertyIdentifier));
-
-                    m_TextIt += expectedPropertyIdentifier.size();
+                    SkipSingleToken(m_TextIt, m_TextEnd, expectedPropertyIdentifier);
                 }
             }
 
             SkipWhitespace(m_TextIt, m_TextEnd);
             assert(m_TextIt != m_TextEnd);
 
-            {
-                assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, "{"));
-                ++m_TextIt;
-            }
+            SkipSingleToken(m_TextIt, m_TextEnd, "{");
 
             SkipWhitespace(m_TextIt, m_TextEnd);
             assert(m_TextIt != m_TextEnd);
@@ -213,17 +216,18 @@ void InspectionContext::EndStruct()
         case Operation::ToText:
         {
             assert(m_Depth != 0);
-            *m_TextBuffer += "}";
 
             --m_Depth;
+            AppendNewlineWithIndent();
+
+            *m_TextBuffer += "}";
+
             m_InsideContainer.pop_back();
 
             if (!m_InsideContainer.back())
             {
                 *m_TextBuffer += ";";
             }
-
-            *m_TextBuffer += "\n";
 
             break;
         }

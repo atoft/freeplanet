@@ -39,6 +39,7 @@ private:
 
     std::string ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end);
     void AppendNameAndValue(std::string _name, std::string _value);
+    void AppendNewlineWithIndent();
     void SkipWhitespace(std::string::const_iterator& _it, std::string::const_iterator _end);
     void SkipSingleToken(std::string::const_iterator& _it, std::string::const_iterator _end, const std::string& _token);
 
@@ -102,6 +103,7 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
     {
         case Operation::ToText:
         {
+            AppendNewlineWithIndent();
             if (!m_InsideContainer.back())
             {
                 *m_TextBuffer += _name + ": ";
@@ -122,7 +124,7 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
             assert(m_InsideContainer.back());
             m_InsideContainer.pop_back();
 
-            *m_TextBuffer += "];\n";
+            *m_TextBuffer += "];";
 
             break;
         }
