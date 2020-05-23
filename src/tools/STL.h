@@ -29,4 +29,18 @@ public:
         _container.erase(iterator);
         return true;
     }
+
+    template <typename EnumType>
+    static EnumType FromString(std::string _valueString)
+    {
+        for (u32 enumIdx = 0; enumIdx < static_cast<u32>(EnumType::Count); ++enumIdx)
+        {
+            if (ToString(static_cast<EnumType>(enumIdx)) == _valueString)
+            {
+                return static_cast<EnumType>(enumIdx);
+            }
+        }
+
+        return EnumType::Count;
+    }
 };

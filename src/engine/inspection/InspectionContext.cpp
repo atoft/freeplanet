@@ -4,8 +4,6 @@
 
 #include "InspectionContext.h"
 
-#include <src/tools/StringHelpers.h>
-
 std::vector<TypeInfo> InspectionContext::ms_TypeInfos =
         {
             {"vec2", InspectionType::vec2},
@@ -16,6 +14,7 @@ std::vector<TypeInfo> InspectionContext::ms_TypeInfos =
 
             {"TestStruct", InspectionType::TestStruct},
             {"TestSubStruct", InspectionType::TestSubStruct},
+            {"TestStructInVector", InspectionType::TestStructInVector},
 
             {"EngineConfig", InspectionType::EngineConfig},
         };
@@ -33,7 +32,7 @@ InspectionType InspectionContext::ToInspectionType(std::string _typeName)
     return InspectionType::Invalid;
 }
 
-std::string InspectionContext::ToString(InspectionType _type)
+std::string InspectionContext::InspectionTypeToString(InspectionType _type)
 {
     for (const TypeInfo& info : ms_TypeInfos)
     {
@@ -46,7 +45,7 @@ std::string InspectionContext::ToString(InspectionType _type)
     return "INVALID";
 }
 
-void SkipWhitespace(std::string::const_iterator& _it, std::string::const_iterator _end)
+void InspectionContext::SkipWhitespace(std::string::const_iterator& _it, std::string::const_iterator _end)
 {
     for (; _it != _end; ++_it)
     {
@@ -57,26 +56,72 @@ void SkipWhitespace(std::string::const_iterator& _it, std::string::const_iterato
     }
 }
 
-std::string ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end)
+void InspectionContext::SkipSingleToken(std::string::const_iterator& _it, std::string::const_iterator _end, const std::string& _token)
 {
-    const std::string expectedPropertyIdentifier = _name + ":";
-    assert(StringHelpers::StartsWith(_it, _end, expectedPropertyIdentifier));
-    _it += expectedPropertyIdentifier.size();
+    assert(StringHelpers::StartsWith(_it, _end, _token));
+
+    _it += _token.size();
+}
+
+std::string InspectionContext::ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end)
+{
+    if (!m_InsideContainer.back())
+    {
+        const std::string expectedPropertyIdentifier = _name + ":";
+        assert(StringHelpers::StartsWith(_it, _end, expectedPropertyIdentifier));
+        _it += expectedPropertyIdentifier.size();
+    }
 
     SkipWhitespace(_it, _end);
     assert(_it != _end);
 
-    const std::string::const_iterator endOfLine = StringHelpers::Find(_it, _end, "\n");
+    std::string endOfValueString = ";";
+    std::string::const_iterator endOfLine = StringHelpers::Find(_it, _end, endOfValueString);
+
+    if (m_InsideContainer.back())
+    {
+        // Find the closest token of , or ].
+        const std::string::const_iterator nextComma = StringHelpers::Find(_it, _end, ",");
+        const std::string::const_iterator nextClosingSquareBrace = StringHelpers::Find(_it, _end, "]");
+
+        if (nextComma < nextClosingSquareBrace)
+        {
+            endOfValueString = ",";
+            endOfLine = nextComma;
+        }
+        else
+        {
+            endOfValueString = "]";
+            endOfLine = nextClosingSquareBrace;
+        }
+    }
+
     assert(endOfLine != _end);
 
     std::string valueString = std::string(_it, endOfLine);
 
-    _it += valueString.size();
+    SkipSingleToken(_it, _end, valueString);
+    SkipSingleToken(_it, _end, endOfValueString);
 
     SkipWhitespace(_it, _end);
     assert(_it != _end);
 
     return valueString;
+}
+
+void InspectionContext::AppendNameAndValue(std::string _name, std::string _value)
+{
+    if (!m_InsideContainer.back())
+    {
+        *m_TextBuffer += _name + ": ";
+    }
+
+    *m_TextBuffer += _value;
+
+    if (!m_InsideContainer.back())
+    {
+        *m_TextBuffer += ";\n";
+    }
 }
 
 void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _version)
@@ -90,14 +135,22 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
                 assert(m_Depth == 0);
 
                 // Just starting, emit the type identifier
-                *m_TextBuffer += ToString(_type) + " v" + std::to_string(_version) + "\n{\n";
+                *m_TextBuffer += InspectionTypeToString(_type) + " v" + std::to_string(_version) + "\n{\n";
             }
             else
             {
-                *m_TextBuffer += _name + ":\n{\n";
+                if (!m_InsideContainer.back())
+                {
+                    *m_TextBuffer += _name + ":\n{\n";
+                }
+                else
+                {
+                    *m_TextBuffer += "\n{\n";
+                }
             }
 
             ++m_Depth;
+            m_InsideContainer.push_back(false);
             break;
         }
         case Operation::FromText:
@@ -105,7 +158,7 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
             if (m_Depth == 0)
             {
                 {
-                    const std::string expectedTypeIdentifier = ToString(_type);
+                    const std::string expectedTypeIdentifier = InspectionTypeToString(_type);
                     assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedTypeIdentifier));
 
                     m_TextIt += expectedTypeIdentifier.size();
@@ -123,10 +176,13 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
             }
             else
             {
-                const std::string expectedPropertyIdentifier = _name + ":";
-                assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedPropertyIdentifier));
+                if (!m_InsideContainer.back())
+                {
+                    const std::string expectedPropertyIdentifier = _name + ":";
+                    assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedPropertyIdentifier));
 
-                m_TextIt += expectedPropertyIdentifier.size();
+                    m_TextIt += expectedPropertyIdentifier.size();
+                }
             }
 
             SkipWhitespace(m_TextIt, m_TextEnd);
@@ -141,6 +197,7 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
             assert(m_TextIt != m_TextEnd);
 
             ++m_Depth;
+            m_InsideContainer.push_back(false);
 
             break;
         }
@@ -156,27 +213,48 @@ void InspectionContext::EndStruct()
         case Operation::ToText:
         {
             assert(m_Depth != 0);
-            *m_TextBuffer += "}\n";
+            *m_TextBuffer += "}";
 
             --m_Depth;
+            m_InsideContainer.pop_back();
+
+            if (!m_InsideContainer.back())
+            {
+                *m_TextBuffer += ";";
+            }
+
+            *m_TextBuffer += "\n";
 
             break;
         }
         case Operation::FromText:
         {
             assert(m_Depth != 0);
-            assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, "}"));
-            ++m_TextIt;
-
+            SkipSingleToken(m_TextIt, m_TextEnd, "}");
             SkipWhitespace(m_TextIt, m_TextEnd);
 
             --m_Depth;
+            m_InsideContainer.pop_back();
 
             if (m_Depth == 0)
             {
+                SkipSingleToken(m_TextIt, m_TextEnd, ";");
+                SkipWhitespace(m_TextIt, m_TextEnd);
                 assert(m_TextIt == m_TextEnd);
             }
-
+            else if (m_InsideContainer.back() && !StringHelpers::StartsWith(m_TextIt, m_TextEnd, "]"))
+            {
+                SkipSingleToken(m_TextIt, m_TextEnd, ",");
+            }
+            else if (m_InsideContainer.back() && StringHelpers::StartsWith(m_TextIt, m_TextEnd, "]"))
+            {
+                SkipSingleToken(m_TextIt, m_TextEnd, "]");
+            }
+            else
+            {
+                SkipSingleToken(m_TextIt, m_TextEnd, ";");
+            }
+            SkipWhitespace(m_TextIt, m_TextEnd);
             break;
         }
         default:
@@ -190,7 +268,7 @@ void InspectionContext::U32(std::string _name, u32& _value)
     {
         case Operation::ToText:
         {
-            *m_TextBuffer += _name + ": " + std::to_string(_value) + "\n";
+            AppendNameAndValue(_name, std::to_string(_value));
 
             break;
         }
@@ -213,7 +291,7 @@ void InspectionContext::S32(std::string _name, s32& _value)
     {
     case Operation::ToText:
     {
-        *m_TextBuffer += _name + ": " + std::to_string(_value) + "\n";
+        AppendNameAndValue(_name, std::to_string(_value));
 
         break;
     }
@@ -236,7 +314,7 @@ void InspectionContext::F32(std::string _name, f32& _value)
     {
     case Operation::ToText:
     {
-        *m_TextBuffer += _name + ": " + std::to_string(_value) + "\n";
+        AppendNameAndValue(_name, std::to_string(_value));
 
         break;
     }
@@ -259,7 +337,7 @@ void InspectionContext::Bool(std::string _name, bool& _value)
     {
     case Operation::ToText:
     {
-        *m_TextBuffer += _name + ": " + (_value ? "true" : "false") + "\n";
+        AppendNameAndValue(_name, _value ? "true" : "false");
 
         break;
     }

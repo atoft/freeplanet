@@ -17,8 +17,10 @@ enum class InspectionType
 
     TestStruct,
     TestSubStruct,
+    TestStructInVector,
 
     EngineConfig,
+    GraphicsConfig,
 };
 
 class TypeInfo
