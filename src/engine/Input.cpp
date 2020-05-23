@@ -11,32 +11,32 @@
 #include <src/graphics/ui/UIDisplay.h>
 #include <src/world/World.h>
 
-const std::vector<InputKeyMapping> DEFAULT_KEY_MAPPINGS
+std::vector<InputKeyMapping> Input::DEFAULT_KEY_MAPPINGS
         {
-                {InputType::EngineQuit, InputContext::Debug, sf::Keyboard::Escape, InputButtonInteraction::OnReleased},
-                {InputType::MenuLeft, InputContext::UI, sf::Keyboard::Left, InputButtonInteraction::OnPressed},
-                {InputType::MenuRight, InputContext::UI, sf::Keyboard::Right, InputButtonInteraction::OnPressed},
-                {InputType::MenuUp, InputContext::UI, sf::Keyboard::Up, InputButtonInteraction::OnPressed},
-                {InputType::MenuDown, InputContext::UI, sf::Keyboard::Down, InputButtonInteraction::OnPressed},
+                {InputType::EngineQuit, InputContext::Debug, KeyboardKey::Escape, InputButtonInteraction::OnReleased},
+                {InputType::MenuLeft, InputContext::UI, KeyboardKey::Left, InputButtonInteraction::OnPressed},
+                {InputType::MenuRight, InputContext::UI, KeyboardKey::Right, InputButtonInteraction::OnPressed},
+                {InputType::MenuUp, InputContext::UI, KeyboardKey::Up, InputButtonInteraction::OnPressed},
+                {InputType::MenuDown, InputContext::UI, KeyboardKey::Down, InputButtonInteraction::OnPressed},
 
-                {InputType::MenuAccept, InputContext::UI, sf::Keyboard::Return, InputButtonInteraction::OnPressed},
-                {InputType::ToggleLog, InputContext::UI, sf::Keyboard::Tilde, InputButtonInteraction::OnPressed},
+                {InputType::MenuAccept, InputContext::UI, KeyboardKey::Enter, InputButtonInteraction::OnPressed},
+                {InputType::ToggleLog, InputContext::UI, KeyboardKey::Tilde, InputButtonInteraction::OnPressed},
 
 				// @CrossPlatform Grave/"UK tilde" is not recognised on Windows - at least with a UK Keyboard layout.
 				// I think it's a bug or limitation in SFML and works by accident (?) on Linux.
 				// Use F1 on Windows as a workaround.
-				{InputType::ToggleLog, InputContext::UI, sf::Keyboard::F1, InputButtonInteraction::OnPressed},
+				{InputType::ToggleLog, InputContext::UI, KeyboardKey::F1, InputButtonInteraction::OnPressed},
 
-                {InputType::MoveForward, InputContext::Gameplay, sf::Keyboard::W, InputButtonInteraction::IsDown},
-                {InputType::MoveBack, InputContext::Gameplay, sf::Keyboard::S, InputButtonInteraction::IsDown},
-                {InputType::StrafeLeft, InputContext::Gameplay, sf::Keyboard::A, InputButtonInteraction::IsDown},
-                {InputType::StrafeRight, InputContext::Gameplay, sf::Keyboard::D, InputButtonInteraction::IsDown},
-                {InputType::Jump, InputContext::Gameplay, sf::Keyboard::Space, InputButtonInteraction::IsDown},
-                {InputType::Sprint, InputContext::Gameplay, sf::Keyboard::LShift, InputButtonInteraction::IsDown},
-                {InputType::LevitateUp, InputContext::Gameplay, sf::Keyboard::R, InputButtonInteraction::IsDown},
-                {InputType::LevitateDown, InputContext::Gameplay, sf::Keyboard::F, InputButtonInteraction::IsDown},
-                {InputType::RollLeft, InputContext::Gameplay, sf::Keyboard::Q, InputButtonInteraction::IsDown},
-                {InputType::RollRight, InputContext::Gameplay, sf::Keyboard::E, InputButtonInteraction::IsDown},
+                {InputType::MoveForward, InputContext::Gameplay, KeyboardKey::W, InputButtonInteraction::IsDown},
+                {InputType::MoveBack, InputContext::Gameplay, KeyboardKey::S, InputButtonInteraction::IsDown},
+                {InputType::StrafeLeft, InputContext::Gameplay, KeyboardKey::A, InputButtonInteraction::IsDown},
+                {InputType::StrafeRight, InputContext::Gameplay, KeyboardKey::D, InputButtonInteraction::IsDown},
+                {InputType::Jump, InputContext::Gameplay, KeyboardKey::Space, InputButtonInteraction::IsDown},
+                {InputType::Sprint, InputContext::Gameplay, KeyboardKey::LShift, InputButtonInteraction::IsDown},
+                {InputType::LevitateUp, InputContext::Gameplay, KeyboardKey::R, InputButtonInteraction::IsDown},
+                {InputType::LevitateDown, InputContext::Gameplay, KeyboardKey::F, InputButtonInteraction::IsDown},
+                {InputType::RollLeft, InputContext::Gameplay, KeyboardKey::Q, InputButtonInteraction::IsDown},
+                {InputType::RollRight, InputContext::Gameplay, KeyboardKey::E, InputButtonInteraction::IsDown},
         };
 
 const std::vector<InputMouseButtonMapping> DEFAULT_MOUSE_BUTTON_MAPPINGS
@@ -46,12 +46,12 @@ const std::vector<InputMouseButtonMapping> DEFAULT_MOUSE_BUTTON_MAPPINGS
                 {InputType::MenuAccept, InputContext::UI, sf::Mouse::Left, InputButtonInteraction::OnReleased},
         };
 
-Input::Input(std::shared_ptr<sf::Window> _window)
+Input::Input(std::shared_ptr<sf::Window> _window, InputConfig _config)
 {
     m_Window = _window;
 
     // TODO Read from a config.
-    m_KeyMappings = DEFAULT_KEY_MAPPINGS;
+    m_KeyMappings = _config.m_KeyMappings;
     m_MouseButtonMappings = DEFAULT_MOUSE_BUTTON_MAPPINGS;
 
     RecenterMouse();
@@ -78,13 +78,13 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
             }
             case sf::Event::KeyPressed:
             {
-                HandleKeyInput(windowEvent.key.code, InputButtonInteraction::OnPressed, _world, _display);
+                HandleKeyInput(static_cast<KeyboardKey>(windowEvent.key.code), InputButtonInteraction::OnPressed, _world, _display);
 
                 break;
             }
             case sf::Event::KeyReleased:
             {
-                HandleKeyInput(windowEvent.key.code, InputButtonInteraction::OnReleased, _world, _display);
+                HandleKeyInput(static_cast<KeyboardKey>(windowEvent.key.code), InputButtonInteraction::OnReleased, _world, _display);
 
                 break;
             }
@@ -112,7 +112,7 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
         {
             if (mapping.m_InputContext == InputContext::Gameplay
                 && mapping.m_Interaction == InputButtonInteraction::IsDown
-                && sf::Keyboard::isKeyPressed(mapping.m_Key))
+                && sf::Keyboard::isKeyPressed(static_cast<sf::Keyboard::Key>(mapping.m_Key)))
             {
                 _world->OnButtonInput(mapping.m_InputType);
             }
@@ -148,7 +148,7 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
     m_PreviousMousePosition = pos;
 }
 
-void Input::HandleKeyInput(sf::Keyboard::Key _key, InputButtonInteraction _interaction, World* _world, UIDisplay* _display)
+void Input::HandleKeyInput(KeyboardKey _key, InputButtonInteraction _interaction, World* _world, UIDisplay* _display)
 {
     for (const InputKeyMapping& mapping : m_KeyMappings)
     {

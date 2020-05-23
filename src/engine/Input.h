@@ -13,6 +13,7 @@ namespace sf
 {
     class Window;
 }
+struct InputConfig;
 class World;
 class UIDisplay;
 class WorldObject;
@@ -23,10 +24,10 @@ class Input
 public:
     void UpdateUserInput(World *_world, UIDisplay *_display);
 
-    Input(std::shared_ptr<sf::Window> _window);
+    Input(std::shared_ptr<sf::Window> _window, InputConfig _config);
 
 private:
-    void HandleKeyInput(sf::Keyboard::Key _key, InputButtonInteraction _interaction, World* _world, UIDisplay* _display);
+    void HandleKeyInput(KeyboardKey _key, InputButtonInteraction _interaction, World* _world, UIDisplay* _display);
     void HandleMouseButtonInput(sf::Mouse::Button _button, InputButtonInteraction _interaction, World* _world, UIDisplay* _display);
 
     void HandleInput(InputType _inputType, InputContext _context, World* _world, UIDisplay* _display);
@@ -34,6 +35,9 @@ private:
     void OnDebugInput(InputType _inputType);
 
     void RecenterMouse();
+
+public:
+    static std::vector<InputKeyMapping> DEFAULT_KEY_MAPPINGS;
 
 private:
     std::shared_ptr<sf::Window> m_Window;

@@ -4,8 +4,13 @@
 
 #pragma once
 
-#include <SFML/Window/Keyboard.hpp>
+#include <string>
+
 #include <SFML/Window/Mouse.hpp>
+#include <src/tools/globals.h>
+#include <src/engine/KeyboardKey.h>
+
+class InspectionContext;
 
 enum class InputType
 {
@@ -44,7 +49,9 @@ enum class InputButtonInteraction
     None,
     IsDown,
     OnPressed,
-    OnReleased
+    OnReleased,
+
+    Count
 };
 
 enum class InputContext
@@ -52,7 +59,9 @@ enum class InputContext
     None,
     UI,
     Gameplay,
-    Debug
+    Debug,
+
+    Count
 };
 
 struct InputKeyMapping
@@ -60,7 +69,7 @@ struct InputKeyMapping
     InputType m_InputType = InputType::None;
     InputContext m_InputContext = InputContext::None;
 
-    sf::Keyboard::Key m_Key = sf::Keyboard::Key::Unknown;
+    KeyboardKey m_Key = KeyboardKey::Unknown;
     InputButtonInteraction m_Interaction = InputButtonInteraction::None;
 };
 
@@ -72,3 +81,10 @@ struct InputMouseButtonMapping
     sf::Mouse::Button m_Button = sf::Mouse::Button::ButtonCount;
     InputButtonInteraction m_Interaction = InputButtonInteraction::None;
 };
+
+std::string ToString(InputType _inputType);
+std::string ToString(InputContext _inputContext);
+std::string ToString(InputButtonInteraction _interaction);
+std::string ToString(KeyboardKey _key);
+
+void Inspect(std::string _name, InputKeyMapping& _target, InspectionContext& _context);

@@ -21,6 +21,9 @@ enum class InspectionType
 
     EngineConfig,
     GraphicsConfig,
+    InputConfig,
+
+    InputKeyMapping
 };
 
 class TypeInfo

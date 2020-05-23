@@ -87,6 +87,8 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
         m_EngineConfig.m_GraphicsConfig.m_Resolution.x = m_Window->getSize().x;
         m_EngineConfig.m_GraphicsConfig.m_Resolution.y = m_Window->getSize().y;
 
+        m_EngineConfig.m_InputConfig.m_KeyMappings = Input::DEFAULT_KEY_MAPPINGS;
+
         InspectionHelpers::SaveToText(m_EngineConfig, "engineconfig.txt");
     }
     
@@ -94,7 +96,7 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
 
     m_RenderHandler = std::make_shared<RenderHandler>(m_Window, m_EngineConfig.m_GraphicsConfig);
 
-    m_Input = new Input(m_Window);
+    m_Input = new Input(m_Window, m_EngineConfig.m_InputConfig);
     m_UIDisplay = std::make_shared<UIDisplay>(m_Window.get());
     m_UIDisplay->UpdateSplashScreen();
 
