@@ -33,11 +33,15 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     ThreadUtils::tl_ThreadType = ThreadType::Main;
     m_CommandLineArgs = _commandLineArgs;
 
-    const std::optional<EngineConfig> loadedConfig = InspectionHelpers::LoadFromText<EngineConfig>("engineconfig.txt");
+    const InspectionHelpers::LoadFromTextResult<EngineConfig> loadedConfig = InspectionHelpers::LoadFromText<EngineConfig>("engineconfig.txt");
 
-    if (loadedConfig.has_value())
+    // If it couldn't be loaded, or it was missing some values, we want to update the file on disk.
+    const bool needToWriteBack = loadedConfig.m_Result == InspectionResult::ReadIncomplete;
+    const bool needToCreate = loadedConfig.m_Result == InspectionResult::ReadSyntaxError || loadedConfig.m_Result == InspectionResult::FileIOError;
+
+    if (loadedConfig.m_Result == InspectionResult::Success || loadedConfig.m_Result == InspectionResult::ReadIncomplete)
     {
-        m_EngineConfig = *loadedConfig;
+        m_EngineConfig = *loadedConfig.m_Value;
     }
     else
     {
@@ -78,18 +82,25 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
         m_Window->setMouseCursorGrabbed(true);
     }
 
-    if (!loadedConfig.has_value())
+    const std::string engineConfigFilename = "engineconfig.txt";
+
+    if (needToCreate)
     {
         // Do this after the window has been created to make sure we get the resolution that is actually being displayed.
         // Avoids issues where SFML is detecting multiple monitor resolutions incorrectly on Linux.
-        LogMessage("No engineconfig.txt found, creating.");
+        LogMessage("No " + engineConfigFilename + " found, creating.");
 
         m_EngineConfig.m_GraphicsConfig.m_Resolution.x = m_Window->getSize().x;
         m_EngineConfig.m_GraphicsConfig.m_Resolution.y = m_Window->getSize().y;
 
         m_EngineConfig.m_InputConfig.m_KeyMappings = Input::DEFAULT_KEY_MAPPINGS;
 
-        InspectionHelpers::SaveToText(m_EngineConfig, "engineconfig.txt");
+        InspectionHelpers::SaveToText(m_EngineConfig, engineConfigFilename);
+    }
+    else if (needToWriteBack)
+    {
+        LogMessage("Updating " + engineConfigFilename + ".");
+        InspectionHelpers::SaveToText(m_EngineConfig, engineConfigFilename);
     }
     
     m_Window->setActive(false);

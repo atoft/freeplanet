@@ -56,29 +56,74 @@ void InspectionContext::SkipWhitespace(std::string::const_iterator& _it, std::st
     }
 }
 
-void InspectionContext::SkipSingleToken(std::string::const_iterator& _it, std::string::const_iterator _end, const std::string& _token)
+bool InspectionContext::SkipSingleToken(std::string::const_iterator& _it, std::string::const_iterator _end, const std::string& _token, bool _allowFailure)
 {
-    assert(StringHelpers::StartsWith(_it, _end, _token));
+    if (!StringHelpers::StartsWith(_it, _end, _token))
+    {
+        if (!_allowFailure)
+        {
+            AddError("Expected token \"" + _token + "\"");
+        }
+        else
+        {
+            AddWarning("Skipping expected token \"" + _token + "\"");
+        }
+
+        return false;
+    }
 
     _it += _token.size();
+    return true;
 }
 
-std::string InspectionContext::ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end)
+void InspectionContext::AddError(std::string _error)
 {
-    if (!m_InsideContainer.back())
+    m_Finished = true;
+    m_Result = InspectionResult::ReadSyntaxError;
+    m_ErrorMessage += "Error: " + _error + " at line " + std::to_string(GetLineNumber()) + ".""\n";
+}
+
+void InspectionContext::AddWarning(std::string _error)
+{
+    if (m_Result != InspectionResult::ReadSyntaxError)
+    {
+        m_Result = InspectionResult::ReadIncomplete;
+    }
+
+    m_WarningMessage += "Warning: " + _error + " at line " + std::to_string(GetLineNumber()) + ".""\n";
+}
+
+
+u32 InspectionContext::GetLineNumber() const
+{
+    u32 lineNumber = 1;
+    for (auto it = m_TextBegin; it < m_TextIt; ++it)
+    {
+        if (*it == '\n')
+        {
+            ++lineNumber;
+        }
+    }
+    return lineNumber;
+}
+
+std::optional<std::string> InspectionContext::ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end)
+{
+    if (!m_Stack.back().m_InsideContainer)
     {
         const std::string expectedPropertyIdentifier = _name + ":";
-        assert(StringHelpers::StartsWith(_it, _end, expectedPropertyIdentifier));
-        _it += expectedPropertyIdentifier.size();
+        const bool canSkipThisToken = m_Stack.back().m_StructRequirements == InspectionStructRequirements::AllowMissingValues;
+
+        if (!SkipSingleToken(_it, _end, expectedPropertyIdentifier, canSkipThisToken)) return std::nullopt;
     }
 
     SkipWhitespace(_it, _end);
-    assert(_it != _end);
+    if (_it == _end) return AddError("Expected value for " + _name), std::nullopt;
 
     std::string endOfValueString = ";";
     std::string::const_iterator endOfLine = StringHelpers::Find(_it, _end, endOfValueString);
 
-    if (m_InsideContainer.back())
+    if (m_Stack.back().m_InsideContainer)
     {
         // Find the closest token of , or ].
         const std::string::const_iterator nextComma = StringHelpers::Find(_it, _end, ",");
@@ -96,22 +141,22 @@ std::string InspectionContext::ParseValueAndSkip(std::string _name, std::string:
         }
     }
 
-    assert(endOfLine != _end);
+    if (_it == _end) return AddError("Expected " + endOfValueString), std::nullopt;
 
     std::string valueString = std::string(_it, endOfLine);
 
-    SkipSingleToken(_it, _end, valueString);
-    SkipSingleToken(_it, _end, endOfValueString);
+    if (!SkipSingleToken(_it, _end, valueString)) return std::nullopt;
+    if (!SkipSingleToken(_it, _end, endOfValueString)) return std::nullopt;
 
     SkipWhitespace(_it, _end);
-    assert(_it != _end);
+    if (_it == _end) return AddError("Unexpected end of file"), std::nullopt;
 
     return valueString;
 }
 
 void InspectionContext::AppendNameAndValue(std::string _name, std::string _value)
 {
-    if (!m_InsideContainer.back())
+    if (!m_Stack.back().m_InsideContainer)
     {
         AppendNewlineWithIndent();
         *m_TextBuffer += _name + ": ";
@@ -119,7 +164,7 @@ void InspectionContext::AppendNameAndValue(std::string _name, std::string _value
 
     *m_TextBuffer += _value;
 
-    if (!m_InsideContainer.back())
+    if (!m_Stack.back().m_InsideContainer)
     {
         *m_TextBuffer += ";";
     }
@@ -129,28 +174,33 @@ void InspectionContext::AppendNewlineWithIndent()
 {
     *m_TextBuffer += "\n";
 
-    for (u32 idx = 0; idx < m_Depth; ++idx)
+    for (u32 idx = 0; idx < m_Stack.size(); ++idx)
     {
         *m_TextBuffer += "\t";
     }
 }
 
-void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _version)
+void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _version, InspectionStructRequirements _requirements)
 {
+    if (m_Finished || (!m_Stack.empty() && m_Stack.back().m_SkipThisLevel))
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
         case Operation::ToText:
         {
             if (m_TextBuffer->empty())
             {
-                assert(m_Depth == 0);
+                assert(m_Stack.empty());
 
                 // Just starting, emit the type identifier
                 *m_TextBuffer += InspectionTypeToString(_type) + " v" + std::to_string(_version) + "\n{";
             }
             else
             {
-                if (!m_InsideContainer.back())
+                if (!m_Stack.back().m_InsideContainer)
                 {
                     AppendNewlineWithIndent();
                     *m_TextBuffer += _name + ":";
@@ -160,18 +210,17 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
                 *m_TextBuffer += "{";
             }
 
-            ++m_Depth;
+            m_Stack.push_back({false, _requirements});
 
-            m_InsideContainer.push_back(false);
             break;
         }
         case Operation::FromText:
         {
-            if (m_Depth == 0)
+            if (m_Stack.empty())
             {
                 {
                     const std::string expectedTypeIdentifier = InspectionTypeToString(_type);
-                    SkipSingleToken(m_TextIt, m_TextEnd, expectedTypeIdentifier);
+                    if (!SkipSingleToken(m_TextIt, m_TextEnd, expectedTypeIdentifier)) return;
                 }
 
                 SkipWhitespace(m_TextIt, m_TextEnd);
@@ -179,28 +228,36 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
 
                 {
                     const std::string expectedVersionIdentifier = "v" + std::to_string(_version);
-                    SkipSingleToken(m_TextIt, m_TextEnd, expectedVersionIdentifier);
+                    if (!SkipSingleToken(m_TextIt, m_TextEnd, expectedVersionIdentifier)) return;
                 }
             }
             else
             {
-                if (!m_InsideContainer.back())
+                if (!m_Stack.back().m_InsideContainer)
                 {
                     const std::string expectedPropertyIdentifier = _name + ":";
-                    SkipSingleToken(m_TextIt, m_TextEnd, expectedPropertyIdentifier);
+                    const bool canSkipThisToken = m_Stack.back().m_StructRequirements == InspectionStructRequirements::AllowMissingValues;
+                    if (!SkipSingleToken(m_TextIt, m_TextEnd, expectedPropertyIdentifier, canSkipThisToken))
+                    {
+                        if (canSkipThisToken)
+                        {
+                            m_Stack.push_back({false, _requirements, true});
+                        }
+
+                        return;
+                    }
                 }
             }
 
             SkipWhitespace(m_TextIt, m_TextEnd);
             assert(m_TextIt != m_TextEnd);
 
-            SkipSingleToken(m_TextIt, m_TextEnd, "{");
+            if (!SkipSingleToken(m_TextIt, m_TextEnd, "{")) return;
 
             SkipWhitespace(m_TextIt, m_TextEnd);
             assert(m_TextIt != m_TextEnd);
 
-            ++m_Depth;
-            m_InsideContainer.push_back(false);
+            m_Stack.push_back({false, _requirements});
 
             break;
         }
@@ -211,20 +268,23 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
 
 void InspectionContext::EndStruct()
 {
+    if (m_Finished)
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
         case Operation::ToText:
         {
-            assert(m_Depth != 0);
+            assert(!m_Stack.empty());
 
-            --m_Depth;
+            m_Stack.pop_back();
             AppendNewlineWithIndent();
 
             *m_TextBuffer += "}";
 
-            m_InsideContainer.pop_back();
-
-            if (!m_InsideContainer.back())
+            if (!m_Stack.back().m_InsideContainer)
             {
                 *m_TextBuffer += ";";
             }
@@ -233,30 +293,37 @@ void InspectionContext::EndStruct()
         }
         case Operation::FromText:
         {
-            assert(m_Depth != 0);
-            SkipSingleToken(m_TextIt, m_TextEnd, "}");
+            assert(!m_Stack.empty());
+
+            if (m_Stack.back().m_SkipThisLevel)
+            {
+                m_Stack.pop_back();
+                SkipWhitespace(m_TextIt, m_TextEnd);
+                return;
+            }
+
+            if (!SkipSingleToken(m_TextIt, m_TextEnd, "}")) return;
             SkipWhitespace(m_TextIt, m_TextEnd);
 
-            --m_Depth;
-            m_InsideContainer.pop_back();
+            m_Stack.pop_back();
 
-            if (m_Depth == 0)
+            if (m_Stack.empty())
             {
-                SkipSingleToken(m_TextIt, m_TextEnd, ";");
+                if (!SkipSingleToken(m_TextIt, m_TextEnd, ";")) return;
                 SkipWhitespace(m_TextIt, m_TextEnd);
                 assert(m_TextIt == m_TextEnd);
             }
-            else if (m_InsideContainer.back() && !StringHelpers::StartsWith(m_TextIt, m_TextEnd, "]"))
+            else if (m_Stack.back().m_InsideContainer && !StringHelpers::StartsWith(m_TextIt, m_TextEnd, "]"))
             {
-                SkipSingleToken(m_TextIt, m_TextEnd, ",");
+                if (!SkipSingleToken(m_TextIt, m_TextEnd, ",")) return;
             }
-            else if (m_InsideContainer.back() && StringHelpers::StartsWith(m_TextIt, m_TextEnd, "]"))
+            else if (m_Stack.back().m_InsideContainer && StringHelpers::StartsWith(m_TextIt, m_TextEnd, "]"))
             {
-                SkipSingleToken(m_TextIt, m_TextEnd, "]");
+                if (!SkipSingleToken(m_TextIt, m_TextEnd, "]")) return;
             }
             else
             {
-                SkipSingleToken(m_TextIt, m_TextEnd, ";");
+                if (!SkipSingleToken(m_TextIt, m_TextEnd, ";")) return;
             }
             SkipWhitespace(m_TextIt, m_TextEnd);
             break;
@@ -268,6 +335,11 @@ void InspectionContext::EndStruct()
 
 void InspectionContext::U32(std::string _name, u32& _value)
 {
+    if (m_Finished || m_Stack.back().m_SkipThisLevel)
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
         case Operation::ToText:
@@ -278,9 +350,14 @@ void InspectionContext::U32(std::string _name, u32& _value)
         }
         case Operation::FromText:
         {
-            std::string valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
+            const std::optional<std::string> valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
 
-            _value = static_cast<u32>(atol(valueString.c_str()));
+            if (!valueString)
+            {
+                return;
+            }
+
+            _value = static_cast<u32>(atol(valueString->c_str()));
 
             break;
         }
@@ -291,6 +368,11 @@ void InspectionContext::U32(std::string _name, u32& _value)
 
 void InspectionContext::S32(std::string _name, s32& _value)
 {
+    if (m_Finished || m_Stack.back().m_SkipThisLevel)
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
     case Operation::ToText:
@@ -301,9 +383,14 @@ void InspectionContext::S32(std::string _name, s32& _value)
     }
     case Operation::FromText:
     {
-        std::string valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
+        const std::optional<std::string> valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
 
-        _value = static_cast<s32>(atoi(valueString.c_str()));
+        if (!valueString)
+        {
+            return;
+        }
+
+        _value = static_cast<s32>(atoi(valueString->c_str()));
 
         break;
     }
@@ -314,6 +401,11 @@ void InspectionContext::S32(std::string _name, s32& _value)
 
 void InspectionContext::F32(std::string _name, f32& _value)
 {
+    if (m_Finished || m_Stack.back().m_SkipThisLevel)
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
     case Operation::ToText:
@@ -324,9 +416,13 @@ void InspectionContext::F32(std::string _name, f32& _value)
     }
     case Operation::FromText:
     {
-        std::string valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
+        const std::optional<std::string> valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
 
-        _value = static_cast<f32>(atof(valueString.c_str()));
+        if (!valueString)
+        {
+            return;
+        }
+        _value = static_cast<f32>(atof(valueString->c_str()));
 
         break;
     }
@@ -337,6 +433,11 @@ void InspectionContext::F32(std::string _name, f32& _value)
 
 void InspectionContext::Bool(std::string _name, bool& _value)
 {
+    if (m_Finished || m_Stack.back().m_SkipThisLevel)
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
     case Operation::ToText:
@@ -347,9 +448,14 @@ void InspectionContext::Bool(std::string _name, bool& _value)
     }
     case Operation::FromText:
     {
-        std::string valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
+        const std::optional<std::string> valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
 
-        _value = (valueString == "true");
+        if (!valueString)
+        {
+            return;
+        }
+
+        _value = (*valueString == "true");
 
         break;
     }

@@ -8,15 +8,21 @@
 #include <src/engine/inspection/InspectionContext.h>
 #include <src/engine/inspection/VectorInspect.h>
 
+bool TestSubStruct::operator==(const TestSubStruct& _other) const
+{
+    return m_SubProperty == _other.m_SubProperty
+           && m_IsTrue == _other.m_IsTrue
+           && std::equal(m_SeveralThings.begin(), m_SeveralThings.end(), _other.m_SeveralThings.begin())
+           && m_Amplitude == _other.m_Amplitude
+           && std::equal(m_VectorOfStructs.begin(), m_VectorOfStructs.end(), _other.m_VectorOfStructs.begin())
+            ;
+}
+
 bool TestStruct::operator==(const TestStruct& _other) const
 {
     return m_Property == _other.m_Property
         && m_OtherProperty == _other.m_OtherProperty
-        && m_StructProperty.m_SubProperty == _other.m_StructProperty.m_SubProperty
-        && m_StructProperty.m_IsTrue == _other.m_StructProperty.m_IsTrue
-        && std::equal(m_StructProperty.m_SeveralThings.begin(), m_StructProperty.m_SeveralThings.end(), _other.m_StructProperty.m_SeveralThings.begin())
-        && m_StructProperty.m_Amplitude == _other.m_StructProperty.m_Amplitude
-        && std::equal(m_StructProperty.m_VectorOfStructs.begin(), m_StructProperty.m_VectorOfStructs.end(), _other.m_StructProperty.m_VectorOfStructs.begin())
+        && m_StructProperty == _other.m_StructProperty
         && m_EnumProperty == _other.m_EnumProperty
         ;
 }
@@ -32,7 +38,9 @@ bool TestStructInVector::operator==(const TestStructInVector& _other) const
 void Inspect(std::string _name, TestStructInVector& _target, InspectionContext& _context)
 {
     constexpr u32 version = 0;
-    _context.Struct(_name, InspectionType::TestStructInVector, version);
+
+    // Explicitly ban missing values for this struct.
+    _context.Struct(_name, InspectionType::TestStructInVector, version, InspectionStructRequirements::RequireExactMatch);
 
     Inspect("Boolean", _target.m_Boolean, _context);
     Inspect("Floaty", _target.m_Floaty, _context);
@@ -44,7 +52,7 @@ void Inspect(std::string _name, TestStructInVector& _target, InspectionContext& 
 void Inspect(std::string _name, TestSubStruct& _target, InspectionContext& _context)
 {
     constexpr u32 version = 0;
-    _context.Struct(_name, InspectionType::TestSubStruct, version);
+    _context.Struct(_name, InspectionType::TestSubStruct, version, InspectionStructRequirements::AllowMissingValues);
 
     Inspect("SubProperty", _target.m_SubProperty, _context);
     Inspect("IsTrue", _target.m_IsTrue, _context);

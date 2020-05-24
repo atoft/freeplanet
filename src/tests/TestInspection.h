@@ -7,4 +7,8 @@
 namespace Test
 {
     bool TestInspection();
+
+    bool TestInspectionToFromText();
+    bool TestInspectionFromTextWithMissingValues();
+    bool TestInspectionFromTextWithExactMatchRequired();
 }

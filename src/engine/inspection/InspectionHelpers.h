@@ -15,7 +15,7 @@ class InspectionHelpers
 {
 public:
     template <typename T>
-    static void FromText(const std::string& _source, T& _outValue)
+    static InspectionResult FromText(const std::string& _source, T& _outValue)
     {
         // TODO handle deprecation here. If the version number from the input is old,
         // call a deprecate method. It could read into a "deprecated version" of the struct
@@ -23,10 +23,23 @@ public:
 
         InspectionContext inspectionContext;
         inspectionContext.m_TextIt = _source.begin();
+        inspectionContext.m_TextBegin = _source.begin();
         inspectionContext.m_TextEnd = _source.end();
         inspectionContext.m_Operation = InspectionContext::Operation::FromText;
         Inspect("", _outValue, inspectionContext);
-        assert(inspectionContext.m_Depth == 0 && "Did you miss an EndStruct() call?");
+
+        if (!inspectionContext.m_ErrorMessage.empty())
+        {
+            LogError(inspectionContext.m_ErrorMessage);
+        }
+
+        if (!inspectionContext.m_WarningMessage.empty())
+        {
+            LogWarning(inspectionContext.m_WarningMessage);
+        }
+
+        assert((inspectionContext.m_Finished || inspectionContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
+        return inspectionContext.m_Result;
     }
 
     template <typename T>
@@ -41,11 +54,18 @@ public:
         inspectionContext.m_TextBuffer = &_outText;
         inspectionContext.m_Operation = InspectionContext::Operation::ToText;
         Inspect("", nonConstCopyOfSource, inspectionContext);
-        assert(inspectionContext.m_Depth == 0 && "Did you miss an EndStruct() call?");
+        assert((inspectionContext.m_Finished || inspectionContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
     }
 
     template <typename T>
-    static std::optional<T> LoadFromText(std::string _path)
+    struct LoadFromTextResult
+    {
+        std::optional<T> m_Value;
+        InspectionResult m_Result;
+    };
+
+    template <typename T>
+    static LoadFromTextResult<T> LoadFromText(std::string _path)
     {
         std::fstream infile;
         infile.open(_path);
@@ -53,18 +73,23 @@ public:
         if (!infile)
         {
             LogError("File \"" + _path + "\" cannot be opened.");
-            return std::nullopt;
+            return { std::nullopt, InspectionResult::FileIOError };
         }
 
         std::stringstream input;
         input << infile.rdbuf();
 
-        T result;
-        FromText(input.str(), result);
+        T value;
+        InspectionResult result = FromText(input.str(), value);
 
         infile.close();
 
-        return result;
+        if (result != InspectionResult::ReadSyntaxError)
+        {
+            return { value, result };
+        }
+
+        return { std::nullopt, result };
     }
 
     template <typename T>

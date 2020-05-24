@@ -14,7 +14,7 @@ class InspectionContext;
 
 struct GraphicsConfig
 {
-    glm::ivec2 m_Resolution;
+    glm::ivec2 m_Resolution = glm::ivec2(1280, 720);
     bool m_IsFullscreen = true;
 
     u32 m_AntialiasingLevel = 4;

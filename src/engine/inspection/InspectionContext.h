@@ -13,12 +13,33 @@
 #include <src/tools/STL.h>
 #include <src/tools/StringHelpers.h>
 
+enum class InspectionResult
+{
+    Success,
+
+    // Some properties were missing from the struct, but it was allowed.
+    ReadIncomplete,
+
+    ReadSyntaxError,
+
+    FileIOError
+};
+
+enum class InspectionStructRequirements
+{
+    // The struct must always match the definition in its Inspect function.
+    RequireExactMatch,
+
+    // When reading from text, values are allowed to be missing from the struct, for example if the input is an older version.
+    AllowMissingValues
+};
+
 class InspectionContext
 {
     friend class InspectionHelpers;
 
 public:
-    void Struct(std::string _name, InspectionType _type, u32 _version);
+    void Struct(std::string _name, InspectionType _type, u32 _version, InspectionStructRequirements _requirements = InspectionStructRequirements::RequireExactMatch);
     void EndStruct();
 
     void U32(std::string _name, u32& _value);
@@ -37,11 +58,14 @@ private:
     static InspectionType ToInspectionType(std::string _typeName);
     static std::string InspectionTypeToString(InspectionType _type);
 
-    std::string ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end);
+    std::optional<std::string> ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end);
     void AppendNameAndValue(std::string _name, std::string _value);
     void AppendNewlineWithIndent();
     void SkipWhitespace(std::string::const_iterator& _it, std::string::const_iterator _end);
-    void SkipSingleToken(std::string::const_iterator& _it, std::string::const_iterator _end, const std::string& _token);
+    bool SkipSingleToken(std::string::const_iterator& _it, std::string::const_iterator _end, const std::string& _token, bool _allowFailure = false);
+    void AddError(std::string _error);
+    void AddWarning(std::string _warning);
+    u32 GetLineNumber() const;
 
     enum class Operation
     {
@@ -54,13 +78,23 @@ private:
     static std::vector<TypeInfo> ms_TypeInfos;
 
     Operation m_Operation = Operation::ToText;
-    
-    // How many nested structs are we in.
-    u32 m_Depth = 0;
 
-    // At each level of nesting, are the values elements in a container.
-    // Container elements are different in text as the don't have associated names.
-    std::vector<bool> m_InsideContainer;
+    struct InspectionStackEntry
+    {
+        // Container elements are different in text as they don't have associated names.
+        bool m_InsideContainer = false;
+
+        InspectionStructRequirements m_StructRequirements = InspectionStructRequirements::RequireExactMatch;
+        bool m_SkipThisLevel = false;
+    };
+
+    // Maintain information about where in the struct we currently are.
+    std::vector<InspectionStackEntry> m_Stack;
+
+    bool m_Finished = false;
+    InspectionResult m_Result = InspectionResult::Success;
+    std::string m_ErrorMessage = "";
+    std::string m_WarningMessage = "";
 
     // TODO placeholder.
 
@@ -68,6 +102,7 @@ private:
     std::string* m_TextBuffer;
 
     // FromText /////////////////////////////
+    std::string::const_iterator m_TextBegin;
     std::string::const_iterator m_TextIt;
     std::string::const_iterator m_TextEnd;
 };
@@ -75,6 +110,11 @@ private:
 template <typename EnumType, typename>
 void InspectionContext::Enum(std::string _name, EnumType& _value)
 {
+    if (m_Finished || m_Stack.back().m_SkipThisLevel)
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
     case Operation::ToText:
@@ -85,9 +125,14 @@ void InspectionContext::Enum(std::string _name, EnumType& _value)
     }
     case Operation::FromText:
     {
-        std::string valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
+        const std::optional<std::string> valueString = ParseValueAndSkip(_name, m_TextIt, m_TextEnd);
 
-        _value = STL::FromString<EnumType>(valueString);
+        if (!valueString)
+        {
+            return;
+        }
+
+        _value = STL::FromString<EnumType>(*valueString);
 
         break;
     }
@@ -99,19 +144,24 @@ void InspectionContext::Enum(std::string _name, EnumType& _value)
 template <typename ElementType>
 void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
 {
+    if (m_Finished || m_Stack.back().m_SkipThisLevel)
+    {
+        return;
+    }
+
     switch (m_Operation)
     {
         case Operation::ToText:
         {
             AppendNewlineWithIndent();
-            if (!m_InsideContainer.back())
+            if (!m_Stack.back().m_InsideContainer)
             {
                 *m_TextBuffer += _name + ": ";
             }
 
             *m_TextBuffer += "[";
 
-            m_InsideContainer.push_back(true);
+            m_Stack.push_back({true, InspectionStructRequirements::RequireExactMatch});
             for (u32 elementIdx = 0; elementIdx < _value.size(); ++elementIdx)
             {
                 Inspect(_name, _value[elementIdx], *this);
@@ -121,8 +171,8 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
                     *m_TextBuffer += ", ";
                 }
             }
-            assert(m_InsideContainer.back());
-            m_InsideContainer.pop_back();
+            assert(m_Stack.back().m_InsideContainer);
+            m_Stack.pop_back();
 
             *m_TextBuffer += "];";
 
@@ -130,7 +180,7 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
         }
         case Operation::FromText:
         {
-            if (!m_InsideContainer.back())
+            if (!m_Stack.back().m_InsideContainer)
             {
                 const std::string expectedPropertyIdentifier = _name + ":";
                 assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedPropertyIdentifier));
@@ -141,7 +191,7 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
             ++m_TextIt;
             SkipWhitespace(m_TextIt, m_TextEnd);
 
-            m_InsideContainer.push_back(true);
+            m_Stack.push_back({true, InspectionStructRequirements::RequireExactMatch});
 
             if (!StringHelpers::StartsWith(m_TextIt, m_TextEnd, "]"))
             {
@@ -152,6 +202,7 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
                     _value.push_back(element);
 
                     SkipWhitespace(m_TextIt, m_TextEnd);
+                    if (m_TextIt == m_TextEnd) return AddError("Unexpected end of file");
                 }
             }
             else
@@ -160,8 +211,8 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
                 SkipSingleToken(m_TextIt, m_TextEnd, "]");
             }
 
-            assert(m_InsideContainer.back());
-            m_InsideContainer.pop_back();
+            assert(m_Stack.back().m_InsideContainer);
+            m_Stack.pop_back();
 
             SkipSingleToken(m_TextIt, m_TextEnd, ";");
             SkipWhitespace(m_TextIt, m_TextEnd);

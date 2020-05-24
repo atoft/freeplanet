@@ -38,6 +38,7 @@ struct TestSubStruct
     std::vector<u32> m_NoThings;
     f32 m_Amplitude = 0.f;
     std::vector<TestStructInVector> m_VectorOfStructs;
+    bool operator==(const TestSubStruct& _other) const;
 };
 
 struct TestStruct

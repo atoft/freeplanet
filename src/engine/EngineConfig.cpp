@@ -11,7 +11,7 @@
 
 void Inspect(std::string _name, GraphicsConfig& _target, InspectionContext& _context)
 {
-    _context.Struct("GraphicsConfig", InspectionType::GraphicsConfig, 0);
+    _context.Struct("GraphicsConfig", InspectionType::GraphicsConfig, 0, InspectionStructRequirements::AllowMissingValues);
 
     Inspect("Resolution", _target.m_Resolution, _context);
     Inspect("IsFullscreen", _target.m_IsFullscreen, _context);
@@ -25,7 +25,7 @@ void Inspect(std::string _name, GraphicsConfig& _target, InspectionContext& _con
 
 void Inspect(std::string _name, InputConfig& _target, InspectionContext& _context)
 {
-    _context.Struct("InputConfig", InspectionType::InputConfig, 0);
+    _context.Struct("InputConfig", InspectionType::InputConfig, 0, InspectionStructRequirements::AllowMissingValues);
 
     Inspect("KeyMappings", _target.m_KeyMappings, _context);
 
@@ -34,7 +34,7 @@ void Inspect(std::string _name, InputConfig& _target, InspectionContext& _contex
 
 void Inspect(std::string _name, EngineConfig& _target, InspectionContext& _context)
 {
-    _context.Struct("EngineConfig", InspectionType::EngineConfig, 0);
+    _context.Struct("EngineConfig", InspectionType::EngineConfig, 0, InspectionStructRequirements::AllowMissingValues);
 
     Inspect("GraphicsConfig", _target.m_GraphicsConfig, _context);
     Inspect("InputConfig", _target.m_InputConfig, _context);
