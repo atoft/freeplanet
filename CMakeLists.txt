@@ -22,8 +22,12 @@ file(GLOB_RECURSE sources      src/*.cpp src/*.h)
 
 # On Windows, CMakeSettings.json should find clang for use, but the clang version for Windows takes different command line args.
 if(WIN32)
-	# On Windows, no special warning settings, because we don't have a good way to avoid warnings from third party headers.
 	SET(CMAKE_CXX_FLAGS "/std:c++17")
+
+	# Ignore warnings coming from the C runtime's usage in third party libraries:
+	# https://docs.microsoft.com/en-us/cpp/c-runtime-library/security-features-in-the-crt?view=vs-2019
+	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+
 else()
 	SET (CMAKE_CXX_COMPILER "clang++")
 	set_source_files_properties(
