@@ -200,6 +200,14 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
                 {
                     ElementType element;
                     Inspect(_name, element, *this);
+
+					// If there was something wrong with the inspection of the element, give up
+					// to make sure we aren't stuck in place with our iteration.
+					if (m_Finished)
+					{
+						return AddError("Failed to read vector");
+					}
+
                     _value.push_back(element);
 
                     SkipWhitespace(m_TextIt, m_TextEnd);
