@@ -284,7 +284,7 @@ void InspectionContext::EndStruct()
 
             *m_TextBuffer += "}";
 
-            if (!m_Stack.back().m_InsideContainer)
+            if (m_Stack.empty() || !m_Stack.back().m_InsideContainer)
             {
                 *m_TextBuffer += ";";
             }
