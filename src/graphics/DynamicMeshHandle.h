@@ -19,6 +19,8 @@ public:
     // Returns true if the latest version of the DynamicMesh has been loaded on the GPU.
     bool IsUpToDate() const { return m_DynamicMeshId != DYNAMICMESHID_INVALID; };
 
+    const RawMesh& GetRawMesh() const { return m_RawMesh; };
+
 private:
     DynamicMeshID m_DynamicMeshId = DYNAMICMESHID_INVALID;
     DynamicMeshID m_PreviousDynamicMeshId = DYNAMICMESHID_INVALID;

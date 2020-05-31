@@ -25,7 +25,7 @@ struct AABB
             : m_Dimensions(glm::vec3()),
               m_PositionOffset(glm::vec3()) {};
 
-    AABB(glm::vec3 _dimensions, glm::vec3 _positionOffset = glm::vec3())
+    explicit AABB(glm::vec3 _dimensions, glm::vec3 _positionOffset = glm::vec3())
             : m_Dimensions(_dimensions),
               m_PositionOffset(_positionOffset) {};
 };

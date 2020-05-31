@@ -417,7 +417,7 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* world, const Freelook
                     Renderable::SceneObject sceneObject;
                     sceneObject.m_Transform = zone.GetTerrainModelTransform() *
                             glm::translate(glm::mat4x4(1.f), vertex)
-                            * MathsHelpers::GenerateRotationMatrixFromNormal(normal);
+                            * MathsHelpers::GenerateRotationMatrixFromRight(normal);
                     sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
                     if (arrowMesh != nullptr)

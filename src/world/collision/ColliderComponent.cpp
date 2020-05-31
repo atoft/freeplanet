@@ -12,7 +12,7 @@ ColliderComponent::ColliderComponent(World* world, WorldObjectID _ownerID, Colli
     m_WorldObjectID = _ownerID;
     m_MovementType = _movementType;
     m_CollisionPrimitiveType = _primitiveType;
-    m_Bounds = {glm::vec3(0.5f), glm::vec3()};
+    m_Bounds = AABB(glm::vec3(0.5f), glm::vec3());
 }
 
 

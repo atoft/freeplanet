@@ -206,7 +206,7 @@ void UIDrawInterface::DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _posi
         sceneObject.m_Mesh = arrow->GetMesh();
 
         const glm::mat4 translation = glm::translate(glm::mat4(1.f), _position);
-        sceneObject.m_Transform = glm::scale(translation * MathsHelpers::GenerateRotationMatrixFromNormal(_normal),  glm::vec3(_length, 1.f, 1.f));
+        sceneObject.m_Transform = glm::scale(translation * MathsHelpers::GenerateRotationMatrixFromRight(_normal), glm::vec3(_length, 1.f, 1.f));
         sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
         sceneObject.m_BaseColor = _color;
 

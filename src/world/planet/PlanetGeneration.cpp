@@ -35,6 +35,8 @@ Planet PlanetGeneration::GenerateFromSeed(u32 _seed)
         biome.m_BiomeDirection = MathsHelpers::GenerateNormalFromPitchYaw(biome.m_PitchRadians,
                                                                           biome.m_YawRadians);
 
+        biome.m_TreeCoverage = unsignedDistribution(gen);
+
         for (f32& weight : biome.m_Inputs.m_OctaveWeights)
         {
             weight = 1.375f + signedDistribution(gen) * 0.625f;

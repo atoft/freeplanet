@@ -16,6 +16,8 @@ public:
 
     static void SetRotationPart(glm::mat4x4& _inOutTransform, glm::vec3 _basisX, glm::vec3 _basisY, glm::vec3 _basisZ);
 
+    static void SetRotationPart(glm::mat4x4& _inOutTransform, const glm::mat3x3& _rotation);
+
     static glm::vec3 GetScale(glm::mat4x4 _transform);
 
     static void SetScale(glm::mat4x4& _inOutTransform, glm::vec3 _scale);
@@ -40,7 +42,11 @@ public:
 
     static f32 ComputeFaceArea(glm::vec3 p1, glm::vec3 p2);
 
-    static glm::mat4x4 GenerateRotationMatrixFromNormal(glm::vec3 normal);
+    static glm::mat4x4 GenerateRotationMatrixFromRight(glm::vec3 _rightVector);
+
+    static glm::mat3x3 GenerateRotationMatrix3x3FromRight(glm::vec3 _rightVector);
+
+    static glm::mat3x3 GenerateRotationMatrix3x3FromUp(glm::vec3 _upVector);
 
     static glm::vec3 GenerateNormalFromPitchYaw(f32 _pitch, f32 _yaw);
 

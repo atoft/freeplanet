@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <src/world/FreelookCameraComponent.h>
+#include <src/world/SpawningHandler.h>
 #include <src/world/collision/CollisionHandler.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/world/terrain/TerrainHandler.h>
@@ -21,6 +22,7 @@ World::World(std::string _worldName, std::optional<Planet> _planet)
 
     m_PlayerHandler = std::make_unique<PlayerHandler>(this);
     m_CollisionHandler = std::make_unique<CollisionHandler>(this);
+    m_SpawningHandler = std::make_unique<SpawningHandler>(this);
     m_TerrainHandler = std::make_unique<TerrainHandler>(this);
     m_VistaHandler = std::make_unique<VistaHandler>(this);
 
@@ -112,7 +114,7 @@ void World::SpawnPropInWorldZone(const WorldPosition& _worldPosition, const Prop
     newObject.SetScale(_propRecipe.m_Scale);
 
     ColliderComponent& collider = targetZone->AddComponent<ColliderComponent>(newObject, CollisionPrimitiveType::OBB, MovementType::Fixed);
-    collider.m_Bounds = _propRecipe.m_Scale / 2.f;
+    collider.m_Bounds = AABB(_propRecipe.m_Scale / 2.f);
 
     targetZone->AddComponent<RenderComponent>(newObject, AssetHandle<StaticMesh>(_propRecipe.m_MeshID),
                                     AssetHandle<ShaderProgram>(_propRecipe.m_ShaderID),
@@ -137,6 +139,7 @@ void World::Update(TimeMS _delta)
 
     m_PlayerHandler->Update();
     m_CollisionHandler->Update(deltaWithTimeScale);
+    m_SpawningHandler->Update();
     m_TerrainHandler->Update(deltaWithTimeScale);
     m_VistaHandler->Update(deltaWithTimeScale);
 

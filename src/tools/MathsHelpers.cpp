@@ -47,6 +47,23 @@ void MathsHelpers::SetRotationPart(glm::mat4x4& _inOutTransform, glm::vec3 _basi
     _inOutTransform[2][2] = _basisZ.z * scale.z;
 }
 
+void MathsHelpers::SetRotationPart(glm::mat4x4& _inOutTransform, const glm::mat3x3& _rotation)
+{
+    const glm::vec3 scale = GetScale(_inOutTransform);
+
+    _inOutTransform[0][0] = _rotation[0][0] * scale.x;
+    _inOutTransform[0][1] = _rotation[0][1] * scale.x;
+    _inOutTransform[0][2] = _rotation[0][2] * scale.x;
+
+    _inOutTransform[1][0] = _rotation[1][0] * scale.y;
+    _inOutTransform[1][1] = _rotation[1][1] * scale.y;
+    _inOutTransform[1][2] = _rotation[1][2] * scale.y;
+
+    _inOutTransform[2][0] = _rotation[2][0] * scale.z;
+    _inOutTransform[2][1] = _rotation[2][1] * scale.z;
+    _inOutTransform[2][2] = _rotation[2][2] * scale.z;
+}
+
 glm::vec3 MathsHelpers::GetScale(glm::mat4x4 _transform)
 {
     return glm::vec3(
@@ -120,24 +137,46 @@ f32 MathsHelpers::ComputeFaceArea(glm::vec3 p1, glm::vec3 p2)
 
 // Generates an arbitrary rotation matrix based on the normal. Note that when specifying a normal only there are
 // infinitely many possible rotation matrices.
-glm::mat4x4 MathsHelpers::GenerateRotationMatrixFromNormal(glm::vec3 normal)
+glm::mat4x4 MathsHelpers::GenerateRotationMatrixFromRight(glm::vec3 _rightVector)
+{
+    glm::mat4x4 matrix = GenerateRotationMatrix3x3FromRight(_rightVector);
+    matrix[3][3] = 1.f;
+
+    return matrix;
+}
+
+glm::mat3x3 MathsHelpers::GenerateRotationMatrix3x3FromRight(glm::vec3 _rightVector)
 {
     // Pick an arbitrary vector
     glm::vec3 other = glm::vec3(1,0,0);
 
     // Make sure it's not parallel
-    if(glm::abs(glm::dot(normal, other)) > 0.99f)
+    if(glm::abs(glm::dot(_rightVector, other)) > 0.99f)
     {
         other = glm::vec3(0,1,0);
     }
 
-    glm::vec3 basisY = glm::normalize(glm::cross(normal, other));
-    glm::vec3 basisZ = glm::cross(normal, basisY);
+    glm::vec3 basisY = glm::normalize(glm::cross(_rightVector, other));
+    glm::vec3 basisZ = glm::cross(_rightVector, basisY);
 
-    glm::mat4x4 matrix = glm::mat3x3(normal, basisY, basisZ);
-    matrix[3][3] = 1.f;
+    return glm::mat3x3(_rightVector, basisY, basisZ);
+}
 
-    return matrix;
+glm::mat3x3 MathsHelpers::GenerateRotationMatrix3x3FromUp(glm::vec3 _upVector)
+{
+    // Pick an arbitrary vector
+    glm::vec3 other = glm::vec3(0,1,0);
+
+    // Make sure it's not parallel
+    if(glm::abs(glm::dot(_upVector, other)) > 0.99f)
+    {
+        other = glm::vec3(1,0,0);
+    }
+
+    glm::vec3 basisZ = glm::normalize(glm::cross(_upVector, other));
+    glm::vec3 basisX = glm::cross(_upVector, basisZ);
+
+    return glm::mat3x3(basisX, _upVector, basisZ);
 }
 
 glm::vec3 MathsHelpers::GenerateNormalFromPitchYaw(f32 _pitch, f32 _yaw)

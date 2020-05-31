@@ -270,8 +270,6 @@ bool CollisionHandler::DoCollision(ColliderComponent& _collider,
 
     bool didCollide = false;
 
-    LogMessage(_object.GetName());
-
     if(_collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
         const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_terrain.m_ChunkSize * _terrain.m_ChunksPerEdge) /2.f;

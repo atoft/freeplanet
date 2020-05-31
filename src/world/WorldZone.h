@@ -103,6 +103,9 @@ public:
     const TerrainComponent& GetTerrainComponent() const { return m_TerrainComponent; };
     TerrainComponent& GetTerrainComponent() { return m_TerrainComponent; };
 
+    bool IsProceduralSpawningDone() const { return m_IsProceduralSpawningDone; };
+    void SetProceduralSpawningDone() { m_IsProceduralSpawningDone = true; };
+
     glm::ivec3 ComputeRelativeCoordinates(glm::vec3 _zonePosition) const;
 
     bool ContainsPlayer() const;
@@ -118,6 +121,9 @@ private:
     glm::vec3 m_Dimensions;
 
     TerrainComponent m_TerrainComponent;
+
+    // TODO probably a zone component containing spawning info.
+    bool m_IsProceduralSpawningDone = false;
 
     World* m_OwnerWorld;
 

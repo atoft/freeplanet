@@ -22,6 +22,7 @@ class WorldObject;
 class WorldZone;
 class FreelookCameraComponent;
 class CollisionHandler;
+class SpawningHandler;
 class TerrainHandler;
 class VistaHandler;
 
@@ -120,6 +121,7 @@ private:
 
     std::shared_ptr<CollisionHandler> m_CollisionHandler;
     std::shared_ptr<PlayerHandler> m_PlayerHandler;
+    std::shared_ptr<SpawningHandler> m_SpawningHandler;
     std::shared_ptr<TerrainHandler> m_TerrainHandler;
     std::shared_ptr<VistaHandler> m_VistaHandler;
 
