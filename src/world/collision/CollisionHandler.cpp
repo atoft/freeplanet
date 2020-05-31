@@ -8,7 +8,7 @@
 #include <src/profiling/Profiler.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/world/collision/algorithms/CollideOBBOBB.h>
-#include <src/world/collision/algorithms/CollideOBBTerrain.h>
+#include <src/world/collision/algorithms/CollideOBBTriangle.h>
 #include <src/world/collision/CollisionHelpers.h>
 #include <src/world/collision/RaycastAlgorithms.h>
 #include <src/world/World.h>
@@ -148,7 +148,7 @@ void CollisionHandler::Update(TimeMS _dt)
     // Collision with other zones.
     for (const DifferentZoneCollisionRequest& request : requestedCollisions)
     {
-        WorldObject *object1 = request.m_Collider->GetOwnerObject();
+        WorldObject* object1 = request.m_Collider->GetOwnerObject();
 
         const glm::vec3 positionOffset = object1->GetWorldPosition().GetPositionRelativeTo(*request.m_OtherZone) - object1->GetPosition();
 
@@ -156,7 +156,7 @@ void CollisionHandler::Update(TimeMS _dt)
         {
             for (ColliderComponent& otherCollider : request.m_OtherZone->GetComponents<ColliderComponent>())
             {
-                WorldObject *object2 = otherCollider.GetOwnerObject();
+                WorldObject* object2 = otherCollider.GetOwnerObject();
                 assert(object1 != nullptr && object2 != nullptr);
 
                 DoCollision(*request.m_Collider, *object1, otherCollider, *object2, positionOffset);
@@ -268,34 +268,70 @@ bool CollisionHandler::DoCollision(ColliderComponent& _collider,
     glm::mat4x4 zoneTransform = _object.GetZoneTransform();
     MathsHelpers::TranslateWorldSpace(zoneTransform, _objectPositionOffset);
 
-    std::optional<CollisionResult> collision;
+    bool didCollide = false;
+
+    LogMessage(_object.GetName());
 
     if(_collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
-        collision = CollideOBBTerrain::Collide(
-                zoneTransform,
-                _collider.m_Bounds,
-                _terrain,
-                _terrainOffset);
+        const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_terrain.m_ChunkSize * _terrain.m_ChunksPerEdge) /2.f;
+
+        const glm::vec3 localPosition = MathsHelpers::GetPosition(zoneTransform) + _collider.m_Bounds.m_PositionOffset + chunksToZoneOriginOffset;
+
+        // Use the bounds of the collider to only test chunks that could possibly overlap.
+        const AABB boundsForOBB = CollisionHelpers::GetAABBForOBB(MathsHelpers::GetRotationMatrix(zoneTransform), _collider.m_Bounds);
+        const glm::ivec3 minRegion = glm::floor((localPosition - boundsForOBB.m_Dimensions) / _terrain.m_ChunkSize);
+        const glm::ivec3 maxRegion = glm::ceil((localPosition + boundsForOBB.m_Dimensions) / _terrain.m_ChunkSize);
+
+        const glm::ivec3 clampedMinRegion = glm::clamp(minRegion, glm::ivec3(), glm::ivec3(_terrain.m_ChunksPerEdge));
+        const glm::ivec3 clampedMaxRegion = glm::clamp(maxRegion, glm::ivec3(), glm::ivec3(_terrain.m_ChunksPerEdge));
+
+        const u32 dimensions = _terrain.GetDimensions();
+        CollisionHelpers::OBBProperties obb = CollisionHelpers::GetOBBProperties(zoneTransform, _collider.m_Bounds, _terrainOffset);
+
+        // Resolve collisions with each of the triangles in the region in turn. Note that a different order of resolution
+        // would give a different result.
+        for (s32 z = clampedMinRegion.z; z < clampedMaxRegion.z; ++z)
+        {
+            for (s32 y = clampedMinRegion.y; y < clampedMaxRegion.y; ++y)
+            {
+                for (s32 x = clampedMinRegion.x; x < clampedMaxRegion.x; ++x)
+                {
+                    const TerrainChunk& chunk = _terrain.GetChunks()[x + y * dimensions + z * dimensions * dimensions];
+
+                    for (u32 triIdx = 0; triIdx < chunk.m_Count; ++triIdx)
+                    {
+                        const std::optional<CollisionResult> triangleResult = CollideOBBTriangle::Collide(obb, chunk.m_Triangles[triIdx]);
+
+                        if (triangleResult != std::nullopt)
+                        {
+                            if (m_ShouldResolveCollisions)
+                            {
+                                _object.SetPosition(_object.GetPosition() + triangleResult->m_Normal * triangleResult->m_Distance);
+
+                                // Recompute these properties for the new position of the object.
+                                zoneTransform = _object.GetZoneTransform();
+                                MathsHelpers::TranslateWorldSpace(zoneTransform, _objectPositionOffset);
+                                obb = CollisionHelpers::GetOBBProperties(zoneTransform, _collider.m_Bounds, _terrainOffset);
+
+                                // Note that in theory the new position of the object could push it outside of the region, causing
+                                // missed collisions. In practice it doesn't seem the distance is big enough to cause a problem,
+                                // but this might be an area to improve if issues arise.
+                            }
+
+                            _collider.m_CollisionsLastFrame.push_back(*triangleResult);
+                        }
+                    }
+                }
+            }
+        }
     }
     else
     {
         LogWarning("Unsupported collision (" + _object.GetName() + " and terrain) was skipped.");
-        collision = std::nullopt;
     }
 
-    if(collision != std::nullopt)
-    {
-        if (m_ShouldResolveCollisions)
-        {
-            _object.SetPosition(_object.GetPosition() + collision->m_Normal * collision->m_Distance);
-        }
-
-        _collider.m_CollisionsLastFrame.push_back(*collision);
-        return true;
-    }
-
-    return false;
+    return didCollide;
 }
 
 std::optional<f32> CollisionHandler::DoRaycast(WorldPosition _origin, glm::vec3 _direction, RaycastRange _range)
