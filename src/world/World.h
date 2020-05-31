@@ -102,7 +102,7 @@ private:
         if (component != nullptr)
         {
             _destinationZone.GetComponents<T>().push_back(*component);
-            _destinationObject.GetComponentRef<BipedComponent>() = _destinationZone.GetComponents<T>().size() - 1;
+            _destinationObject.GetComponentRef<T>() = _destinationZone.GetComponents<T>().size() - 1;
         }
     }
 
