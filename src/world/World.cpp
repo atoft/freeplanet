@@ -339,6 +339,7 @@ void World::SendWorldEvents()
 
     for (const WorldEvent& event : events)
     {
+        m_SpawningHandler->HandleWorldEvent(event);
         m_TerrainHandler->HandleWorldEvent(event);
     }
 }

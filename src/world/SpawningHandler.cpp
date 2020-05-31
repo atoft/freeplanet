@@ -4,11 +4,12 @@
 
 #include "SpawningHandler.h"
 
+#include <random>
+#include <glm/gtx/norm.hpp>
+
 #include <src/graphics/RenderComponent.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/world/World.h>
-
-#include <random>
 #include <src/tools/MathsHelpers.h>
 #include <src/world/planet/PlanetGeneration.h>
 
@@ -86,5 +87,47 @@ void SpawningHandler::Update()
 
             zone.SetProceduralSpawningDone();
         }
+    }
+}
+
+void SpawningHandler::HandleWorldEvent(WorldEvent _event)
+{
+    switch (_event.m_Type)
+    {
+    case WorldEvent::Type::AddTerrain:
+    case WorldEvent::Type::RemoveTerrain:
+    {
+        const WorldPosition worldPosition = *_event.m_TargetPosition;
+        const f32 radius = *_event.m_Radius;
+        const f32 squareDistance = radius * radius;
+
+        for (WorldZone& zone : m_World->GetActiveZones())
+        {
+            const glm::vec3 localPosition = worldPosition.GetPositionRelativeTo(zone);
+
+            // TODO we will want a separate component to specify that a spawned object is attached to the terrain.
+            for (ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
+            {
+                if (collider.m_MovementType != MovementType::Fixed)
+                {
+                    continue;
+                }
+
+                WorldObject* owner = collider.GetOwnerObject();
+                assert(owner != nullptr);
+
+                const f32 squareDistanceToPoint = glm::length2(owner->GetPosition() - localPosition);
+
+                if (squareDistanceToPoint < squareDistance)
+                {
+                    m_World->DestroyWorldObject(owner->GetWorldObjectID());
+                }
+            }
+        }
+
+        break;
+    }
+    default:
+    break;
     }
 }
