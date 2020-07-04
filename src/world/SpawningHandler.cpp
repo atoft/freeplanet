@@ -35,11 +35,13 @@ void SpawningHandler::Update()
 
         if (!zone.IsProceduralSpawningDone() && !rawMesh.IsEmpty())
         {
-            constexpr f32 fractionOfVertsToSpawnOn = 0.03125f;
+            constexpr f32 fractionOfVertsToSpawnTreesOn = 0.03125f;
+            constexpr f32 fractionOfVertsToSpawnGrassOn = 0.125f;
 
             const Planet::Biome& biome = TerrainGeneration::GetBiome(*planet, WorldPosition(zone.GetCoordinates(), glm::vec3(0.f)));
 
-            const u32 targetTreeQuantity = biome.m_TreeCoverage * fractionOfVertsToSpawnOn * rawMesh.m_Vertices.size();
+            const u32 targetTreeQuantity = biome.m_TreeCoverage * fractionOfVertsToSpawnTreesOn * rawMesh.m_Vertices.size();
+            const u32 targetGrassQuantity = biome.m_TreeCoverage * fractionOfVertsToSpawnGrassOn * rawMesh.m_Vertices.size();
 
             // TODO probably need to mutate the seed based on the zone to avoid an identical shuffle for every zone.
             std::mt19937 gen(planet->m_TerrainSeed);
@@ -49,7 +51,7 @@ void SpawningHandler::Update()
 
             u32 spawnedCount = 0;
             auto vertIt = verts.begin();
-            while (spawnedCount < targetTreeQuantity && vertIt < verts.end())
+            while (spawnedCount < (targetTreeQuantity + targetGrassQuantity) && vertIt < verts.end())
             {
                 const glm::vec3 chunksToZoneOriginOffset = glm::vec3(zone.GetTerrainComponent().m_ChunkSize * zone.GetTerrainComponent().m_ChunksPerEdge) /2.f;
 
@@ -64,23 +66,48 @@ void SpawningHandler::Update()
 
                 // TODO Verify if the position is safe to spawn at - surface normal, vertical space, horizontal space.
 
-                WorldObject& worldObject = m_World->ConstructWorldObject(zone, "Tree");
-                worldObject.SetInitialPosition(spawnPosition);
+                if (spawnedCount < targetTreeQuantity)
+                {
+                    WorldObject &worldObject = m_World->ConstructWorldObject(zone, "Tree");
+                    worldObject.SetInitialPosition(spawnPosition);
 
-                const glm::mat3x3 rotationMatrix = MathsHelpers::GenerateRotationMatrix3x3FromUp(
-                        PlanetGeneration::GetUpDirection(*m_World->GetPlanet(), worldObject.GetWorldPosition()));
+                    const glm::mat3x3 rotationMatrix = MathsHelpers::GenerateRotationMatrix3x3FromUp(
+                            PlanetGeneration::GetUpDirection(*m_World->GetPlanet(), worldObject.GetWorldPosition()));
 
-                MathsHelpers::SetRotationPart(worldObject.GetZoneTransform(), rotationMatrix);
+                    MathsHelpers::SetRotationPart(worldObject.GetZoneTransform(), rotationMatrix);
 
-                zone.AddComponent<RenderComponent>
-                        (worldObject,
-                        AssetHandle<StaticMesh>(MeshAsset_Tree),
-                        AssetHandle<ShaderProgram>(ShaderAsset_Lit_Textured),
-                        AssetHandle<Texture>(TextureAsset_Tree));
+                    zone.AddComponent<RenderComponent>
+                            (worldObject,
+                             AssetHandle<StaticMesh>(MeshAsset_Tree),
+                             AssetHandle<ShaderProgram>(ShaderAsset_Lit_Textured),
+                             AssetHandle<Texture>(TextureAsset_Tree),
+                             MeshType::Normal);
 
-                ColliderComponent& collider = zone.AddComponent<ColliderComponent>(worldObject, CollisionPrimitiveType::OBB, MovementType::Movable);
-                collider.m_Bounds = AABB(glm::vec3(.8f, 4.f, .8f), glm::vec3(0.f, 2.f, 0.f));
-                collider.m_MovementType = MovementType::Fixed;
+                    ColliderComponent &collider = zone.AddComponent<ColliderComponent>(worldObject,
+                                                                                       CollisionPrimitiveType::OBB,
+                                                                                       MovementType::Movable);
+                    collider.m_Bounds = AABB(glm::vec3(.8f, 4.f, .8f), glm::vec3(0.f, 2.f, 0.f));
+                    collider.m_MovementType = MovementType::Fixed;
+                }
+                else
+                {
+                    // Probably(?) don't want to go as far as having a WorldObject for every blade of grass. Probably some
+                    // simpler structure which caches all the points to draw a sprite at.
+                    WorldObject &worldObject = m_World->ConstructWorldObject(zone, "Grass");
+                    worldObject.SetInitialPosition(spawnPosition + glm::vec3(0.f, 0.5f, 0.f));
+
+                    const glm::mat3x3 rotationMatrix = MathsHelpers::GenerateRotationMatrix3x3FromUp(
+                            PlanetGeneration::GetUpDirection(*m_World->GetPlanet(), worldObject.GetWorldPosition()));
+
+                    MathsHelpers::SetRotationPart(worldObject.GetZoneTransform(), rotationMatrix);
+
+                    zone.AddComponent<RenderComponent>
+                            (worldObject,
+                             AssetHandle<StaticMesh>(MeshAsset_UnitQuad),
+                             AssetHandle<ShaderProgram>(ShaderAsset_Lit_AlphaTest_NormalUp),
+                             AssetHandle<Texture>(TextureAsset_Billboard_Grass),
+                             MeshType::OrientedBillboard);
+                }
 
                 ++spawnedCount;
             }

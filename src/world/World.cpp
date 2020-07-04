@@ -118,7 +118,8 @@ void World::SpawnPropInWorldZone(const WorldPosition& _worldPosition, const Prop
 
     targetZone->AddComponent<RenderComponent>(newObject, AssetHandle<StaticMesh>(_propRecipe.m_MeshID),
                                     AssetHandle<ShaderProgram>(_propRecipe.m_ShaderID),
-                                    AssetHandle<Texture>(_propRecipe.m_TextureID));
+                                    AssetHandle<Texture>(_propRecipe.m_TextureID),
+                                    MeshType::Normal);
 }
 
 void World::Update(TimeMS _delta)

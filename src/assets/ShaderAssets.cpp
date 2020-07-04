@@ -18,6 +18,8 @@ std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
             return "Unlit_Untextured";
         case ShaderAsset_Lit_Textured:
             return "Lit_Textured";
+        case ShaderAsset_Lit_AlphaTest_NormalUp:
+            return "Lit_AlphaTest_NormalUp";
         case ShaderAsset_Skybox:
             return "Skybox";
         case ShaderAsset_Terrain_Base:
@@ -26,5 +28,5 @@ std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
         default:
             return "INVALID";
     }
-    static_assert(static_cast<ShaderAssetID>(ShaderAsset::Count) == 7);
+    static_assert(static_cast<ShaderAssetID>(ShaderAsset::Count) == 8);
 }

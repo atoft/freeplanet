@@ -272,7 +272,41 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
             glEnableVertexAttribArray(attrib);
         }
 
-        shaderProgram->SetUniformMat4("frplTransform", _scene.m_CameraTransform * sceneObject.m_Transform);
+        switch (sceneObject.m_MeshType)
+        {
+        case MeshType::Normal:
+        {
+            shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * _scene.m_ViewTransform * sceneObject.m_Transform);
+            break;
+        }
+        case MeshType::Billboard:
+        {
+            glm::mat4 mvMatrix = _scene.m_ViewTransform * sceneObject.m_Transform;
+            MathsHelpers::SetRotationPart(mvMatrix, glm::mat3(1.f));
+
+            shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * mvMatrix);
+
+            break;
+        }
+        case MeshType::OrientedBillboard:
+        {
+            glm::mat4 mvMatrix = _scene.m_ViewTransform * sceneObject.m_Transform;
+
+            // Clear x and z rotation only.
+            mvMatrix[0][0] = 1.f;
+            mvMatrix[0][1] = 0.f;
+            mvMatrix[0][2] = 0.f;
+
+            mvMatrix[2][0] = 0.f;
+            mvMatrix[2][1] = 0.f;
+            mvMatrix[2][2] = 1.f;
+
+            shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * mvMatrix);
+
+            break;
+        }
+        }
+
         shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
         shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
 
@@ -311,6 +345,26 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
                 break;
             }
             static_assert(static_cast<u32>(TextureAssetType::Count) == 2);
+
+            switch (sceneObject.m_MeshType)
+            {
+            case MeshType::Normal:
+            {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+                break;
+            }
+            case MeshType::Billboard:
+                [[fallthrough]];
+            case MeshType::OrientedBillboard:
+            {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+                break;
+            }
+            }
         }
 
         glDrawElements(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, 0);

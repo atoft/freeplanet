@@ -16,11 +16,13 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
             return "cubemaps/dev/";
         case TextureAsset_Tree:
             return "Tree.jpg";
+        case TextureAsset_Billboard_Grass:
+            return "Billboard_Grass.png";
         case TextureAsset_Invalid:
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 4);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 5);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -35,10 +37,12 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             [[fallthrough]];
         case TextureAsset_Tree:
             [[fallthrough]];
+        case TextureAsset_Billboard_Grass:
+            [[fallthrough]];
         case TextureAsset_Invalid:
         default:
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 4);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 5);
 }

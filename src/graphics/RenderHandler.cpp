@@ -144,8 +144,8 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
             0.1f,
             c->GetFarClipDistance());
 
-        sceneToRender.m_CameraTransform =
-                projection * view;
+        sceneToRender.m_ProjectionTransform = projection;
+        sceneToRender.m_ViewTransform = view;
 
         sceneToRender.m_CameraRelativePosition = MathsHelpers::GetPosition(c->GetCameraZoneTransform());
 
@@ -172,8 +172,8 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
             0.1f,
             c->GetFarClipDistance());
 
-        sceneToRender.m_CameraTransform =
-                projection * view * zone.GetRelativeTransform(c->GetOwnerObject()->GetRef().m_ZoneCoordinates);
+        sceneToRender.m_ProjectionTransform = projection;
+        sceneToRender.m_ViewTransform = view * zone.GetRelativeTransform(c->GetOwnerObject()->GetRef().m_ZoneCoordinates);
 
         sceneToRender.m_CameraRelativePosition = MathsHelpers::GetPosition(c->GetCameraZoneTransform());
 
@@ -193,6 +193,7 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
             sceneObject.m_Transform = worldObject->GetZoneTransform();
             sceneObject.m_Shader = component.GetShader();
             sceneObject.m_Texture = component.GetTexture();
+            sceneObject.m_MeshType = component.GetMeshType();
 
             const StaticMesh* mesh = component.GetMesh().GetAsset();
             if (mesh != nullptr)
@@ -296,8 +297,8 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* world, const Freelook
                 0.1f,
                 c->GetFarClipDistance());
 
-        sceneToRender.m_CameraTransform =
-                projection * view * zone.GetRelativeTransform(c->GetOwnerObject()->GetWorldPosition().m_ZoneCoordinates);
+        sceneToRender.m_ProjectionTransform = projection;
+        sceneToRender.m_ViewTransform = view * zone.GetRelativeTransform(c->GetOwnerObject()->GetWorldPosition().m_ZoneCoordinates);
 
         if (m_BoundingBoxMode == BoundingBoxMode::Components)
         {
@@ -470,7 +471,8 @@ void RenderHandler::GenerateBackgroundScene(const World* world, const FreelookCa
     Renderable::Scene sceneToRender;
     sceneToRender.m_RenderMode = Renderable::RenderMode::Background;
 
-    sceneToRender.m_CameraTransform = glm::mat4(1.f);
+    sceneToRender.m_ViewTransform = glm::mat4(1.f);
+    sceneToRender.m_ProjectionTransform = glm::mat4(1.f);
     sceneToRender.m_CameraRotation = MathsHelpers::GetRotationMatrix(c->GetCameraZoneTransform());
 
     sceneToRender.m_CameraInverseProjection = glm::inverse(glm::perspective(m_DefaultFov,

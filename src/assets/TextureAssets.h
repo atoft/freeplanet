@@ -14,6 +14,7 @@ enum TextureAsset
     TextureAsset_Dev_512,
     TextureAsset_Cubemap_Dev,
     TextureAsset_Tree,
+    TextureAsset_Billboard_Grass,
     TextureAsset_Count
 };
 

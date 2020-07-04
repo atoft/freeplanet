@@ -16,6 +16,7 @@
 #include <src/engine/AssetHandle.h>
 #include <src/graphics/Color.h>
 #include <src/graphics/GLHelpers.h>
+#include <src/graphics/MeshType.h>
 
 class ShaderProgram;
 class Texture;
@@ -81,6 +82,7 @@ namespace Renderable
 
         Mesh m_Mesh;
         u32 m_MeshID = 0;
+        MeshType m_MeshType = MeshType::Normal;
 
         Color m_BaseColor = Color(0.f, 0.f, 0.f, 1.f);
 
@@ -89,8 +91,10 @@ namespace Renderable
 
     struct Scene
     {
-        // Usually projection * view * zoneOffset
-        glm::mat4 m_CameraTransform;
+        // Usually view * zoneOffset
+        glm::mat4 m_ViewTransform;
+        glm::mat4 m_ProjectionTransform;
+
         glm::vec3 m_CameraRelativePosition;
 
         glm::mat4 m_CameraInverseProjection;
