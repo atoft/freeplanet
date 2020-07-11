@@ -1,87 +1,77 @@
 cmake_minimum_required(VERSION 2.6)
 
-project(freeplanet LANGUAGES CXX)
+# Enable debug symbols by default
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose type of build (Debug or Release)" FORCE)
+endif()
+
+project(onua)
 
 if(WIN32)
     set(freeplanet_PLATFORM freeplanet_WIN32)
 elseif(APPLE)
-    set(freeplanet_PLATFORM freeplanet_APPLE)
+    set(onua_PLATFORM onua_APPLE)
 else()
     set(freeplanet_PLATFORM freeplanet_LINUX)
 endif()
 
-set(freeplanet_VERSION_MAJOR 1)
-set(freeplanet_VERSION_MINOR 0)
+set(onua_VERSION_MAJOR 1)
+set(onua_VERSION_MINOR 0)
 configure_file(
     "src/config.h.in"
-    "${CMAKE_SOURCE_DIR}/src/config.h"
+    "${PROJECT_BINARY_DIR}/config.h"
     )
 
 # Automatically include all C++ files in the src directory.
 file(GLOB_RECURSE sources      src/*.cpp src/*.h)
 
-# On Windows, CMakeSettings.json should find clang for use, but the clang version for Windows takes different command line args.
-if(WIN32)
-	SET(CMAKE_CXX_FLAGS "/std:c++17")
-
-	# Ignore warnings coming from the C runtime's usage in third party libraries:
-	# https://docs.microsoft.com/en-us/cpp/c-runtime-library/security-features-in-the-crt?view=vs-2019
-	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-
-else()
-	SET (CMAKE_CXX_COMPILER "clang++")
-	set_source_files_properties(
+# Define compiler flags
+# Treat warnings as errors and enable all warnings, excluding unused parameters as there are some valid cases of that.
+# Use C++17 features.
+set_source_files_properties(
         ${sources}
         PROPERTIES
-		# Define compiler flags
-		# Treat warnings as errors and enable all warnings, excluding unused parameters as there are some valid cases of that.
-		# Use C++17 features.
         COMPILE_FLAGS "-Wextra -Wall -Werror -Wno-unused-parameter -std=c++17"
-	)
-endif()
+)
 
-set(EXECUTABLE_NAME "freeplanet")
+SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(CMAKE_CXX_FLAGS "-pthread -lX11 -lsfml-graphics -lsfml-window -lsfml-system -Wno-unused-command-line-argument")
+
+set(EXECUTABLE_NAME "onua")
 add_executable(${EXECUTABLE_NAME} ${sources})
 
-set(INCLUDE_DIRS ${INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}")
-include_directories(${INCLUDE_DIRS})
-
-# Assume we can find OpenGL whatever platform we're on.
-find_package(OpenGL REQUIRED)
-
-### Begin dependencies from vcpkg ###
-
-find_package(GLEW REQUIRED)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE GLEW::GLEW)
-
-find_package(glm CONFIG REQUIRED)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE glm)
-
-find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE sfml-system sfml-window sfml-graphics)
-
-if(WIN32)
-	target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE FLAC OpenAL OpenGL Vorbis)
-else()
-	target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE X11 FLAC UDev OpenAL)
+# Detect and add SFML
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
+# Find any version 2.x of SFML
+find_package(SFML 2 REQUIRED window system graphics network audio)
+if(SFML_FOUND)
+    include_directories(${SFML_INCLUDE_DIR})
+    target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})
 endif()
 
-### End dependencies from vcpkg ###
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(GLM REQUIRED)
+#find_package(Boost REQUIRED)
+#find_package(ASSIMP REQUIRED)
+#set(BUILD_ASSIMP_TOOLS  ON)
+
+# Set the directories to search for #include. Need to add the roots of any third party libs here to make their includes work
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}")
+
+# Dynamic linking for libraries.
+set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${GLEW_LIBRARIES}  X11)
+include_directories(${INCLUDE_DIRS})
+
+target_link_libraries(${PROJECT_NAME} ${LIBS})
 
 install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
 
 include(InstallRequiredSystemLibraries)
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_VERSION_MAJOR "${freeplanet_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${freeplanet_VERSION_MINOR}")
 include(CPack)
 
-# On Windows, the solution is able to build both Debug and Release.
-# With Unix Makefiles on Linux, we need to CMake once per target, in the intended directory.
-if(WIN32)
-	file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-	file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/Release)
-else()
-	file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
-endif()
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
