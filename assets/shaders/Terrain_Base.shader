@@ -10,6 +10,7 @@ uniform vec3 frplBaseColor;
 uniform mat4 frplTransform;
 uniform mat4 frplModelTransform;
 uniform mat4 frplNormalTransform;
+uniform vec3 frplLocalUpDirection;
 uniform vec3 frplCameraWorldPosition;
 
 
@@ -17,6 +18,7 @@ out vec3 Color;
 out vec3 WorldPosition;
 out vec3 CameraWorldPosition;
 out vec3 Normal;
+out vec3 LocalUpDirection;
 out vec2 TexCoord;
 
 uniform sampler2D tex2D_0;
@@ -25,7 +27,7 @@ void main()
 {
     Color = frplColor;
     TexCoord = frplTexcoord;
-
+    LocalUpDirection = frplLocalUpDirection;
 
     WorldPosition = (frplModelTransform * vec4(frplPosition, 1.0)).xyz ;
     gl_Position = frplTransform * vec4(frplPosition, 1.0);
@@ -43,6 +45,7 @@ in vec3 WorldPosition;
 in vec3 CameraWorldPosition;
 in vec3 Normal;
 in vec2 TexCoord;
+in vec3 LocalUpDirection;
 
 uniform sampler2D tex2D_0;
 uniform struct Light {
@@ -72,7 +75,7 @@ void main()
 {
     vec3 sunDiffuse = clamp(dot(Normal, frplDirectionalLight.direction), 0, 1) * frplDirectionalLight.color * frplDirectionalLight.intensity;
 
-    vec3 ambient = clamp(dot(Normal, vec3(0,1,0)), 0.5, 1) * frplAmbientLight.color * frplAmbientLight.intensity;
+    vec3 ambient = clamp(dot(Normal, LocalUpDirection), 0.5, 1) * frplAmbientLight.color * frplAmbientLight.intensity;
 
     outColor = vec4((ambient + sunDiffuse) * Color,1.0);
 }

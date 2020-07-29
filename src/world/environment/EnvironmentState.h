@@ -6,6 +6,9 @@
 
 #include <src/tools/globals.h>
 
+struct Planet;
+struct WorldPosition;
+
 class EnvironmentState
 {
 public:
@@ -14,7 +17,7 @@ public:
 
     glm::vec3 GetSunDirection() const;
     glm::vec3 GetSunColor() const { return m_SunColor; };
-    f32 GetSunIntensity() const;
+    f32 GetSunIntensity(const Planet* _planet, const WorldPosition& _worldPosition) const;
 
     glm::vec3 GetAmbientColor() const { return m_AmbientColor; };
     f32 GetAmbientIntensity() const { return m_AmbientIntensity; };

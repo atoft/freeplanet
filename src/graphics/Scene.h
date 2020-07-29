@@ -108,7 +108,7 @@ namespace Renderable
 
         RenderMode m_RenderMode;
 
-        glm::mat4 m_CameraRotation;
+        glm::vec3 m_LocalUpDirection;
     };
 
     using DrawableVariant = std::variant<sf::RectangleShape, sf::Text, sf::Sprite>;

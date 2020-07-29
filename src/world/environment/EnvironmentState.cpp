@@ -7,6 +7,9 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include <src/tools/MathsHelpers.h>
+#include <src/world/WorldPosition.h>
+#include <src/world/planet/Planet.h>
+#include <src/world/planet/PlanetGeneration.h>
 
 EnvironmentState::EnvironmentState()
 {
@@ -26,10 +29,9 @@ glm::vec3 EnvironmentState::GetSunDirection() const
     return m_SunMatrix * glm::vec4(0,1,0,1);
 }
 
-f32 EnvironmentState::GetSunIntensity() const
+f32 EnvironmentState::GetSunIntensity(const Planet* _planet, const WorldPosition& _worldPosition) const
 {
-    // TODO Get from world
-    const glm::vec3 UP_DIRECTION = glm::vec3(0,1,0);
+    const glm::vec3 upDirection = _planet != nullptr ? PlanetGeneration::GetUpDirection(*_planet, _worldPosition) : glm::vec3(0,1,0);
 
-    return m_SunIntensity * glm::smoothstep(-0.2f, 0.2f, glm::dot(GetSunDirection(), UP_DIRECTION));
+    return m_SunIntensity * glm::smoothstep(-0.2f, 0.2f, glm::dot(GetSunDirection(), upDirection));
 }

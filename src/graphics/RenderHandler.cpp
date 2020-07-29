@@ -9,6 +9,7 @@
 #include <src/engine/EngineConfig.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/world/FreelookCameraComponent.h>
+#include <src/world/planet/PlanetGeneration.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
 #include <src/world/WorldObject.h>
@@ -149,12 +150,19 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
 
         sceneToRender.m_CameraRelativePosition = MathsHelpers::GetPosition(c->GetCameraZoneTransform());
 
+        const Planet* planet = world->GetPlanet();
+
         sceneToRender.m_DirectionalLight.m_Direction = world->GetEnvironmentState().GetSunDirection();
         sceneToRender.m_DirectionalLight.m_Color = world->GetEnvironmentState().GetSunColor();
-        sceneToRender.m_DirectionalLight.m_Intensity = world->GetEnvironmentState().GetSunIntensity();
+        sceneToRender.m_DirectionalLight.m_Intensity = world->GetEnvironmentState().GetSunIntensity(planet, c->GetOwnerObject()->GetWorldPosition());
 
         sceneToRender.m_AmbientLight.m_Color = world->GetEnvironmentState().GetAmbientColor();
         sceneToRender.m_AmbientLight.m_Intensity = world->GetEnvironmentState().GetAmbientIntensity();
+
+        if (planet != nullptr)
+        {
+            sceneToRender.m_LocalUpDirection = PlanetGeneration::GetUpDirection(*planet, c->GetOwnerObject()->GetWorldPosition());
+        }
 
         UpdateDynamicMesh(world->GetVistaHandler()->m_DynamicMesh, world->GetVistaHandler()->GetTerrainModelTransform(), m_HACKTerrainShader, sceneToRender.m_SceneObjects);
         _scenes.push_back(sceneToRender);
@@ -177,12 +185,19 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
 
         sceneToRender.m_CameraRelativePosition = MathsHelpers::GetPosition(c->GetCameraZoneTransform());
 
+        const Planet* planet = world->GetPlanet();
+
         sceneToRender.m_DirectionalLight.m_Direction = world->GetEnvironmentState().GetSunDirection();
         sceneToRender.m_DirectionalLight.m_Color = world->GetEnvironmentState().GetSunColor();
-        sceneToRender.m_DirectionalLight.m_Intensity = world->GetEnvironmentState().GetSunIntensity();
+        sceneToRender.m_DirectionalLight.m_Intensity = world->GetEnvironmentState().GetSunIntensity(planet, c->GetOwnerObject()->GetWorldPosition());
 
         sceneToRender.m_AmbientLight.m_Color = world->GetEnvironmentState().GetAmbientColor();
         sceneToRender.m_AmbientLight.m_Intensity = world->GetEnvironmentState().GetAmbientIntensity();
+
+        if (planet != nullptr)
+        {
+            sceneToRender.m_LocalUpDirection = PlanetGeneration::GetUpDirection(*planet, c->GetOwnerObject()->GetWorldPosition());
+        }
 
         for (const RenderComponent& component : zone.GetComponents<RenderComponent>())
         {
@@ -473,21 +488,20 @@ void RenderHandler::GenerateBackgroundScene(const World* world, const FreelookCa
 
     sceneToRender.m_ViewTransform = glm::mat4(1.f);
     sceneToRender.m_ProjectionTransform = glm::mat4(1.f);
-    sceneToRender.m_CameraRotation = MathsHelpers::GetRotationMatrix(c->GetCameraZoneTransform());
 
     sceneToRender.m_CameraInverseProjection = glm::inverse(glm::perspective(m_DefaultFov,
                                                                static_cast<f32>(m_WindowResolution.x) / static_cast<f32>(m_WindowResolution.y),
                                                                0.1f,
-                                                               c->GetFarClipDistance()) * glm::inverse(sceneToRender.m_CameraRotation));
+                                                               c->GetFarClipDistance()) * glm::inverse(MathsHelpers::GetRotationMatrix(c->GetCameraZoneTransform())));
+
+    const Planet* planet = world->GetPlanet();
 
     sceneToRender.m_DirectionalLight.m_Direction = world->GetEnvironmentState().GetSunDirection();
     sceneToRender.m_DirectionalLight.m_Color = world->GetEnvironmentState().GetSunColor();
-    sceneToRender.m_DirectionalLight.m_Intensity = world->GetEnvironmentState().GetSunIntensity();
+    sceneToRender.m_DirectionalLight.m_Intensity = world->GetEnvironmentState().GetSunIntensity(planet, c->GetOwnerObject()->GetWorldPosition());
 
     sceneToRender.m_AmbientLight.m_Color = world->GetEnvironmentState().GetAmbientColor();
     sceneToRender.m_AmbientLight.m_Intensity = world->GetEnvironmentState().GetAmbientIntensity();
-
-    const Planet* planet = world->GetPlanet();
 
     if (planet != nullptr)
     {
@@ -497,6 +511,8 @@ void RenderHandler::GenerateBackgroundScene(const World* world, const FreelookCa
         sceneToRender.m_Atmosphere.m_GroundRadius = planet->m_Radius;
         sceneToRender.m_Atmosphere.m_AtmosphereHeight = planet->m_AtmosphereHeight;
         sceneToRender.m_Atmosphere.m_AtmosphereBlendOutHeight = planet->m_BlendOutHeight;
+
+        sceneToRender.m_LocalUpDirection = PlanetGeneration::GetUpDirection(*planet, c->GetOwnerObject()->GetWorldPosition());
     }
 
     Renderable::SceneObject sceneObject;

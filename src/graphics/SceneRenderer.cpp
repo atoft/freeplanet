@@ -316,6 +316,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         // TODO
         shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_BaseColor);
         shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
+        shaderProgram->SetUniformFloat3("frplLocalUpDirection", _scene.m_LocalUpDirection);
 
         shaderProgram->SetUniformFloat3("frplDirectionalLight.direction", _scene.m_DirectionalLight.m_Direction);
         shaderProgram->SetUniformFloat3("frplDirectionalLight.color", _scene.m_DirectionalLight.m_Color);

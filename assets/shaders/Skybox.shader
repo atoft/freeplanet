@@ -12,12 +12,14 @@ uniform mat4 frplNormalTransform;
 uniform mat4 frplCameraRotation;
 uniform mat4 frplCameraInverseProjection;
 uniform vec3 frplCameraWorldPosition;
+uniform vec3 frplLocalUpDirection;
 uniform float frplAspectRatio;
 
 out vec3 Color;
 out vec3 WorldPosition;
 out vec3 CameraWorldPosition;
 out vec3 Normal;
+out vec3 LocalUpDirection;
 out vec2 TexCoord;
 
 uniform sampler2D tex2D_0;
@@ -26,6 +28,7 @@ void main()
 {
     Color = frplBaseColor;
     TexCoord = frplTexcoord;
+    LocalUpDirection = frplLocalUpDirection;
 
     WorldPosition = (frplModelTransform * vec4(frplPosition, 1.0)).xyz ;
     gl_Position = frplTransform * vec4(frplPosition, 1.0);
@@ -42,6 +45,7 @@ in vec3 Color;
 in vec3 WorldPosition;
 in vec3 CameraWorldPosition;
 in vec3 Normal;
+in vec3 LocalUpDirection;
 in vec2 TexCoord;
 
 uniform sampler2D tex2D_0;
@@ -126,12 +130,12 @@ void main()
     float sunGlowIntensity = smoothstep(0.8, 1, sunDisk);
     vec3 sunGlowColor = sunGlowIntensity * SUN_GLOW_COLOR;
 
-    float nightExtent = clamp(dot(frplDirectionalLight.direction, vec3(0,1,0) + 0.2), 0, 1);
+    float nightExtent = clamp(dot(frplDirectionalLight.direction, LocalUpDirection) + 0.2, 0, 1);
 
     vec3 skyColor = mix(NIGHT_SKY_COLOR, DAY_SKY_COLOR, nightExtent) * atmosphereIntensity;
 
-    float sunsetIntensity = smoothstep(0.3, 1.0, 1 - clamp(dot(normal, vec3(0,1,0)), 0, 1));
-    float sunsetExtent =  smoothstep(0.4, 0, abs(dot(frplDirectionalLight.direction, vec3(0,1,0))));
+    float sunsetIntensity = smoothstep(0.3, 1.0, 1 - clamp(dot(normal, LocalUpDirection), 0, 1));
+    float sunsetExtent =  smoothstep(0.4, 0, abs(dot(frplDirectionalLight.direction, LocalUpDirection)));
     vec3 sunsetColor = sunsetIntensity * sunsetExtent * SUNSET_COLOR;
 
     outColor = vec4(sunIntensity * frplDirectionalLight.color + sunGlowColor + skyColor + sunsetColor + SPACE_COLOR, 1.0);
