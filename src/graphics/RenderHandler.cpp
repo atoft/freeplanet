@@ -223,6 +223,18 @@ void RenderHandler::GenerateScenes(const World* world, const FreelookCameraCompo
             sceneToRender.m_SceneObjects.push_back(sceneObject);
         }
 
+        for (const LightComponent& component : zone.GetComponents<LightComponent>())
+        {
+            Renderable::PointLight light;
+            light.m_Color = component.m_Color;
+            light.m_Intensity = component.m_Brightness;
+
+            const WorldObject* worldObject = component.GetOwnerObject();
+            assert(worldObject != nullptr);
+
+            light.m_Origin = worldObject->GetPosition();
+        }
+
         UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, zone.GetTerrainModelTransform(), m_HACKTerrainShader, sceneToRender.m_SceneObjects);
 
         if (zone.ContainsPlayer())

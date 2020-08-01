@@ -10,14 +10,7 @@
 class LightComponent : public WorldObjectComponent
 {
 public:
-    LightComponent(glm::vec3 color, f32 brightness);
-
-    const glm::vec3 GetColor() const;
-
-    f32 GetBrightness() const;
-
-private:
-    glm::vec3 m_Color;
-    float m_Brightness;
+    Color m_Color;
+    f32 m_Brightness;
 };
 

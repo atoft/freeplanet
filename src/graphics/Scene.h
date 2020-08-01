@@ -43,7 +43,7 @@ namespace Renderable
     struct PointLight
     {
         glm::vec3 m_Origin;
-        glm::vec4 m_Color;
+        Color m_Color;
         float m_Intensity;
     };
 

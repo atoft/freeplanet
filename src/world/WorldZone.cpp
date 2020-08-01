@@ -26,7 +26,8 @@ WorldZone::WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions)
     m_ColliderComponents.reserve(INITIAL_COMPONENT_COUNT);
     m_CameraComponents.reserve(INITIAL_COMPONENT_COUNT);
     m_RenderComponents.reserve(INITIAL_COMPONENT_COUNT);
-    static_assert(ComponentConstants::ComponentCount == 4);
+    m_LightComponents.reserve(INITIAL_COMPONENT_COUNT);
+    static_assert(ComponentConstants::ComponentCount == 5);
 
     // TODO either remove this requirement or replace dimensions with f32
     assert(_dimensions.x == _dimensions.y && _dimensions.y == _dimensions.z);
@@ -44,7 +45,8 @@ void WorldZone::OnRemovedFromWorld()
         DestroyComponentOfObject(m_ColliderComponents, object.GetWorldObjectID(), true);
         DestroyComponentOfObject(m_CameraComponents, object.GetWorldObjectID(), true);
         DestroyComponentOfObject(m_RenderComponents, object.GetWorldObjectID(), true);
-        static_assert(ComponentConstants::ComponentCount == 4);
+        DestroyComponentOfObject(m_LightComponents, object.GetWorldObjectID(), true);
+        static_assert(ComponentConstants::ComponentCount == 5);
     }
 
     m_TerrainComponent.m_DynamicMesh.RequestDestruction();
@@ -102,7 +104,8 @@ bool WorldZone::DestroyWorldObject_Internal(WorldObjectID _objectID, bool _remov
     DestroyComponentOfObject(m_ColliderComponents, _objectID, _removedFromWorld);
     DestroyComponentOfObject(m_CameraComponents, _objectID, _removedFromWorld);
     DestroyComponentOfObject(m_RenderComponents, _objectID, _removedFromWorld);
-    static_assert(ComponentConstants::ComponentCount == 4);
+    DestroyComponentOfObject(m_LightComponents, _objectID, _removedFromWorld);
+    static_assert(ComponentConstants::ComponentCount == 5);
 
     WorldObjectRef ref = swapObject->GetRef();
     *swapObject = m_WorldObjects.back();

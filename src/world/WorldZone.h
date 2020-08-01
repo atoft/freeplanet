@@ -14,6 +14,7 @@
 #include <src/world/BipedComponent.h>
 #include <src/world/FreelookCameraComponent.h>
 #include <src/world/collision/ColliderComponent.h>
+#include <src/world/LightComponent.h>
 #include <src/graphics/RenderComponent.h>
 #include <src/world/terrain/TerrainComponent.h>
 
@@ -31,8 +32,8 @@ public:
     bool DestroyWorldObject(WorldObjectID _objectID);
     bool TransferWorldObjectOutOfZone(WorldObjectID _objectID);
 
-    inline const glm::ivec3 GetCoordinates() const { return m_Coordinates; };
-    inline const glm::vec3 GetDimensions() const { return m_Dimensions; };
+    glm::ivec3 GetCoordinates() const { return m_Coordinates; };
+    glm::vec3 GetDimensions() const { return m_Dimensions; };
 
     glm::mat4x4 GetGlobalTransform() const;
     glm::mat4x4 GetRelativeTransform(glm::ivec3 _relativeZone) const;
@@ -73,11 +74,15 @@ public:
         {
             return m_CameraComponents;
         }
-        else //if constexpr (std::is_same<T, RenderComponent>())
+        else if constexpr (std::is_same<T, RenderComponent>())
         {
             return m_RenderComponents;
         }
-        static_assert(ComponentConstants::ComponentCount == 4);
+        else // if constexpr (std::is_same<T, LightComponent>())
+        {
+            return m_LightComponents;
+        }
+        static_assert(ComponentConstants::ComponentCount == 5);
     }
 
     template<typename T>
@@ -133,5 +138,6 @@ private:
     std::vector<ColliderComponent>         m_ColliderComponents;
     std::vector<FreelookCameraComponent>   m_CameraComponents;
     std::vector<RenderComponent>           m_RenderComponents;
-    static_assert(ComponentConstants::ComponentCount == 4);
+    std::vector<LightComponent>            m_LightComponents;
+    static_assert(ComponentConstants::ComponentCount == 5);
 };

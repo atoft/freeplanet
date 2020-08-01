@@ -9,5 +9,5 @@
 class ComponentConstants
 {
 public:
-    static constexpr u32 ComponentCount = 4;
+    static constexpr u32 ComponentCount = 5;
 };

@@ -235,7 +235,8 @@ void World::TransferEntitiesBetweenZones()
             TransferComponent<ColliderComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
             TransferComponent<FreelookCameraComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
             TransferComponent<RenderComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
-            static_assert(ComponentConstants::ComponentCount == 4);
+            TransferComponent<LightComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
+            static_assert(ComponentConstants::ComponentCount == 5);
 
             glm::vec3 positionOffset =
                     static_cast<glm::vec3>(destinationZone->GetCoordinates() - sourceZone->GetCoordinates()) *

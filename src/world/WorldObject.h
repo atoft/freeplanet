@@ -44,11 +44,15 @@ public:
         {
             return m_CameraComponentRef;
         }
-        else // if constexpr (std::is_same<T, RenderComponent>())
+        else if constexpr (std::is_same<T, RenderComponent>())
         {
             return m_RenderComponentRef;
         }
-        static_assert(ComponentConstants::ComponentCount == 4);
+        else // if constexpr (std::is_same<T, LightComponent>())
+        {
+            return m_LightComponentRef;
+        }
+        static_assert(ComponentConstants::ComponentCount == 5);
     }
 
     template<typename T>
@@ -129,5 +133,6 @@ private:
     LocalComponentRef m_CollisionComponentRef = REF_INVALID;
     LocalComponentRef m_CameraComponentRef = REF_INVALID;
     LocalComponentRef m_RenderComponentRef = REF_INVALID;
-    static_assert(ComponentConstants::ComponentCount == 4);
+    LocalComponentRef m_LightComponentRef = REF_INVALID;
+    static_assert(ComponentConstants::ComponentCount == 5);
 };
