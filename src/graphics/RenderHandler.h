@@ -38,15 +38,18 @@ public:
     void Render(const World* _world, std::shared_ptr<const UIDisplay> _uiDisplay);
 
 private:
-    void GenerateScenes(const World *world, const FreelookCameraComponent *c, std::vector<Renderable::Scene>& _scenes);
+    void GenerateScenes(const World *_world, const FreelookCameraComponent *_camera, std::vector<Renderable::Scene>& _scenes);
     void GenerateBoundingBoxScenes(
-            const World *world,
-            const FreelookCameraComponent *c,
+            const World *_world,
+            const FreelookCameraComponent *_camera,
             const std::vector<ZoneDebugRenderable>& _debugRenderables,
             std::vector<Renderable::Scene>& _scenes);
-    void AddBoundingBoxObject(const glm::mat4 _transform, const StaticMesh* _mesh, Renderable::Scene& _outScene);
+    void GenerateBackgroundScene(const World *_world, const FreelookCameraComponent *_camera, std::vector<Renderable::Scene>& _scenes) const;
 
-    void GenerateBackgroundScene(const World *world, const FreelookCameraComponent *c, std::vector<Renderable::Scene>& _scenes);
+    void AddBoundingBoxObject(const glm::mat4 _transform, const StaticMesh* _mesh, Renderable::Scene& _outScene) const;
+
+    void GenerateSceneCamera(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
+    void GenerateSceneGlobalLighting(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
 
     void UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat4& _transform, const AssetHandle<ShaderProgram>& _shader, std::vector<Renderable::SceneObject>& _outSceneObjects);
     void OnDynamicMeshDestroyed(DynamicMeshID _id);
