@@ -18,11 +18,13 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
             return "Tree.jpg";
         case TextureAsset_Billboard_Grass:
             return "Billboard_Grass.png";
+        case TextureAsset_Volume_Test:
+            return "Volume_Test.png";
         case TextureAsset_Invalid:
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 5);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 6);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -33,6 +35,8 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
     {
         case TextureAsset_Cubemap_Dev:
             return TextureAssetType::Cubemap;
+        case TextureAsset_Volume_Test:
+            return TextureAssetType::Volume;
         case TextureAsset_Dev_512:
             [[fallthrough]];
         case TextureAsset_Tree:
@@ -44,5 +48,5 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 5);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 6);
 }

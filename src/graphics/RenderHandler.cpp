@@ -24,6 +24,7 @@ RenderHandler::RenderHandler(std::shared_ptr<sf::RenderWindow> _window, Graphics
     m_Quad = AssetHandle<StaticMesh>(MeshAsset_UnitQuad);
     m_Arrow = AssetHandle<StaticMesh>(MeshAsset_Arrow);
     m_SkyboxTexture = AssetHandle<Texture>(TextureAsset_Cubemap_Dev);
+    m_HACKTerrainVolumeTexture = AssetHandle<Texture>(TextureAsset_Volume_Test);
 
     // We hold a Handle to the default shader to keep it loaded, we use it to
     // initialise meshes in the Render thread
@@ -61,6 +62,7 @@ void RenderHandler::HandleEvent(EngineEvent _event)
         m_UnitSphere = AssetHandle<StaticMesh>();
         m_UnitCylinder = AssetHandle<StaticMesh>();
         m_Arrow = AssetHandle<StaticMesh>();
+        m_HACKTerrainVolumeTexture = AssetHandle<Texture>();
         m_WaitingToQuit = true;
 
         break;
@@ -219,7 +221,9 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
             Renderable::SceneObject sceneObject;
             sceneObject.m_Transform = _transform;
             sceneObject.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
-            // TODO texture
+
+            // TODO Support multiple textures, have somewhere to source them.
+            sceneObject.m_Texture = m_HACKTerrainVolumeTexture;
 
             sceneObject.m_MeshID = _handle.m_PreviousDynamicMeshId;
 
@@ -247,7 +251,9 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
         Renderable::SceneObject sceneObject;
         sceneObject.m_Transform = _transform;
         sceneObject.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
-        // TODO texture
+
+        // TODO Support multiple textures, have somewhere to source them.
+        sceneObject.m_Texture = m_HACKTerrainVolumeTexture;
 
         sceneObject.m_MeshID = _handle.m_DynamicMeshId;
 

@@ -22,6 +22,7 @@ out vec3 LocalUpDirection;
 out vec2 TexCoord;
 
 uniform sampler2D tex2D_0;
+uniform sampler3D texVolume_0;
 
 void main()
 {
@@ -48,6 +49,7 @@ in vec2 TexCoord;
 in vec3 LocalUpDirection;
 
 uniform sampler2D tex2D_0;
+uniform sampler3D texVolume_0;
 uniform struct Light {
    vec3 position;
    vec3 color;
@@ -91,5 +93,5 @@ void main()
         break;
     }
 
-    outColor = vec4((ambient + sunDiffuse + pointLighting) * Color,1.0);
+    outColor = vec4((ambient + sunDiffuse + pointLighting) * Color,1.0) * texture(texVolume_0, WorldPosition.xzy);
 }

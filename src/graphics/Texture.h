@@ -20,16 +20,21 @@ public:
     void AcquireResources(TextureAssetID _asset);
     void ReleaseResources();
 
-    void BindAsTexture(ShaderProgram *program, int textureNumber);
+    void Bind(ShaderProgram* _program, u32 _textureNumber);
     void Unbind();
 
     TextureAssetType GetTextureType() { return m_TextureType; };
 
-    void BindAsCubemap(ShaderProgram* _program, int _textureNumber);
+
 
 private:
     void CreateImageTexture(std::string _fileName);
+    void CreateVolumeTexture(std::string _fileName);
     void CreateCubemapTexture(std::string _directory);
+
+    void BindAsTexture(ShaderProgram* _program, u32 _textureNumber);
+    void BindAsCubemap(ShaderProgram* _program, u32 _textureNumber);
+    void BindAsVolume(ShaderProgram* _program, u32 _textureNumber);
 
 private:
     GLuint m_TextureHandle;

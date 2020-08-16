@@ -354,18 +354,8 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
 
         if (texture != nullptr)
         {
-            switch (texture->GetTextureType())
-            {
-            case TextureAssetType::Image:
-                texture->BindAsTexture(shaderProgram, 0);       // TODO Weird syntax, refactor
-                break;
-            case TextureAssetType::Cubemap:
-                texture->BindAsCubemap(shaderProgram, 0);
-                break;
-            default:
-                break;
-            }
-            static_assert(static_cast<u32>(TextureAssetType::Count) == 2);
+            constexpr u32 TEXTURE_INDEX_PLACEHOLDER = 0;
+            texture->Bind(shaderProgram, TEXTURE_INDEX_PLACEHOLDER);
 
             switch (sceneObject.m_MeshType)
             {

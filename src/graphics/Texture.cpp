@@ -21,22 +21,26 @@ void Texture::AcquireResources(TextureAssetID _asset)
         case TextureAssetType::Cubemap:
             CreateCubemapTexture(Assets::GetTextureAssetName(_asset));
             break;
+        case TextureAssetType::Volume:
+            CreateVolumeTexture(Assets::GetTextureAssetName(_asset));
+            break;
         default:
             break;
     }
-    static_assert(static_cast<u32>(TextureAssetType::Count) == 2);
+    static_assert(static_cast<u32>(TextureAssetType::Count) == 3);
 }
 
 void Texture::ReleaseResources()
 {
-    // TODO Oh no, texture resources are never freed from GPU?
+    glDeleteTextures(1, &m_TextureHandle);
+    GLHelpers::ReportError("glDeleteTextures");
 }
 
 void Texture::CreateImageTexture(std::string _fileName)
 {
     sf::Image imgData;
-    std::string path = Globals::FREEPLANET_ASSET_PATH + "textures/" + _fileName;
-    bool texLoadSuccess = imgData.loadFromFile(path);
+    const std::string path = Globals::FREEPLANET_ASSET_PATH + "textures/" + _fileName;
+    const bool texLoadSuccess = imgData.loadFromFile(path);
 
     if(!texLoadSuccess)
     {
@@ -66,20 +70,83 @@ void Texture::CreateImageTexture(std::string _fileName)
     GLHelpers::ReportError("glTexParameter setup");
 }
 
-void Texture::BindAsTexture(ShaderProgram *program, int textureNumber)
+void Texture::CreateVolumeTexture(std::string _fileName)
+{
+    sf::Image imgData;
+    const std::string path = Globals::FREEPLANET_ASSET_PATH + "textures/volumes/" + _fileName;
+    const bool texLoadSuccess = imgData.loadFromFile(path);
+
+    if(!texLoadSuccess)
+    {
+        LogError("Failed to load a texture from path: " + path);
+    }
+
+    imgData.flipVertically();
+
+    glGenTextures(1, &m_TextureHandle);
+    GLHelpers::ReportError("glGenTextures");
+
+    glBindTexture(GL_TEXTURE_3D, m_TextureHandle);
+    GLHelpers::ReportError("glBindTexture");
+
+    assert(imgData.getSize().x * imgData.getSize().x == imgData.getSize().y);
+
+    glTexImage3D(
+            GL_TEXTURE_3D, 0, GL_RGBA,
+            imgData.getSize().x, imgData.getSize().x, imgData.getSize().x,
+            0,
+            GL_RGBA, GL_UNSIGNED_BYTE, imgData.getPixelsPtr()
+    );
+    GLHelpers::ReportError("glTexImage3D");
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);   // TODO How does this map into 3D?
+    GLHelpers::ReportError("glTexParameter setup");
+}
+
+void Texture::Bind(ShaderProgram *_program, u32 _textureNumber)
+{
+    switch (m_TextureType)
+    {
+    case TextureAssetType::Image:
+        BindAsTexture(_program, _textureNumber);
+        break;
+    case TextureAssetType::Cubemap:
+        BindAsCubemap(_program, _textureNumber);
+        break;
+    case TextureAssetType::Volume:
+        BindAsVolume(_program, _textureNumber);
+        break;
+    case TextureAssetType::Count:
+        break;
+    }
+    static_assert(static_cast<u32>(TextureAssetType::Count) == 3);
+}
+
+void Texture::BindAsTexture(ShaderProgram* _program, u32 _textureNumber)
 {
     glBindTexture(GL_TEXTURE_2D, m_TextureHandle);
-    GLuint sampler = glGetUniformLocation(program->GetProgramHandle(), "tex2D_0");
+    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "tex2D_0");
     GLHelpers::ReportError("glGetUniformLocation");
     glUniform1i(sampler, 0);
     GLHelpers::ReportError("glUniform1i");
-
 }
 
-void Texture::BindAsCubemap(ShaderProgram* _program, int _textureNumber)
+void Texture::BindAsCubemap(ShaderProgram* _program, u32 _textureNumber)
 {
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureHandle);
-    GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "texCUBE_0");
+    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "texCUBE_0");
+    GLHelpers::ReportError("glGetUniformLocation");
+    glUniform1i(sampler, 0);
+    GLHelpers::ReportError("glUniform1i");
+}
+
+void Texture::BindAsVolume(ShaderProgram* _program, u32 _textureNumber)
+{
+    glBindTexture(GL_TEXTURE_3D, m_TextureHandle);
+    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "texVolume_0");
     GLHelpers::ReportError("glGetUniformLocation");
     glUniform1i(sampler, 0);
     GLHelpers::ReportError("glUniform1i");
@@ -87,7 +154,14 @@ void Texture::BindAsCubemap(ShaderProgram* _program, int _textureNumber)
 
 void Texture::Unbind()
 {
-    glBindTexture(GL_TEXTURE_2D, 0);
+    if (m_TextureType == TextureAssetType::Volume)
+    {
+        glBindTexture(GL_TEXTURE_3D, 0);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
 void Texture::CreateCubemapTexture(std::string _directory)
@@ -111,7 +185,7 @@ void Texture::CreateCubemapTexture(std::string _directory)
     for (int faceIdx = 0; faceIdx < 6; ++faceIdx)
     {
         sf::Image imgData;
-        bool texLoadSuccess = imgData.loadFromFile(path + Assets::CUBEMAP_PATHS[faceIdx]);
+        const bool texLoadSuccess = imgData.loadFromFile(path + Assets::CUBEMAP_PATHS[faceIdx]);
 
         GLuint faceEnum;
         switch (faceIdx)
@@ -135,7 +209,6 @@ void Texture::CreateCubemapTexture(std::string _directory)
                 faceEnum = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
                 break;
         }
-
 
         if (!texLoadSuccess)
         {

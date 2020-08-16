@@ -15,6 +15,7 @@ enum TextureAsset
     TextureAsset_Cubemap_Dev,
     TextureAsset_Tree,
     TextureAsset_Billboard_Grass,
+    TextureAsset_Volume_Test,
     TextureAsset_Count
 };
 
@@ -22,6 +23,7 @@ enum class TextureAssetType
 {
     Image = 0,
     Cubemap,
+    Volume,
     Count
 };
 
