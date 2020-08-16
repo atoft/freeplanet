@@ -51,7 +51,7 @@ uniform sampler2D tex2D_0;
 uniform struct Light {
    vec3 position;
    vec3 color;
-   float brightness;
+   float intensity;
 };
 uniform struct DirectionalLight {
    vec3 direction;
@@ -83,12 +83,13 @@ void main()
     {
         vec3 fragToLight = frplLights[lightIdx].position - WorldPosition;
 
-        float pointBrightness = dot(Normal, fragToLight) / (length(fragToLight));
+        float pointBrightness = dot(Normal, normalize(fragToLight));
         pointBrightness = clamp(pointBrightness, 0.0, 1.0);
 
-        pointLighting = pointLighting + vec3(length(fragToLight) / 10.0);//pointLighting + vec3(pointBrightness * 0.1);// * frplLights[lightIdx].color * frplLights[lightIdx].brightness);
+        float distanceToLight = length(fragToLight);
+        pointLighting = pointLighting + (1.0 / (distanceToLight * distanceToLight)) * frplLights[lightIdx].color * frplLights[lightIdx].intensity * pointBrightness;
         break;
     }
 
-    outColor = vec4(pointLighting.rgb, 1.0);//vec4((ambient + sunDiffuse + pointLighting) * Color,1.0);
+    outColor = vec4((ambient + sunDiffuse + pointLighting) * Color,1.0);
 }

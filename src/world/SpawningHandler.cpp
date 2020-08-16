@@ -55,7 +55,7 @@ void SpawningHandler::Update()
             {
                 const glm::vec3 chunksToZoneOriginOffset = glm::vec3(zone.GetTerrainComponent().m_ChunkSize * zone.GetTerrainComponent().m_ChunksPerEdge) /2.f;
 
-                const glm::vec3 spawnPosition = *vertIt - chunksToZoneOriginOffset + glm::vec3(0.f,2.f,0.f);
+                const glm::vec3 spawnPosition = *vertIt - chunksToZoneOriginOffset;
 
                 ++vertIt;
 
@@ -88,8 +88,6 @@ void SpawningHandler::Update()
                                                                                        MovementType::Movable);
                     collider.m_Bounds = AABB(glm::vec3(.8f, 4.f, .8f), glm::vec3(0.f, 2.f, 0.f));
                     collider.m_MovementType = MovementType::Fixed;
-
-                    zone.AddComponent<LightComponent>(worldObject, Color(1.f,1.f,1.f,1.f), 10.f);
                 }
                 else
                 {
