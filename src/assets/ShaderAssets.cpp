@@ -6,7 +6,7 @@
 
 std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
 {
-    assert(_assetID < static_cast<ShaderAssetID>(ShaderAsset::Count));
+    assert(_assetID < static_cast<ShaderAssetID>(ShaderAsset_Count));
 
     switch(static_cast<ShaderAsset >(_assetID))
     {
@@ -28,5 +28,5 @@ std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
         default:
             return "INVALID";
     }
-    static_assert(static_cast<ShaderAssetID>(ShaderAsset::Count) == 8);
+    static_assert(static_cast<ShaderAssetID>(ShaderAsset_Count) == 8);
 }

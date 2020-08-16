@@ -41,6 +41,8 @@ public:
 
     void SetUniformFloat3(std::string name, glm::vec3 vector);
 
+    static bool ValidateShader(std::string _fileName);
+
 protected:
     static std::pair<std::string, std::string> ParseShader(std::string filename);
     static GLuint CompileShader(std::string name, std::string shaderSource, ShaderType _shaderType);

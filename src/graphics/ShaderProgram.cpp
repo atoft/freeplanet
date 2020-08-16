@@ -113,6 +113,19 @@ GLuint ShaderProgram::CompileShader(std::string name, std::string shaderSource, 
     return id;
 }
 
+bool ShaderProgram::ValidateShader(std::string _fileName)
+{
+    std::pair<std::string,std::string> shaders = ParseShader(Globals::FREEPLANET_ASSET_PATH + "shaders/" + _fileName + ".shader");
+
+    if(shaders.first.empty() || shaders.second.empty())
+    {
+        LogError(_fileName + " couldn't be parsed correctly.");
+        return false;
+    }
+
+    return true;
+}
+
 std::pair<std::string, std::string> ShaderProgram::ParseShader(std::string filename)
 {
     std::string currentLine;

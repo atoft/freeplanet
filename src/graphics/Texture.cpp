@@ -11,6 +11,8 @@
 
 void Texture::AcquireResources(TextureAssetID _asset)
 {
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
+
     m_TextureType = Assets::GetTextureAssetType(_asset);
 
     switch (m_TextureType)
@@ -32,6 +34,8 @@ void Texture::AcquireResources(TextureAssetID _asset)
 
 void Texture::ReleaseResources()
 {
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
+
     glDeleteTextures(1, &m_TextureHandle);
     GLHelpers::ReportError("glDeleteTextures");
 }
@@ -73,7 +77,7 @@ void Texture::CreateImageTexture(std::string _fileName)
 void Texture::CreateVolumeTexture(std::string _fileName)
 {
     sf::Image imgData;
-    const std::string path = Globals::FREEPLANET_ASSET_PATH + "textures/volumes/" + _fileName;
+    const std::string path = Globals::FREEPLANET_ASSET_PATH + "textures/" + _fileName;
     const bool texLoadSuccess = imgData.loadFromFile(path);
 
     if(!texLoadSuccess)
@@ -108,6 +112,8 @@ void Texture::CreateVolumeTexture(std::string _fileName)
 
 void Texture::Bind(ShaderProgram *_program, u32 _textureNumber)
 {
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
+
     switch (m_TextureType)
     {
     case TextureAssetType::Image:
@@ -154,6 +160,8 @@ void Texture::BindAsVolume(ShaderProgram* _program, u32 _textureNumber)
 
 void Texture::Unbind()
 {
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
+
     if (m_TextureType == TextureAssetType::Volume)
     {
         glBindTexture(GL_TEXTURE_3D, 0);

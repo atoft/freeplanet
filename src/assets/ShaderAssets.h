@@ -21,7 +21,7 @@ enum ShaderAsset
 
     ShaderAsset_Terrain_Base,
 
-    Count
+    ShaderAsset_Count
 };
 namespace Assets
 {

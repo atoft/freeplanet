@@ -19,7 +19,7 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
         case TextureAsset_Billboard_Grass:
             return "Billboard_Grass.png";
         case TextureAsset_Volume_Test:
-            return "Volume_Test.png";
+            return "volumes/Volume_Test.png";
         case TextureAsset_Invalid:
         default:
             return "INVALID";
