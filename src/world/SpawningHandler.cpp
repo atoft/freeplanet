@@ -55,7 +55,7 @@ void SpawningHandler::Update()
             {
                 const glm::vec3 chunksToZoneOriginOffset = glm::vec3(zone.GetTerrainComponent().m_ChunkSize * zone.GetTerrainComponent().m_ChunksPerEdge) /2.f;
 
-                const glm::vec3 spawnPosition = *vertIt - chunksToZoneOriginOffset;
+                const glm::vec3 spawnPosition = *vertIt - chunksToZoneOriginOffset + glm::vec3(0.f,2.f,0.f);
 
                 ++vertIt;
 
@@ -68,7 +68,7 @@ void SpawningHandler::Update()
 
                 if (spawnedCount < targetTreeQuantity)
                 {
-                    WorldObject &worldObject = m_World->ConstructWorldObject(zone, "Tree");
+                    WorldObject& worldObject = m_World->ConstructWorldObject(zone, "Tree");
                     worldObject.SetInitialPosition(spawnPosition);
 
                     const glm::mat3x3 rotationMatrix = MathsHelpers::GenerateRotationMatrix3x3FromUp(
@@ -83,11 +83,13 @@ void SpawningHandler::Update()
                              AssetHandle<Texture>(TextureAsset_Tree),
                              MeshType::Normal);
 
-                    ColliderComponent &collider = zone.AddComponent<ColliderComponent>(worldObject,
+                    ColliderComponent& collider = zone.AddComponent<ColliderComponent>(worldObject,
                                                                                        CollisionPrimitiveType::OBB,
                                                                                        MovementType::Movable);
                     collider.m_Bounds = AABB(glm::vec3(.8f, 4.f, .8f), glm::vec3(0.f, 2.f, 0.f));
                     collider.m_MovementType = MovementType::Fixed;
+
+                    zone.AddComponent<LightComponent>(worldObject, Color(1.f,1.f,1.f,1.f), 10.f);
                 }
                 else
                 {

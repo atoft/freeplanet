@@ -77,5 +77,18 @@ void main()
 
     vec3 ambient = clamp(dot(Normal, LocalUpDirection), 0.5, 1) * frplAmbientLight.color * frplAmbientLight.intensity;
 
-    outColor = vec4((ambient + sunDiffuse) * Color,1.0);
+    vec3 pointLighting = vec3(0,0,0);
+
+    for (int lightIdx = 0; lightIdx < 8; ++lightIdx)
+    {
+        vec3 fragToLight = frplLights[lightIdx].position - WorldPosition;
+
+        float pointBrightness = dot(Normal, fragToLight) / (length(fragToLight));
+        pointBrightness = clamp(pointBrightness, 0.0, 1.0);
+
+        pointLighting = pointLighting + vec3(length(fragToLight) / 10.0);//pointLighting + vec3(pointBrightness * 0.1);// * frplLights[lightIdx].color * frplLights[lightIdx].brightness);
+        break;
+    }
+
+    outColor = vec4(pointLighting.rgb, 1.0);//vec4((ambient + sunDiffuse + pointLighting) * Color,1.0);
 }

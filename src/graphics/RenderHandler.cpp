@@ -192,6 +192,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
             assert(worldObject != nullptr);
 
             light.m_Origin = worldObject->GetPosition();
+
+            sceneToRender.m_PointLights.push_back(light);
         }
 
         UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, zone.GetTerrainModelTransform(), m_HACKTerrainShader, sceneToRender.m_SceneObjects);

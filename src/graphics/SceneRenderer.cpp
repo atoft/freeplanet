@@ -325,6 +325,26 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         shaderProgram->SetUniformFloat3("frplAmbientLight.color", _scene.m_AmbientLight.m_Color);
         shaderProgram->SetUniformFloat("frplAmbientLight.intensity", _scene.m_AmbientLight.m_Intensity);
 
+        // TODO Pick the n nearest lights to the camera.
+        // TODO Lights shared across zones/scenes.
+        // Can set only once per frame?
+        for (u32 lightIdx = 0; lightIdx < 8; ++lightIdx)
+        {
+            const std::string lightName = "frplLights[" + std::to_string(lightIdx) + "]";
+
+            if (_scene.m_PointLights.size() <= lightIdx)
+            {
+                shaderProgram->SetUniformFloat3(lightName + ".position", glm::vec3(0.f));
+                shaderProgram->SetUniformFloat3(lightName + ".color", Color(0.f));
+                shaderProgram->SetUniformFloat(lightName + ".intensity", 0.f);
+                continue;
+            }
+
+            shaderProgram->SetUniformFloat3(lightName + ".position", _scene.m_PointLights[lightIdx].m_Origin);
+            shaderProgram->SetUniformFloat3(lightName + ".color", _scene.m_PointLights[lightIdx].m_Color);
+            shaderProgram->SetUniformFloat(lightName + ".intensity", _scene.m_PointLights[lightIdx].m_Intensity);
+        }
+
         shaderProgram->SetUniformFloat3("frplAtmosphere.origin", _scene.m_Atmosphere.m_Origin);
         shaderProgram->SetUniformFloat("frplAtmosphere.groundRadius", _scene.m_Atmosphere.m_GroundRadius);
         shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
