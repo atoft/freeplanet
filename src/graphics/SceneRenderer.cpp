@@ -258,7 +258,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         glBindVertexArray(mesh.m_VaoHandle);
         GLHelpers::ReportError("glBindVertexArray in renderer");
 
-        ShaderProgram* shaderProgram = sceneObject.m_Shader.GetAsset();
+        ShaderProgram* shaderProgram = sceneObject.m_Material.m_Shader.GetAsset();
         if (shaderProgram == nullptr)
         {
             LogError("ShaderProgram was not loaded.");
@@ -350,39 +350,48 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
         shaderProgram->SetUniformFloat("frplAtmosphere.blendOutHeight", _scene.m_Atmosphere.m_AtmosphereBlendOutHeight);
 
-        Texture* texture = sceneObject.m_Texture.GetAsset();
-
-        if (texture != nullptr)
+        u32 textureUnitIdx = 0;
+        for (const std::pair<std::string, AssetHandle<Texture>>& texturePair : sceneObject.m_Material.m_Textures)
         {
-            constexpr u32 TEXTURE_INDEX_PLACEHOLDER = 0;
-            texture->Bind(shaderProgram, TEXTURE_INDEX_PLACEHOLDER);
+            Texture* texture = texturePair.second.GetAsset();
 
-            switch (sceneObject.m_MeshType)
+            if (texture != nullptr)
             {
-            case MeshType::Normal:
-            {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                texture->Bind(shaderProgram, texturePair.first, textureUnitIdx);
 
-                break;
-            }
-            case MeshType::Billboard:
-                [[fallthrough]];
-            case MeshType::OrientedBillboard:
-            {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                switch (sceneObject.m_MeshType)
+                {
+                    case MeshType::Normal:
+                    {
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-                break;
-            }
+                        break;
+                    }
+                    case MeshType::Billboard:
+                        [[fallthrough]];
+                    case MeshType::OrientedBillboard:
+                    {
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+                        break;
+                    }
+                }
+                ++textureUnitIdx;
             }
         }
 
         glDrawElements(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, 0);
 
-        if(texture != nullptr)
+        for (s32 texIdx = sceneObject.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
         {
-            texture->Unbind();
+            Texture* texture = sceneObject.m_Material.m_Textures[texIdx].second.GetAsset();
+
+            if (texture != nullptr)
+            {
+                texture->Unbind(texIdx);
+            }
         }
 
         //Unbind vertex array

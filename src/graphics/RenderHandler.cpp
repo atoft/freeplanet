@@ -24,7 +24,9 @@ RenderHandler::RenderHandler(std::shared_ptr<sf::RenderWindow> _window, Graphics
     m_Quad = AssetHandle<StaticMesh>(MeshAsset_UnitQuad);
     m_Arrow = AssetHandle<StaticMesh>(MeshAsset_Arrow);
     m_SkyboxTexture = AssetHandle<Texture>(TextureAsset_Cubemap_Dev);
-    m_HACKTerrainVolumeTexture = AssetHandle<Texture>(TextureAsset_Volume_Test);
+
+    m_HACKTerrainVolumeTexture0 = AssetHandle<Texture>(TextureAsset_Volume_Perlin128);
+    m_HACKTerrainVolumeTexture1 = AssetHandle<Texture>(TextureAsset_Volume_Grass128);
 
     // We hold a Handle to the default shader to keep it loaded, we use it to
     // initialise meshes in the Render thread
@@ -62,7 +64,8 @@ void RenderHandler::HandleEvent(EngineEvent _event)
         m_UnitSphere = AssetHandle<StaticMesh>();
         m_UnitCylinder = AssetHandle<StaticMesh>();
         m_Arrow = AssetHandle<StaticMesh>();
-        m_HACKTerrainVolumeTexture = AssetHandle<Texture>();
+        m_HACKTerrainVolumeTexture0 = AssetHandle<Texture>();
+        m_HACKTerrainVolumeTexture1 = AssetHandle<Texture>();
         m_WaitingToQuit = true;
 
         break;
@@ -167,8 +170,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
             Renderable::SceneObject sceneObject;
             sceneObject.m_Transform = worldObject->GetZoneTransform();
-            sceneObject.m_Shader = component.GetShader();
-            sceneObject.m_Texture = component.GetTexture();
+            sceneObject.m_Material.m_Shader = component.GetShader();
+            sceneObject.m_Material.m_Textures.emplace_back("tex2D_0",  component.GetTexture());
             sceneObject.m_MeshType = component.GetMeshType();
 
             const StaticMesh* mesh = component.GetMesh().GetAsset();
@@ -220,10 +223,11 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
             // This frame, we will render the previous version of the mesh while we request a new one.
             Renderable::SceneObject sceneObject;
             sceneObject.m_Transform = _transform;
-            sceneObject.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
+            sceneObject.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
 
             // TODO Support multiple textures, have somewhere to source them.
-            sceneObject.m_Texture = m_HACKTerrainVolumeTexture;
+            sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
+            sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
 
             sceneObject.m_MeshID = _handle.m_PreviousDynamicMeshId;
 
@@ -250,10 +254,11 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
 
         Renderable::SceneObject sceneObject;
         sceneObject.m_Transform = _transform;
-        sceneObject.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
+        sceneObject.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
 
         // TODO Support multiple textures, have somewhere to source them.
-        sceneObject.m_Texture = m_HACKTerrainVolumeTexture;
+        sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
+        sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
 
         sceneObject.m_MeshID = _handle.m_DynamicMeshId;
 
@@ -357,7 +362,7 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* _world, const Freeloo
         {
             Renderable::SceneObject sceneObject;
             sceneObject.m_Transform = glm::scale(glm::mat4(1.f), zone.GetDimensions());
-            sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+            sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
             if (cubeMesh != nullptr)
             {
@@ -382,7 +387,7 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* _world, const Freeloo
                             Renderable::SceneObject sceneObject;
                             sceneObject.m_Transform = zone.GetTerrainModelTransform() * glm::scale(
                                     glm::translate(glm::mat4(1.f), glm::vec3(x, y, z) * chunkScale), chunkScale);
-                            sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+                            sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
                             if (cubeMesh != nullptr)
                             {
@@ -410,7 +415,7 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* _world, const Freeloo
                     sceneObject.m_Transform = zone.GetTerrainModelTransform() *
                             glm::translate(glm::mat4x4(1.f), vertex)
                             * MathsHelpers::GenerateRotationMatrixFromRight(normal);
-                    sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+                    sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
                     if (arrowMesh != nullptr)
                     {
@@ -439,7 +444,7 @@ void RenderHandler::AddBoundingBoxObject(const glm::mat4 _transform, const Stati
 {
     Renderable::SceneObject sceneObject;
     sceneObject.m_Transform = _transform;
-    sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+    sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
     if (_mesh != nullptr)
     {
@@ -492,7 +497,7 @@ void RenderHandler::GenerateBackgroundScene(const World* _world, const FreelookC
     {
         sceneObject.m_Mesh = quadMesh->GetMesh();
     }
-    sceneObject.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Skybox);
+    sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Skybox);
 
     sceneToRender.m_SceneObjects.emplace_back(sceneObject);
 

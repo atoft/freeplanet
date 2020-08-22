@@ -103,27 +103,32 @@ void Texture::CreateVolumeTexture(std::string _fileName)
     );
     GLHelpers::ReportError("glTexImage3D");
 
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glGenerateTextureMipmap(m_TextureHandle);
+
+    // TODO Enable or disable mipmaps per texture.
+     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    //glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);   // TODO How does this map into 3D?
     GLHelpers::ReportError("glTexParameter setup");
 }
 
-void Texture::Bind(ShaderProgram *_program, u32 _textureNumber)
+void Texture::Bind(ShaderProgram *_program, const std::string& _name, u32 _texUnitIdx)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
     switch (m_TextureType)
     {
     case TextureAssetType::Image:
-        BindAsTexture(_program, _textureNumber);
+        BindAsTexture(_program, _name, _texUnitIdx);
         break;
     case TextureAssetType::Cubemap:
-        BindAsCubemap(_program, _textureNumber);
+        BindAsCubemap(_program, _name, _texUnitIdx);
         break;
     case TextureAssetType::Volume:
-        BindAsVolume(_program, _textureNumber);
+        BindAsVolume(_program, _name, _texUnitIdx);
         break;
     case TextureAssetType::Count:
         break;
@@ -131,37 +136,41 @@ void Texture::Bind(ShaderProgram *_program, u32 _textureNumber)
     static_assert(static_cast<u32>(TextureAssetType::Count) == 3);
 }
 
-void Texture::BindAsTexture(ShaderProgram* _program, u32 _textureNumber)
+void Texture::BindAsTexture(ShaderProgram* _program, const std::string& _name, u32 _texUnitIdx)
 {
+    glActiveTexture(GL_TEXTURE0 + _texUnitIdx);
     glBindTexture(GL_TEXTURE_2D, m_TextureHandle);
-    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "tex2D_0");
+    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), _name.c_str());
     GLHelpers::ReportError("glGetUniformLocation");
-    glUniform1i(sampler, 0);
+    glUniform1i(sampler, _texUnitIdx);
     GLHelpers::ReportError("glUniform1i");
 }
 
-void Texture::BindAsCubemap(ShaderProgram* _program, u32 _textureNumber)
+void Texture::BindAsCubemap(ShaderProgram* _program, const std::string& _name, u32 _texUnitIdx)
 {
+    glActiveTexture(GL_TEXTURE0 + _texUnitIdx);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_TextureHandle);
-    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "texCUBE_0");
+    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), _name.c_str());
     GLHelpers::ReportError("glGetUniformLocation");
-    glUniform1i(sampler, 0);
+    glUniform1i(sampler, _texUnitIdx);
     GLHelpers::ReportError("glUniform1i");
 }
 
-void Texture::BindAsVolume(ShaderProgram* _program, u32 _textureNumber)
+void Texture::BindAsVolume(ShaderProgram* _program, const std::string& _name, u32 _texUnitIdx)
 {
+    glActiveTexture(GL_TEXTURE0 + _texUnitIdx);
     glBindTexture(GL_TEXTURE_3D, m_TextureHandle);
-    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), "texVolume_0");
+    const GLuint sampler = glGetUniformLocation(_program->GetProgramHandle(), _name.c_str());
     GLHelpers::ReportError("glGetUniformLocation");
-    glUniform1i(sampler, 0);
+    glUniform1i(sampler, _texUnitIdx);
     GLHelpers::ReportError("glUniform1i");
 }
 
-void Texture::Unbind()
+void Texture::Unbind(u32 _texUnitIdx)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
+    glActiveTexture(GL_TEXTURE0 + _texUnitIdx);
     if (m_TextureType == TextureAssetType::Volume)
     {
         glBindTexture(GL_TEXTURE_3D, 0);

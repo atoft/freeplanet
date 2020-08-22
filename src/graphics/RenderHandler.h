@@ -68,7 +68,9 @@ private:
 
     AssetHandle<ShaderProgram> m_DefaultShader;
     AssetHandle<ShaderProgram> m_HACKTerrainShader;
-    AssetHandle<Texture> m_HACKTerrainVolumeTexture;
+
+    AssetHandle<Texture> m_HACKTerrainVolumeTexture0;
+    AssetHandle<Texture> m_HACKTerrainVolumeTexture1;
 
     // TODO Get from world
     AssetHandle<Texture> m_SkyboxTexture;

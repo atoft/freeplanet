@@ -15,7 +15,8 @@ enum TextureAsset
     TextureAsset_Cubemap_Dev,
     TextureAsset_Tree,
     TextureAsset_Billboard_Grass,
-    TextureAsset_Volume_Test,
+    TextureAsset_Volume_Perlin128,
+    TextureAsset_Volume_Grass128,
     TextureAsset_Count
 };
 

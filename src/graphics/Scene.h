@@ -72,13 +72,18 @@ namespace Renderable
         u32 m_NumberOfElements = 0;
     };
 
+    struct Material
+    {
+        AssetHandle<ShaderProgram> m_Shader;
+        std::vector<std::pair<std::string, AssetHandle<Texture>>> m_Textures;
+    };
+
     struct SceneObject
     {
         // TODO Need some serious thought about how to make this both threadsafe and performant
         // Eg. would need to make every Handle operation locking and that's not sufficient
         //   If we get a pointer from the Handle then the array is reallocated
-        AssetHandle<ShaderProgram> m_Shader;
-        AssetHandle<Texture> m_Texture;
+        Material m_Material;
 
         Mesh m_Mesh;
         u32 m_MeshID = 0;
