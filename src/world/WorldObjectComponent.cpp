@@ -9,10 +9,26 @@
 
 WorldObject* WorldObjectComponent::GetOwnerObject()
 {
-    return m_World->GetWorldObject(m_WorldObjectID);
+    WorldObject* worldObject = m_World->GetWorldObject(m_WorldObjectID);
+
+    if (worldObject == nullptr)
+    {
+        LogError("A component is missing its owner ID" + std::to_string(m_WorldObjectID));
+        assert(false);
+    }
+
+    return worldObject;
 }
 
 const WorldObject* WorldObjectComponent::GetOwnerObject() const
 {
-    return m_World->GetWorldObject(m_WorldObjectID);
+    const WorldObject* worldObject = m_World->GetWorldObject(m_WorldObjectID);
+
+    if (worldObject == nullptr)
+    {
+        LogError("A component is missing its owner ID" + std::to_string(m_WorldObjectID));
+        assert(false);
+    }
+
+    return worldObject;
 }
