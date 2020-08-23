@@ -39,14 +39,11 @@ WorldZone::WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions)
 
 void WorldZone::OnRemovedFromWorld()
 {
+    // TODO this split of creation and destruction between world and zone is confusing and bug-prone, it should all
+    // move up to the world and make the zones more POD-like.
     for (const WorldObject& object : m_WorldObjects)
     {
-        DestroyComponentOfObject(m_BipedComponents, object.GetWorldObjectID(), true);
-        DestroyComponentOfObject(m_ColliderComponents, object.GetWorldObjectID(), true);
-        DestroyComponentOfObject(m_CameraComponents, object.GetWorldObjectID(), true);
-        DestroyComponentOfObject(m_RenderComponents, object.GetWorldObjectID(), true);
-        DestroyComponentOfObject(m_LightComponents, object.GetWorldObjectID(), true);
-        static_assert(ComponentConstants::ComponentCount == 5);
+        m_OwnerWorld->DestroyWorldObject(object.GetWorldObjectID());
     }
 
     m_TerrainComponent.m_DynamicMesh.RequestDestruction();

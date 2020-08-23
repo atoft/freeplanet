@@ -152,6 +152,7 @@ void World::Update(TimeMS _delta)
     {
         TransferEntitiesBetweenZones();
         UpdateActiveZones();
+        VerifyWorld();
     }
 }
 
@@ -286,7 +287,7 @@ void World::UpdateActiveZones()
                 const glm::ivec3 zone = zonesToRemove[zoneIdx - 1];
                 const glm::ivec3 coordDistance = glm::abs(zone - playerZone);
 
-                bool isFarFromPlayer = coordDistance.x > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x
+                const bool isFarFromPlayer = coordDistance.x > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.x
                                     || coordDistance.y > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.y
                                     || coordDistance.z > TerrainConstants::WORLD_ZONE_LOAD_DISTANCE.z;
 
@@ -543,6 +544,22 @@ void World::HandleCommandLineArgs(const CommandLineArgs& _args)
 void World::AddWorldEvent(WorldEvent _event)
 {
     m_WorldEventHandler.PushEvent(_event);
+}
+
+void World::VerifyWorld() const
+{
+    u32 totalWorldObjects = 0;
+
+    for (const WorldZone& zone : m_ActiveZones)
+    {
+        totalWorldObjects += zone.GetWorldObjects().size();
+    }
+
+    if (totalWorldObjects != m_Directory.GetCount())
+    {
+        LogError("Directory is out of sync with the contents of the zones.");
+        assert(false);
+    }
 }
 
 void World::DebugDraw(UIDrawInterface& _interface) const

@@ -13,7 +13,8 @@ public:
     void OnWorldObjectTransferred(WorldObjectID _objectID, WorldObjectRef _newLocation);
     void UnregisterWorldObject(WorldObjectID _objectID);
 
-    const WorldObjectRef GetWorldObjectLocation(WorldObjectID _objectID) const;
+    WorldObjectRef GetWorldObjectLocation(WorldObjectID _objectID) const;
+    u32 GetCount() const { return m_Map.size(); };
 
 private:
     std::unordered_map<WorldObjectID, WorldObjectRef> m_Map;

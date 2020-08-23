@@ -39,7 +39,7 @@ void WorldObjectDirectory::UnregisterWorldObject(WorldObjectID _objectID)
     assert(eraseCount == 1);
 }
 
-const WorldObjectRef WorldObjectDirectory::GetWorldObjectLocation(WorldObjectID _objectID) const
+WorldObjectRef WorldObjectDirectory::GetWorldObjectLocation(WorldObjectID _objectID) const
 {
     auto&& result = m_Map.find(_objectID);
     if(result != m_Map.end())

@@ -88,6 +88,7 @@ private:
     void TransferEntitiesBetweenZones();
     void UpdateActiveZones();
     void SendWorldEvents();
+    void VerifyWorld() const;
 
     bool TryLoadZone(glm::ivec3 _position);
 
