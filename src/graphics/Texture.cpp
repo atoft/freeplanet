@@ -95,11 +95,22 @@ void Texture::CreateVolumeTexture(std::string _fileName)
 
     assert(imgData.getSize().x * imgData.getSize().x == imgData.getSize().y);
 
+    // Convert to single channel texture (quick fix to avoid the SFML limitation).
+    std::vector<u8> rawTexture;
+    rawTexture.reserve(imgData.getSize().x * imgData.getSize().x * imgData.getSize().x);
+
+    const u8* pixelPtr = imgData.getPixelsPtr();
+    for (u32 idx = 0; idx < imgData.getSize().x * imgData.getSize().x * imgData.getSize().x; ++idx)
+    {
+        rawTexture[idx] = *pixelPtr;
+        pixelPtr += 4;
+    }
+
     glTexImage3D(
-            GL_TEXTURE_3D, 0, GL_RGBA,
+            GL_TEXTURE_3D, 0, GL_COMPRESSED_RED,
             imgData.getSize().x, imgData.getSize().x, imgData.getSize().x,
             0,
-            GL_RGBA, GL_UNSIGNED_BYTE, imgData.getPixelsPtr()
+            GL_RED, GL_UNSIGNED_BYTE, rawTexture.data()
     );
     GLHelpers::ReportError("glTexImage3D");
 

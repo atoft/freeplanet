@@ -39,6 +39,7 @@ public:
         RenderSetWireframe,
         RenderSetVista,
         RenderOnDynamicMeshDestroyed,
+        RenderMaxTerrainLOD,
 
         TerrainSetNormalGenerationMethod,
 

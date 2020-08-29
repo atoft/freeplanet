@@ -67,6 +67,7 @@ uniform Light frplLights[8];
 uniform DirectionalLight frplDirectionalLight;
 uniform AmbientLight frplAmbientLight;
 
+uniform int frplTerrainLod;
 
 out vec4 outColor;
 
@@ -77,7 +78,12 @@ float Remap(float _value, float _min, float _max)
 
 vec3 GetGrassColor()
 {
-    float baseColor = texture(texGrass, WorldPosition.xzy).r;
+    float baseColor = 0.4;
+
+    if (frplTerrainLod < 1)
+    {
+        baseColor = texture(texGrass, WorldPosition.xzy).r;
+    }
 
     const float GRASS_CONTRAST = 0.6;
     const float GRASS_BRIGHTNESS = 0.5;
@@ -91,7 +97,12 @@ vec3 GetGrassColor()
 
 vec3 GetDirtColor()
 {
-    float baseColor = texture(texPerlin, WorldPosition.xzy / 2.0).r * 0.5 + texture(texPerlin, WorldPosition.xzy).r * 0.5;
+    float baseColor = 0.4;
+
+    if (frplTerrainLod < 1)
+    {
+        baseColor = texture(texPerlin, WorldPosition.xzy / 2.0).r * 0.5 + texture(texPerlin, WorldPosition.xzy).r * 0.5;
+    }
 
     const float DIRT_CONTRAST = 0.4;
     const float DIRT_BRIGHTNESS = 1.0;

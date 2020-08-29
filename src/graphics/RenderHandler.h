@@ -51,13 +51,17 @@ private:
     void GenerateSceneCamera(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
     void GenerateSceneGlobalLighting(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
 
-    void UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat4& _transform, const AssetHandle<ShaderProgram>& _shader, std::vector<Renderable::SceneObject>& _outSceneObjects);
+    void UpdateDynamicMesh(DynamicMeshHandle &_handle, const glm::mat4 &_transform,
+                           const AssetHandle<ShaderProgram> &_shader,
+                           std::vector<Renderable::SceneObject> &_outSceneObjects,
+                           u32 _terrainLOD);
     void OnDynamicMeshDestroyed(DynamicMeshID _id);
 
 private:
     BoundingBoxMode m_BoundingBoxMode = BoundingBoxMode::None;
     bool m_ShouldRenderWireframe = false;
     bool m_ShouldRenderVista = true;
+    u32 m_MaxTerrainLOD = 1;
 
     // Make sure to release these in HandleEvent for quit
     AssetHandle<StaticMesh> m_UnitCube;

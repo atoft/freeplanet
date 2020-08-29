@@ -76,6 +76,8 @@ namespace Renderable
     {
         AssetHandle<ShaderProgram> m_Shader;
         std::vector<std::pair<std::string, AssetHandle<Texture>>> m_Textures;
+
+        std::vector<std::pair<std::string, u32>> m_IntUniforms;
     };
 
     struct SceneObject

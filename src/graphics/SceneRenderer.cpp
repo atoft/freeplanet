@@ -382,7 +382,12 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
             }
         }
 
-        glDrawElements(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, 0);
+        for (const std::pair<std::string, u32>& uniform : sceneObject.m_Material.m_IntUniforms)
+        {
+            shaderProgram->SetUniformInt(uniform.first, uniform.second);
+        }
+
+        glDrawElements(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, nullptr);
 
         for (s32 texIdx = sceneObject.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
         {

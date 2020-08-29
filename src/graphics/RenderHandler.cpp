@@ -90,6 +90,11 @@ void RenderHandler::HandleEvent(EngineEvent _event)
         OnDynamicMeshDestroyed(static_cast<DynamicMeshID>(_event.GetIntData()));
         break;
     }
+    case EngineEvent::Type::RenderMaxTerrainLOD:
+    {
+        m_MaxTerrainLOD = _event.GetIntData();
+        break;
+    }
     default:
         break;
     }
@@ -127,7 +132,7 @@ void RenderHandler::Render(const World* _world, std::shared_ptr<const UIDisplay>
     }
 
     {
-        ProfileCurrentScope("Waiting for SceneRenderer");
+        ProfileCurrentScope("Wait for GPU");
         m_SceneRenderer.RequestRender(pendingScenes, pendingUIElements);
     }
 }
@@ -142,16 +147,7 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
     GenerateSceneCamera(_world, _camera, sceneTemplate);
     GenerateSceneGlobalLighting(_world, _camera, sceneTemplate);
 
-    if (m_ShouldRenderVista)
-    {
-        Renderable::Scene sceneToRender = sceneTemplate;
 
-        sceneToRender.m_RenderMode = m_ShouldRenderWireframe ? Renderable::RenderMode::Wireframe
-                                                             : Renderable::RenderMode::Vista;
-
-        UpdateDynamicMesh(_world->GetVistaHandler()->m_DynamicMesh, _world->GetVistaHandler()->GetTerrainModelTransform(), m_HACKTerrainShader, sceneToRender.m_SceneObjects);
-        _scenes.push_back(sceneToRender);
-    }
 
     for (const WorldZone& zone : _world->GetActiveZones())
     {
@@ -201,7 +197,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
             sceneToRender.m_PointLights.push_back(light);
         }
 
-        UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, zone.GetTerrainModelTransform(), m_HACKTerrainShader, sceneToRender.m_SceneObjects);
+        UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, zone.GetTerrainModelTransform(),
+                          m_HACKTerrainShader, sceneToRender.m_SceneObjects, 0);
 
         if (zone.ContainsPlayer())
         {
@@ -210,9 +207,25 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
         _scenes.push_back(sceneToRender);
     }
+
+    if (m_ShouldRenderVista)
+    {
+        Renderable::Scene sceneToRender = sceneTemplate;
+
+        sceneToRender.m_RenderMode = m_ShouldRenderWireframe ? Renderable::RenderMode::Wireframe
+                                                             : Renderable::RenderMode::Vista;
+
+        UpdateDynamicMesh(_world->GetVistaHandler()->m_DynamicMesh,
+                          _world->GetVistaHandler()->GetTerrainModelTransform(), m_HACKTerrainShader,
+                          sceneToRender.m_SceneObjects, m_MaxTerrainLOD);
+        _scenes.push_back(sceneToRender);
+    }
 }
 
-void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat4& _transform, const AssetHandle<ShaderProgram>& _shader, std::vector<Renderable::SceneObject>& _outSceneObjects)
+void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle &_handle, const glm::mat4 &_transform,
+                                      const AssetHandle<ShaderProgram> &_shader,
+                                      std::vector<Renderable::SceneObject> &_outSceneObjects,
+                                      u32 _terrainLOD)
 {
     if (_handle.m_DynamicMeshId == DYNAMICMESHID_INVALID)
     {
@@ -228,6 +241,12 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
             // TODO Support multiple textures, have somewhere to source them.
             sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
             sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
+
+            // TODO a more generic source for this.
+            // We should use ifdefs to make this a compile-time switch (e.g. multiple versions of the
+            // shader with different switches applied). Can also avoid binding the detail textures for
+            // these lower LOD shaders.
+            sceneObject.m_Material.m_IntUniforms.emplace_back("frplTerrainLod", _terrainLOD);
 
             sceneObject.m_MeshID = _handle.m_PreviousDynamicMeshId;
 
@@ -259,6 +278,9 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
         // TODO Support multiple textures, have somewhere to source them.
         sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
         sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
+
+        // TODO a more generic source for this.
+        sceneObject.m_Material.m_IntUniforms.emplace_back("frplTerrainLod", _terrainLOD);
 
         sceneObject.m_MeshID = _handle.m_DynamicMeshId;
 

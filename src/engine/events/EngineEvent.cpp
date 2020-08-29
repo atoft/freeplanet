@@ -31,6 +31,7 @@ const std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS =
             },
             {EngineEvent::Type::RenderSetWireframe, true, "wireframe", "Set whether to render the world as wireframes (0,1).", EngineEvent::ArgumentType::Int},
             {EngineEvent::Type::RenderSetVista, true, "vista", "Set whether to render the vista (0,1).", EngineEvent::ArgumentType::Int},
+            {EngineEvent::Type::RenderMaxTerrainLOD, true, "tlod", "Set the max terrain LOD for the shader.", EngineEvent::ArgumentType::Int},
 
             {EngineEvent::Type::TerrainSetNormalGenerationMethod, true, "normals", "Set how to compute terrain normals. From face normals = 0, From volume = 1.", EngineEvent::ArgumentType::Int},
 
