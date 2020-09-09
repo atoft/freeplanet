@@ -9,6 +9,7 @@
 
 #include <src/graphics/Color.h>
 #include <src/tools/globals.h>
+#include <src/world/terrain/TerrainSubstance.h>
 
 struct Triangle;
 
@@ -27,6 +28,7 @@ struct RawMesh
     std::vector<glm::vec3> m_Normals;
     std::vector<glm::vec2> m_TextureCoordinates;
     std::vector<Color> m_Colors;
+    std::vector<TerrainSubstance> m_TerrainSubstance;
 
     std::vector<RawTriangle> m_Faces;
 };

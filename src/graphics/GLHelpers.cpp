@@ -113,6 +113,8 @@ u32 GetDimensions(GLHelpers::VertexDataBitfield _vertexData)
             return 2;
         case GLHelpers::VertexData_Color:
             return 3;
+        case GLHelpers::VertexData_TerrainSubstance:
+            return 4;
         default:
             assert(false);
             return 0;
@@ -148,6 +150,11 @@ void GLHelpers::SetupForShader(const ShaderProgram& _shader, VertexDataBitfield 
         dimensions += GetDimensions(VertexData_Color);
     }
 
+    if (_vertexDataMask & VertexData_TerrainSubstance)
+    {
+        dimensions += GetDimensions(VertexData_TerrainSubstance);
+    }
+
     // Specify the layout of the vertex data.
 
     u32 offsetIntoVertexData = 0;
@@ -173,6 +180,12 @@ void GLHelpers::SetupForShader(const ShaderProgram& _shader, VertexDataBitfield 
     if (_vertexDataMask & VertexData_Color)
     {
         const GLint attrib = BindVertexAttribToVertexData(_shader, "frplColor", GetDimensions(VertexData_Color), dimensions, offsetIntoVertexData);
+        _inOutMesh.m_VertexAttribs.push_back(attrib);
+    }
+
+    if (_vertexDataMask & VertexData_TerrainSubstance)
+    {
+        const GLint attrib = BindVertexAttribToVertexData(_shader, "frplTerrainSubstance", GetDimensions(VertexData_TerrainSubstance), dimensions, offsetIntoVertexData);
         _inOutMesh.m_VertexAttribs.push_back(attrib);
     }
 }

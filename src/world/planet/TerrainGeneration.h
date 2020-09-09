@@ -7,6 +7,7 @@
 #include <src/graphics/Color.h>
 #include <src/tools/globals.h>
 #include <src/world/planet/Planet.h>
+#include <src/world/terrain/TerrainSubstance.h>
 
 struct WorldPosition;
 
@@ -27,6 +28,7 @@ public:
 
     static f32 GetDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod = TerrainLevelOfDetail::ActiveZone);
     static Color GetColor(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod = TerrainLevelOfDetail::ActiveZone);
+    static TerrainSubstance GetSubstance(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod = TerrainLevelOfDetail::ActiveZone);
 
     static const Planet::Biome& GetBiome(const Planet& _planet, const WorldPosition& _position);
     static void GetClosestBiomes(const Planet& _planet, const WorldPosition& _position, WeightedBiomeArray & _outBiomes);
@@ -34,6 +36,7 @@ public:
     static f32 ClampDensity(f32 _density);
 
 private:
+    static f32 GetUnclampedDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod = TerrainLevelOfDetail::ActiveZone);
     static f32 ComputeBaseShapeDensity(const Planet& _planet, const WorldPosition& _position);
     static f32 ComputeBiomeDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod);
 

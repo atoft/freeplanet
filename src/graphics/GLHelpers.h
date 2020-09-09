@@ -24,12 +24,15 @@ public:
 
     enum VertexDataBitfield : u8
     {
-        VertexData_Position    = 0b0001u,
-        VertexData_Normal      = 0b0010u,
-        VertexData_TexCoords   = 0b0100u,
-        VertexData_Color       = 0b1000u,
+        VertexData_None             = 0b00000u,
 
-        VertexData_All         = VertexData_Position | VertexData_Normal | VertexData_TexCoords | VertexData_Color
+        VertexData_Position         = 0b00001u,
+        VertexData_Normal           = 0b00010u,
+        VertexData_TexCoords        = 0b00100u,
+        VertexData_Color            = 0b01000u,
+        VertexData_TerrainSubstance = 0b10000u,
+
+        VertexData_All              = VertexData_Position | VertexData_Normal | VertexData_TexCoords | VertexData_Color | VertexData_TerrainSubstance
     };
 
     static void LoadToGPU(const GLfloat* _vertices, u32 _numberOfVertices, const GLuint* _elements, u32 _numberOfElements, VertexDataBitfield _vertexDataMask, Renderable::Mesh& _outMesh);

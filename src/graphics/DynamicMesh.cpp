@@ -37,6 +37,14 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
         vertices.push_back(_mesh.m_Colors[vertIdx].x);
         vertices.push_back(_mesh.m_Colors[vertIdx].y);
         vertices.push_back(_mesh.m_Colors[vertIdx].z);
+
+        if (!_mesh.m_TerrainSubstance.empty())
+        {
+            vertices.push_back(_mesh.m_TerrainSubstance[vertIdx].m_Topsoil);
+            vertices.push_back(_mesh.m_TerrainSubstance[vertIdx].m_Dirt);
+            vertices.push_back(_mesh.m_TerrainSubstance[vertIdx].m_Rock);
+            vertices.push_back(_mesh.m_TerrainSubstance[vertIdx].m_Sand);
+        }
     }
 
     for (const RawTriangle& triangle : _mesh.m_Faces)
@@ -49,7 +57,12 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
     const u32 numberOfVertices = vertices.size();
     const u32 numberOfElements = elements.size();
 
-    const GLHelpers::VertexDataBitfield vertexDataMask = GLHelpers::VertexData_All;
+    GLHelpers::VertexDataBitfield vertexDataMask = GLHelpers::VertexData_Position | GLHelpers::VertexData_Normal | GLHelpers::VertexData_TexCoords | GLHelpers::VertexData_Color;
+
+    if (!_mesh.m_TerrainSubstance.empty())
+    {
+        vertexDataMask = vertexDataMask | GLHelpers::VertexData_TerrainSubstance;
+    }
 
     GLHelpers::LoadToGPU(vertices.data(), numberOfVertices, elements.data(), numberOfElements, vertexDataMask, m_Mesh);
 }

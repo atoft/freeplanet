@@ -14,6 +14,11 @@
 
 f32 TerrainGeneration::GetDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
 {
+    return ClampDensity(GetUnclampedDensity(_planet, _position, _lod));
+}
+
+f32 TerrainGeneration::GetUnclampedDensity(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
+{
     f32 density = 0.f;
 
     density += ComputeBaseShapeDensity(_planet, _position);
@@ -25,7 +30,7 @@ f32 TerrainGeneration::GetDensity(const Planet& _planet, const WorldPosition& _p
         density += ComputeBiomeDensity(_planet, _position, _lod);
     }
 
-    return ClampDensity(density);
+    return density;
 }
 
 // Later, will probably want to expose materials with blending rather than color, e.g. 0.9 stone, 0.1 dirt
@@ -43,6 +48,23 @@ Color TerrainGeneration::GetColor(const Planet& _planet, const WorldPosition& _p
     color.a = 1.f;
 
     return color;
+}
+
+TerrainSubstance TerrainGeneration::GetSubstance(const Planet& _planet, const WorldPosition& _position, TerrainLevelOfDetail _lod)
+{
+    // @Performance Should reuse the same density sample as for the mesh generation.
+    const float density = GetUnclampedDensity(_planet, _position, _lod);
+
+    constexpr float DIRT_MIN_DENSITY = 0.1f;
+    constexpr float ROCK_MIN_DENSITY = 0.2f;
+
+    TerrainSubstance result;
+    result.m_Topsoil = glm::clamp((DIRT_MIN_DENSITY - density) / DIRT_MIN_DENSITY, 0.f, 1.f);
+
+    result.m_Rock = glm::clamp((density - ROCK_MIN_DENSITY) / ROCK_MIN_DENSITY, 0.f, 1.f);
+
+    result.m_Dirt = (1.f - result.m_Topsoil) * (1.f - result.m_Rock);
+    return result;
 }
 
 const Planet::Biome& TerrainGeneration::GetBiome(const Planet& _planet, const WorldPosition& _position)

@@ -216,6 +216,8 @@ void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params
         for (u32 vertIdx = 0; vertIdx < _outRawMesh.m_Vertices.size(); ++vertIdx)
         {
             _outRawMesh.m_Colors.push_back(TerrainGeneration::GetColor(*_params.m_Planet, {_params.m_ZoneCoordinates, _outRawMesh.m_Vertices[vertIdx] - chunksToZoneOriginOffset}));
+
+            _outRawMesh.m_TerrainSubstance.push_back(TerrainGeneration::GetSubstance(*_params.m_Planet, {_params.m_ZoneCoordinates, _outRawMesh.m_Vertices[vertIdx] - chunksToZoneOriginOffset}, _params.m_LevelOfDetail));
         }
     }
     else
