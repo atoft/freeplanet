@@ -46,6 +46,7 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
             vertices.push_back(_mesh.m_TerrainSubstance[vertIdx].m_Sand);
         }
     }
+    static_assert(RawMesh::ms_VertexTypesCount == 5);
 
     for (const RawTriangle& triangle : _mesh.m_Faces)
     {

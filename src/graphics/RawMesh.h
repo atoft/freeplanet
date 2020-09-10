@@ -29,6 +29,7 @@ struct RawMesh
     std::vector<glm::vec2> m_TextureCoordinates;
     std::vector<Color> m_Colors;
     std::vector<TerrainSubstance> m_TerrainSubstance;
+    static constexpr u32 ms_VertexTypesCount = 5;
 
     std::vector<RawTriangle> m_Faces;
 };

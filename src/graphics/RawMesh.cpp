@@ -20,6 +20,8 @@ void RawMesh::Append(const RawMesh& _other)
     m_Normals.insert(m_Normals.end(), _other.m_Normals.begin(), _other.m_Normals.end());
     m_TextureCoordinates.insert(m_TextureCoordinates.end(), _other.m_TextureCoordinates.begin(), _other.m_TextureCoordinates.end());
     m_Colors.insert(m_Colors.end(), _other.m_Colors.begin(), _other.m_Colors.end());
+    m_TerrainSubstance.insert(m_TerrainSubstance.end(), _other.m_TerrainSubstance.begin(), _other.m_TerrainSubstance.end());
+    static_assert(ms_VertexTypesCount == 5);
 
     for (const RawTriangle& face : _other.m_Faces)
     {
