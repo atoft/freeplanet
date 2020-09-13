@@ -37,6 +37,7 @@ struct TerrainMeshUpdateParams
     TerrainRegion m_DirtyRegion;
     NormalGenerationMethod m_NormalGenerationMethod = NormalGenerationMethod::FromVolume;
     TerrainLevelOfDetail m_LevelOfDetail = TerrainLevelOfDetail::ActiveZone;
+    bool m_IsFringe = false;
 };
 
 class TerrainMeshUpdater

@@ -51,6 +51,14 @@ void TerrainMeshUpdater::UpdateChunks(const TerrainMeshUpdateParams& _params, st
         {
             for (s32 x = region.m_Min.x; x < region.m_Max.x; ++x)
             {
+                if (_params.m_IsFringe
+                    && z > region.m_Min.z && z < region.m_Max.z - 1
+                    && y > region.m_Min.y && y < region.m_Max.y - 1
+                    && x > region.m_Min.x && x < region.m_Max.x - 1)
+                {
+                    continue;
+                }
+
                 const glm::vec3 pos = glm::vec3(static_cast<f32>(x) * spacing, static_cast<f32>(y) * spacing, static_cast<f32>(z) * spacing);
 
                 MarchingCubes::Cell cell;

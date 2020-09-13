@@ -125,14 +125,15 @@ void VistaHandler::Update(TimeMS _dt)
         }
         static_assert(LODS_IN_USE_COUNT == 3);
 
-        if (request.m_Index == glm::ivec3(0))
+        params.m_IsFringe = request.m_IsFringe;
+
+        if (request.m_IsFringe)
         {
             // Adjacent meshes of different LODs will have visible seams between them. Perfectly stitching the seams is
             // a non-trivial problem.
-            // The current work-around is this. Still render the area covered by the active zones in the LOD0 mesh
-            // (and still render the LOD0 area in the LOD1 mesh), but modify the terrain data itself so that this
-            // area is heavily suppressed. This + ensuring the render order for the vista is always below the zones
-            // themselves, should be *good enough* to cover up seams and holes at the zone boundaries.
+            // The current work-around is this. Render a "fringe" around the edge of the active zones in the lower LOD mesh,
+            // and decrease the density of the terrain towards the inside of the fringe. This gives a nice overlap with
+            // less change of gaps between the meshes.
 
             // TODO Keep this suppressed mesh separate so we can quickly remove it when zones change (otherwise you can see
             // the previously suppressed area).
@@ -140,7 +141,7 @@ void VistaHandler::Update(TimeMS _dt)
 
             const f32 suppressScale = glm::pow(3.f, request.m_LOD);
 
-            params.m_Terrain.m_SubtractiveElements.push_back(BoxTerrainElement(glm::vec3(1.5f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), glm::vec3(1.3f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), 0.f));
+            params.m_Terrain.m_SubtractiveElements.push_back(BoxTerrainElement(glm::vec3(1.5f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), glm::vec3(1.4f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), 0.f));
         }
 
         const bool canUpdate = m_TerrainMeshUpdaters.RequestLoad(identifier, params);
@@ -190,6 +191,12 @@ void VistaHandler::GenerateChunkRequestsForLOD(u32 _lod)
             for (s32 x = -1; x <= 1; ++x)
             {
                 VistaChunkRequest chunkRequest;
+
+                if (x == 0 && y == 0 && z == 0)
+                {
+                    chunkRequest.m_IsFringe = true;
+                }
+
                 chunkRequest.m_LOD = _lod;
                 chunkRequest.m_Index = glm::ivec3(x, y, z);
 

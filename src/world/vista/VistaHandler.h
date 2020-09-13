@@ -14,6 +14,7 @@ struct VistaChunkRequest
 {
     u32 m_LOD = 0;
     glm::ivec3 m_Index;
+    bool m_IsFringe = false;
 };
 
 struct VistaChunkIdentifier
