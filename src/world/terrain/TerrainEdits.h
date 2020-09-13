@@ -15,6 +15,7 @@ using TerrainElementVariant = std::variant<SphereTerrainElement, BoxTerrainEleme
 struct TerrainEdits
 {
     f32 GetDensity(glm::vec3 _localPosition) const;
+    void GetSubstance(glm::vec3 _localPosition, TerrainSubstance& _inOutSubstance) const;
     bool IsEmpty() const;
 
     std::vector<TerrainElementVariant> m_AdditiveElements;

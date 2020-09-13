@@ -14,7 +14,7 @@ SphereTerrainElement::SphereTerrainElement(glm::vec3 _origin, f32 _radius)
 
 f32 SphereTerrainElement::GetDensity(glm::vec3 _position) const
 {
-    return glm::max(m_Radius - glm::length(_position - m_Origin), 0.f);
+    return m_Radius - glm::length(_position - m_Origin);
 }
 
 

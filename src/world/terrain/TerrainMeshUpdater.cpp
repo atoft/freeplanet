@@ -33,6 +33,21 @@ f32 GetDensity(const TerrainMeshUpdateParams& _params, glm::vec3 _pos)
     return TerrainGeneration::ClampDensity(density);
 }
 
+TerrainSubstance GetSubstance(const TerrainMeshUpdateParams& _params, glm::vec3 _pos)
+{
+    TerrainSubstance substance;
+
+    if (_params.m_Planet != nullptr)
+    {
+        const glm::vec3 localPosition = TerrainHelpers::ToLocalSpace(_pos, _params.m_Properties);
+        substance = TerrainGeneration::GetSubstance(*_params.m_Planet, {_params.m_ZoneCoordinates, localPosition}, _params.m_LevelOfDetail);
+    }
+
+    _params.m_TerrainEdits.GetSubstance(_pos, substance);
+
+    return substance;
+}
+
 void TerrainMeshUpdater::UpdateChunks(const TerrainMeshUpdateParams& _params, std::vector<TerrainChunk>& _existingChunks) const
 {
     const f32 spacing = _params.m_Properties.m_ChunkSize;
@@ -215,7 +230,7 @@ void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params
 
             _outRawMesh.m_Colors.push_back(TerrainGeneration::GetColor(*_params.m_Planet, {_params.m_ZoneCoordinates, localPosition}));
 
-            _outRawMesh.m_TerrainSubstance.push_back(TerrainGeneration::GetSubstance(*_params.m_Planet, {_params.m_ZoneCoordinates, localPosition}, _params.m_LevelOfDetail));
+            _outRawMesh.m_TerrainSubstance.push_back(GetSubstance(_params, _outRawMesh.m_Vertices[vertIdx]));
         }
     }
     else

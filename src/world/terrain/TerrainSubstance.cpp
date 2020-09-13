@@ -15,24 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "TerrainSubstance.h"
 
-enum class TerrainSubstanceType
+#include <src/tools/globals.h>
+
+TerrainSubstance TerrainSubstance::FromType(TerrainSubstanceType _type)
 {
-    Topsoil,
-    Dirt,
-    Rock,
-    Sand,
-
-    Count
-};
-
-struct TerrainSubstance
-{
-    float m_Topsoil = 0.f;
-    float m_Dirt = 0.f;
-    float m_Rock = 0.f;
-    float m_Sand = 0.f;
-
-    static TerrainSubstance FromType(TerrainSubstanceType _type);
-};
+    switch (_type)
+    {
+        case TerrainSubstanceType::Topsoil:
+            return {1.f, 0.f, 0.f, 0.f};
+        case TerrainSubstanceType::Dirt:
+            return {0.f, 1.f, 0.f, 0.f};
+        case TerrainSubstanceType::Rock:
+            return {0.f, 0.f, 1.f, 0.f};
+        case TerrainSubstanceType::Sand:
+        default:
+            return {0.f, 0.f, 0.f, 1.f};
+    }
+    static_assert(static_cast<u32>(TerrainSubstanceType::Count) == 4);
+}
