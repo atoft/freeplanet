@@ -272,17 +272,16 @@ bool CollisionHandler::DoCollision(ColliderComponent& _collider,
 
     if(_collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
     {
-        const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_terrain.m_ChunkSize * _terrain.m_ChunksPerEdge) /2.f;
-
-        const glm::vec3 localPosition = MathsHelpers::GetPosition(zoneTransform) + _collider.m_Bounds.m_PositionOffset + chunksToZoneOriginOffset;
+        const glm::vec3 localPosition = MathsHelpers::GetPosition(zoneTransform);
+        const glm::vec3 meshSpacePosition = TerrainHelpers::ToTerrainMeshSpace(localPosition, _terrain.m_Properties) + _collider.m_Bounds.m_PositionOffset;
 
         // Use the bounds of the collider to only test chunks that could possibly overlap.
         const AABB boundsForOBB = CollisionHelpers::GetAABBForOBB(MathsHelpers::GetRotationMatrix(zoneTransform), _collider.m_Bounds);
-        const glm::ivec3 minRegion = glm::floor((localPosition - boundsForOBB.m_Dimensions) / _terrain.m_ChunkSize);
-        const glm::ivec3 maxRegion = glm::ceil((localPosition + boundsForOBB.m_Dimensions) / _terrain.m_ChunkSize);
+        const glm::ivec3 minRegion = glm::floor((meshSpacePosition - boundsForOBB.m_Dimensions) / _terrain.m_Properties.m_ChunkSize);
+        const glm::ivec3 maxRegion = glm::ceil((meshSpacePosition + boundsForOBB.m_Dimensions) / _terrain.m_Properties.m_ChunkSize);
 
-        const glm::ivec3 clampedMinRegion = glm::clamp(minRegion, glm::ivec3(), glm::ivec3(_terrain.m_ChunksPerEdge));
-        const glm::ivec3 clampedMaxRegion = glm::clamp(maxRegion, glm::ivec3(), glm::ivec3(_terrain.m_ChunksPerEdge));
+        const glm::ivec3 clampedMinRegion = glm::clamp(minRegion, glm::ivec3(), glm::ivec3(_terrain.m_Properties.m_ChunksPerEdge));
+        const glm::ivec3 clampedMaxRegion = glm::clamp(maxRegion, glm::ivec3(), glm::ivec3(_terrain.m_Properties.m_ChunksPerEdge));
 
         const u32 dimensions = _terrain.GetDimensions();
         CollisionHelpers::OBBProperties obb = CollisionHelpers::GetOBBProperties(zoneTransform, _collider.m_Bounds, _terrainOffset);

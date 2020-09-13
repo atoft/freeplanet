@@ -8,7 +8,7 @@ BoxTerrainElement::BoxTerrainElement(const glm::vec3& _position, const glm::vec3
     : m_Position(_position),
       m_Extents(_extents) {}
 
-f32 BoxTerrainElement::GetDensity(glm::vec3 position, glm::vec3 globalOffset) const
+f32 BoxTerrainElement::GetDensity(glm::vec3 position) const
 {
     const f32 dX = position.x > m_Position.x - m_Extents.x && position.x < m_Position.x + m_Extents.x ? 10.f : 0.f;
     const f32 dY = position.y > m_Position.y - m_Extents.y && position.y < m_Position.y + m_Extents.y ? 10.f : 0.f;

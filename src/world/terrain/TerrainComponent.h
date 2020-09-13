@@ -11,8 +11,7 @@
 #include <src/graphics/DynamicMeshHandle.h>
 #include <src/tools/globals.h>
 #include <src/world/GeometryTypes.h>
-#include <src/world/terrain/Terrain.h>
-#include <src/world/terrain/elements/TerrainElement.h>
+#include <src/world/terrain/TerrainEdits.h>
 #include <src/world/terrain/TerrainMeshUpdater.h>
 
 class TerrainComponent
@@ -24,7 +23,7 @@ public:
     TerrainComponent(u32 _chunksPerEdge, f32 _chunkSize, glm::ivec3 _zoneCoords);
     TerrainComponent();
 
-    u32 GetDimensions() const { return m_ChunksPerEdge; };
+    u32 GetDimensions() const { return m_Properties.m_ChunksPerEdge; };
 
     // For now we keep this accessible to be used by collision.
     // It wouldn't be too difficult to extract the triangles from the RawMesh and no longer use Chunks in physics.
@@ -37,11 +36,12 @@ public:
 
     std::vector<TerrainChunk> m_TerrainChunks;
 
-    u32 m_ChunksPerEdge = 0;
-    f32 m_ChunkSize = 0.f;
+    TerrainProperties m_Properties;
+    //u32 m_ChunksPerEdge = 0;
+    //f32 m_ChunkSize = 0.f;
 
 private:
-    Terrain m_Terrain;
+    TerrainEdits m_TerrainEdits;
 
     glm::ivec3 m_ZoneCoordinates;
 

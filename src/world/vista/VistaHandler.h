@@ -57,7 +57,6 @@ private:
     bool m_WaitingToUpdateTransform = false;
 
     glm::ivec3 m_VistaOrigin;
-    Terrain m_VistaTerrain;
 
     glm::mat4 m_TerrainModelTransform;
 

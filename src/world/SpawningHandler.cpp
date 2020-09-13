@@ -53,9 +53,7 @@ void SpawningHandler::Update()
             auto vertIt = verts.begin();
             while (spawnedCount < (targetTreeQuantity + targetGrassQuantity) && vertIt < verts.end())
             {
-                const glm::vec3 chunksToZoneOriginOffset = glm::vec3(zone.GetTerrainComponent().m_ChunkSize * zone.GetTerrainComponent().m_ChunksPerEdge) /2.f;
-
-                const glm::vec3 spawnPosition = *vertIt - chunksToZoneOriginOffset;
+                const glm::vec3 spawnPosition = TerrainHelpers::ToLocalSpace(*vertIt, zone.GetTerrainComponent().m_Properties);
 
                 ++vertIt;
 

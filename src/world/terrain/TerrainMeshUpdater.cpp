@@ -15,7 +15,7 @@ TerrainMeshUpdater::TerrainMeshUpdater(TerrainMeshUpdateParams _params)
 {
     m_Chunks = _params.m_ExistingChunks;
     UpdateChunks(_params, m_Chunks);
-    ConvertToRawMesh(_params, _params.m_Terrain, m_Chunks, _params.m_Properties, _params.m_NormalGenerationMethod, m_Mesh);
+    ConvertToRawMesh(_params, m_Chunks, m_Mesh);
 }
 
 f32 GetDensity(const TerrainMeshUpdateParams& _params, glm::vec3 _pos)
@@ -24,15 +24,11 @@ f32 GetDensity(const TerrainMeshUpdateParams& _params, glm::vec3 _pos)
 
     if (_params.m_Planet != nullptr)
     {
-        // TODO Bad copy-paste from TerrainHandler, really need to fix the coordinate system of TerrainChunks.
-        const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_params.m_Properties.m_ChunkSize * _params.m_Properties.m_ChunksPerEdge) / 2.f;
-
-        density += TerrainGeneration::GetDensity(*_params.m_Planet, {_params.m_ZoneCoordinates, _pos - chunksToZoneOriginOffset}, _params.m_LevelOfDetail);
+        const glm::vec3 localPosition = TerrainHelpers::ToLocalSpace(_pos, _params.m_Properties);
+        density += TerrainGeneration::GetDensity(*_params.m_Planet, {_params.m_ZoneCoordinates, localPosition}, _params.m_LevelOfDetail);
     }
 
-    // TODO need rename some terrain types, maybe Terrain is now TerrainEdits since the Planet
-    // determines the base shape?
-    density += _params.m_Terrain.GetDensity(_pos);
+    density += _params.m_TerrainEdits.GetDensity(_pos);
 
     return TerrainGeneration::ClampDensity(density);
 }
@@ -74,14 +70,9 @@ void TerrainMeshUpdater::UpdateChunks(const TerrainMeshUpdateParams& _params, st
     }
 }
 
-void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params, // TODO fix arg list
-        const Terrain& _terrain,
-        std::vector<TerrainChunk>& _existingChunks,
-        const TerrainProperties& _properties,
-        NormalGenerationMethod _normalGenerationMethod,
-        RawMesh& _outRawMesh) const
+void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params, const std::vector<TerrainChunk>& _existingChunks, RawMesh& _outRawMesh) const
 {
-    const f32 dimensions = _properties.m_ChunksPerEdge;
+    const f32 dimensions = _params.m_Properties.m_ChunksPerEdge;
 
     // First, we go from triangles to shared vertices and indexes.
     // This significantly reduces the amount of data sent to the GPU.
@@ -130,7 +121,7 @@ void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params
         }
     }
 
-    switch (_normalGenerationMethod)
+    switch (_params.m_NormalGenerationMethod)
     {
     case NormalGenerationMethod::FromFaceNormals:
     {
@@ -218,14 +209,13 @@ void TerrainMeshUpdater::ConvertToRawMesh(const TerrainMeshUpdateParams& _params
 
     if (_params.m_Planet != nullptr)
     {
-        // TODO Bad copy-paste from TerrainHandler, really need to fix the coordinate system of TerrainChunks.
-        const glm::vec3 chunksToZoneOriginOffset = glm::vec3(_params.m_Properties.m_ChunkSize * _params.m_Properties.m_ChunksPerEdge) / 2.f;
-
         for (u32 vertIdx = 0; vertIdx < _outRawMesh.m_Vertices.size(); ++vertIdx)
         {
-            _outRawMesh.m_Colors.push_back(TerrainGeneration::GetColor(*_params.m_Planet, {_params.m_ZoneCoordinates, _outRawMesh.m_Vertices[vertIdx] - chunksToZoneOriginOffset}));
+            const glm::vec3 localPosition = TerrainHelpers::ToLocalSpace(_outRawMesh.m_Vertices[vertIdx], _params.m_Properties);
 
-            _outRawMesh.m_TerrainSubstance.push_back(TerrainGeneration::GetSubstance(*_params.m_Planet, {_params.m_ZoneCoordinates, _outRawMesh.m_Vertices[vertIdx] - chunksToZoneOriginOffset}, _params.m_LevelOfDetail));
+            _outRawMesh.m_Colors.push_back(TerrainGeneration::GetColor(*_params.m_Planet, {_params.m_ZoneCoordinates, localPosition}));
+
+            _outRawMesh.m_TerrainSubstance.push_back(TerrainGeneration::GetSubstance(*_params.m_Planet, {_params.m_ZoneCoordinates, localPosition}, _params.m_LevelOfDetail));
         }
     }
     else

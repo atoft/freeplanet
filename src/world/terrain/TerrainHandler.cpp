@@ -38,13 +38,12 @@ void TerrainHandler::Update(TimeMS _dt)
         {
             const TerrainMeshUpdateParams params =
                     {
-                        // TODO Would be nice if the params were already stored in this struct in TerrainComponent, would prevent having to rebuild it every time.
                         zone.GetCoordinates(),
                         m_World->GetPlanet(),
 
-                        terrainComponent.m_Terrain,
+                        terrainComponent.m_TerrainEdits,
                         terrainComponent.m_TerrainChunks,
-                        {terrainComponent.m_ChunksPerEdge, terrainComponent.m_ChunkSize},
+                        terrainComponent.m_Properties,
                         *terrainComponent.m_DirtyRegion,
                         m_NormalGenerationMethod
                     };
@@ -88,19 +87,18 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
             TerrainComponent& terrainComponent = zone.GetTerrainComponent();
 
             const glm::vec3 relativeZoneOffset = _event.m_TargetPosition->m_ZoneCoordinates - zone.GetCoordinates();
-            const glm::vec3 zonePositionOffset = relativeZoneOffset * glm::vec3(terrainComponent.m_ChunkSize * terrainComponent.m_ChunksPerEdge);
-            const glm::vec3 chunksToZoneOriginOffset = glm::vec3(terrainComponent.m_ChunkSize * terrainComponent.m_ChunksPerEdge) /2.f;
+            const glm::vec3 zonePositionOffset = relativeZoneOffset * glm::vec3(terrainComponent.m_Properties.m_ChunkSize * terrainComponent.m_Properties.m_ChunksPerEdge);
 
-            const glm::vec3 localPosition = _event.m_TargetPosition->m_LocalPosition + chunksToZoneOriginOffset + zonePositionOffset;
+            const glm::vec3 localPosition = TerrainHelpers::ToTerrainMeshSpace(_event.m_TargetPosition->m_LocalPosition, terrainComponent.m_Properties) + zonePositionOffset;
             const f32 radius = *_event.m_Radius;
 
-            const glm::ivec3 minRegion = glm::floor((localPosition - glm::vec3(2.f * radius)) / terrainComponent.m_ChunkSize);
-            const glm::ivec3 maxRegion = glm::ceil((localPosition + glm::vec3(2.f * radius)) / terrainComponent.m_ChunkSize);
+            const glm::ivec3 minRegion = glm::floor((localPosition - glm::vec3(2.f * radius)) / terrainComponent.m_Properties.m_ChunkSize);
+            const glm::ivec3 maxRegion = glm::ceil((localPosition + glm::vec3(2.f * radius)) / terrainComponent.m_Properties.m_ChunkSize);
 
             const TerrainRegion region =
                 {
-                    glm::clamp(minRegion, glm::ivec3(), glm::ivec3(terrainComponent.m_ChunksPerEdge)),
-                    glm::clamp(maxRegion, glm::ivec3(), glm::ivec3(terrainComponent.m_ChunksPerEdge))
+                    glm::clamp(minRegion, glm::ivec3(), glm::ivec3(terrainComponent.m_Properties.m_ChunksPerEdge)),
+                    glm::clamp(maxRegion, glm::ivec3(), glm::ivec3(terrainComponent.m_Properties.m_ChunksPerEdge))
                 };
 
             if (GetTerrainRegionVolume(region) == 0)
@@ -111,11 +109,11 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
 
             if (_event.m_Type == WorldEvent::Type::AddTerrain)
             {
-                terrainComponent.m_Terrain.m_AdditiveElements.push_back(SphereTerrainElement(localPosition, radius));
+                terrainComponent.m_TerrainEdits.m_AdditiveElements.push_back(SphereTerrainElement(localPosition, radius));
             }
-            else // RemoveTerrain
+            else if (_event.m_Type == WorldEvent::Type::RemoveTerrain)
             {
-                terrainComponent.m_Terrain.m_SubtractiveElements.push_back(SphereTerrainElement(localPosition, radius));
+                terrainComponent.m_TerrainEdits.m_SubtractiveElements.push_back(SphereTerrainElement(localPosition, radius));
             }
 
             LogMessage("Updated chunks in range " + glm::to_string(minRegion) + " - " + glm::to_string(maxRegion));
@@ -138,7 +136,7 @@ f32 TerrainHandler::GetDensity(const WorldPosition& _position) const
         const glm::vec3 terrainPositionOffset = MathsHelpers::GetPosition(zone->GetTerrainModelTransform());
         const glm::vec3 localPosition = _position.m_LocalPosition - terrainPositionOffset;
 
-        return zone->GetTerrainComponent().m_Terrain.GetDensity(localPosition);
+        return zone->GetTerrainComponent().m_TerrainEdits.GetDensity(localPosition);
     }
 
     LogWarning("Tried to get density of an unloaded zone (" + glm::to_string(_position.m_ZoneCoordinates) + ")");

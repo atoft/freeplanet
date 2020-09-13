@@ -103,11 +103,6 @@ void VistaHandler::Update(TimeMS _dt)
         params.m_Properties = GetPropertiesForLOD(request.m_LOD);
         params.m_DirtyRegion = {glm::ivec3(), glm::ivec3(params.m_Properties.m_ChunksPerEdge)};
         params.m_ExistingChunks = std::vector<TerrainChunk>(params.m_Properties.m_ChunksPerEdge * params.m_Properties.m_ChunksPerEdge * params.m_Properties.m_ChunksPerEdge);
-        params.m_Terrain = m_VistaTerrain;
-
-        params.m_Terrain.m_GlobalPositionOffset = glm::vec3(m_VistaOrigin) * TerrainConstants::WORLD_ZONE_SIZE
-                + GetGlobalSamplingOffset(request.m_Index, request.m_LOD)
-                - glm::vec3(TerrainConstants::WORLD_ZONE_SIZE * GetZonesOffsetFromCenter(request.m_LOD)); // Because the origin of the Terrain is offset by (1 zone * 1 zone * 1 zone) in each direction, need to include this in the global offset so we get the same sampling.
 
         switch (request.m_LOD)
         {
@@ -141,7 +136,7 @@ void VistaHandler::Update(TimeMS _dt)
 
             const f32 suppressScale = glm::pow(3.f, request.m_LOD);
 
-            params.m_Terrain.m_SubtractiveElements.push_back(BoxTerrainElement(glm::vec3(1.5f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), glm::vec3(1.4f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), 0.f));
+            params.m_TerrainEdits.m_SubtractiveElements.push_back(BoxTerrainElement(glm::vec3(1.5f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), glm::vec3(1.4f * suppressScale * TerrainConstants::WORLD_ZONE_SIZE), 0.f));
         }
 
         const bool canUpdate = m_TerrainMeshUpdaters.RequestLoad(identifier, params);

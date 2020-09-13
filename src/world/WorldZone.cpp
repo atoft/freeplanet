@@ -6,8 +6,6 @@
 #include <src/engine/Engine.h>
 #include <src/world/WorldObject.h>
 #include <src/world/World.h>
-#include <src/world/terrain/elements/PerlinTerrainElement.h>
-#include <src/world/terrain/elements/PlaneTerrainElement.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/profiling/Profiler.h>
 

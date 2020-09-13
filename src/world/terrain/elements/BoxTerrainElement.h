@@ -14,7 +14,7 @@ class BoxTerrainElement
 public:
     BoxTerrainElement(const glm::vec3& _position, const glm::vec3& _extents, f32 _transitionSize);
 
-    f32 GetDensity(glm::vec3 position, glm::vec3 globalOffset) const;
+    f32 GetDensity(glm::vec3 position) const;
 
 private:
     glm::vec3 m_Position;
