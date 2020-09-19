@@ -15,8 +15,10 @@
 
 #include <src/engine/AssetHandle.h>
 #include <src/graphics/Color.h>
+#include <src/graphics/DynamicMeshID.h>
 #include <src/graphics/GLHelpers.h>
 #include <src/graphics/MeshType.h>
+#include <src/graphics/RawMesh.h>
 
 class ShaderProgram;
 class Texture;
@@ -119,5 +121,20 @@ namespace Renderable
     };
 
     using DrawableVariant = std::variant<sf::RectangleShape, sf::Text, sf::Sprite>;
+
+    struct MeshRequest
+    {
+        DynamicMeshID m_ID;
+        RawMesh m_PendingMesh;
+    };
+
+    struct Frame
+    {
+        std::vector<Renderable::Scene> m_PendingScenes;
+        std::vector<Renderable::DrawableVariant> m_PendingUIElements;
+
+        std::vector<MeshRequest> m_MeshCreationRequests;
+        std::vector<DynamicMeshID> m_MeshDestructionRequests;
+    };
 };
 

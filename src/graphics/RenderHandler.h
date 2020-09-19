@@ -38,7 +38,7 @@ public:
     void Render(const World* _world, std::shared_ptr<const UIDisplay> _uiDisplay);
 
 private:
-    void GenerateScenes(const World *_world, const FreelookCameraComponent *_camera, std::vector<Renderable::Scene>& _scenes);
+    void GenerateScenes(const World* _world, const FreelookCameraComponent* _camera, Renderable::Frame& _inOutFrame);
     void GenerateBoundingBoxScenes(
             const World *_world,
             const FreelookCameraComponent *_camera,
@@ -51,9 +51,10 @@ private:
     void GenerateSceneCamera(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
     void GenerateSceneGlobalLighting(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
 
-    void UpdateDynamicMesh(DynamicMeshHandle &_handle, const glm::mat4 &_transform,
-                           const AssetHandle<ShaderProgram> &_shader,
-                           std::vector<Renderable::SceneObject> &_outSceneObjects,
+    void UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat4& _transform,
+                           const AssetHandle<ShaderProgram>& _shader,
+                           std::vector<Renderable::SceneObject>& _outSceneObjects,
+                           Renderable::Frame& _inOutFrame,
                            u32 _terrainLOD);
     void OnDynamicMeshDestroyed(DynamicMeshID _id);
 
@@ -81,6 +82,11 @@ private:
 
     std::thread m_RenderThread;
     SceneRenderer m_SceneRenderer;
+
+    DynamicMeshID m_NextAvailableDynamicMeshID = 1;
+
+    // Requests coming from a handle being destroyed, rather than the mesh being updated.
+    std::vector<DynamicMeshID> m_ExtraMeshDesructionRequests;
 
     glm::uvec2 m_WindowResolution;
     f32 m_DefaultFov = 0.f;

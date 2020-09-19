@@ -4,14 +4,12 @@
 
 #pragma once
 
+#include <src/graphics/DynamicMeshID.h>
 #include <src/graphics/RawMesh.h>
 #include <src/graphics/Scene.h>
 
 class ShaderProgram;
 struct TerrainChunk;
-
-using DynamicMeshID = u32;
-constexpr DynamicMeshID DYNAMICMESHID_INVALID = 0;
 
 class DynamicMesh
 {

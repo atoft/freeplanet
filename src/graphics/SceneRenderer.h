@@ -26,11 +26,10 @@ public:
     void Run(std::shared_ptr<sf::RenderWindow> _window);
     void HandleEvent(EngineEvent _event);
 
-    void RequestRender(std::vector<Renderable::Scene> _scenes, std::vector<Renderable::DrawableVariant> _uiElements);
+    void RequestRender(Renderable::Frame _frame);
     void RequestTerminate();
 
-    DynamicMeshID RequestDynamicMeshCreation(const RawMesh &_mesh);
-    void RequestDynamicMeshDestruction(DynamicMeshID _meshID);
+
 
 private:
     static void Init();
@@ -40,6 +39,7 @@ private:
     static void PostRender();
     void Render(Renderable::Scene& _scene, std::shared_ptr<sf::RenderWindow> _window);
     void Render(std::vector<Renderable::Scene> _scenes, std::shared_ptr<sf::RenderWindow> _window);
+    void HandleDynamicMeshRequests();
     static void Render(std::vector<Renderable::DrawableVariant> _uiElements, std::shared_ptr<sf::RenderWindow> _window);
 
 private:
@@ -57,14 +57,7 @@ private:
     bool m_ReadyToRender;
     bool m_RenderComplete;
 
-    struct MeshRequest
-    {
-        DynamicMeshID m_ID;
-        RawMesh m_PendingMesh;
-    };
-
-    std::vector<MeshRequest> m_MeshCreationRequests;
+    std::vector<Renderable::MeshRequest> m_MeshCreationRequests;
     std::vector<DynamicMeshID > m_MeshDestructionRequests;
-    DynamicMeshID m_NextAvailableID = 1;
     std::map<DynamicMeshID, DynamicMesh> m_LoadedDynamicMeshes;
 };

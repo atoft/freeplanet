@@ -110,8 +110,7 @@ void RenderHandler::Render(const World* _world, std::shared_ptr<const UIDisplay>
         LogMessage("Requesting the final frame");
     }
 
-    std::vector<Renderable::Scene> pendingScenes;
-    std::vector<Renderable::DrawableVariant> pendingUIElements;
+    Renderable::Frame frame;
 
     if (_world != nullptr)
     {
@@ -119,26 +118,28 @@ void RenderHandler::Render(const World* _world, std::shared_ptr<const UIDisplay>
 
         if (camera != nullptr)
         {
-            GenerateBackgroundScene(_world, camera, pendingScenes);
-            GenerateScenes(_world, camera, pendingScenes);
+            GenerateBackgroundScene(_world, camera, frame.m_PendingScenes);
+            GenerateScenes(_world, camera, frame);
 
-            GenerateBoundingBoxScenes(_world, camera, _uiDisplay->m_Debug3DDrawingQueue, pendingScenes);
+            GenerateBoundingBoxScenes(_world, camera, _uiDisplay->m_Debug3DDrawingQueue, frame.m_PendingScenes);
         }
     }
 
+    STL::Append(frame.m_MeshDestructionRequests, m_ExtraMeshDesructionRequests);
+    m_ExtraMeshDesructionRequests.clear();
+
     if (_uiDisplay != nullptr)
     {
-        pendingUIElements = _uiDisplay->m_DrawingQueue;
+        frame.m_PendingUIElements = _uiDisplay->m_DrawingQueue;
     }
 
     {
         ProfileCurrentScope("Wait for GPU");
-        m_SceneRenderer.RequestRender(pendingScenes, pendingUIElements);
+        m_SceneRenderer.RequestRender(frame);
     }
 }
 
-void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComponent* _camera,
-                                   std::vector<Renderable::Scene>& _scenes)
+void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComponent* _camera, Renderable::Frame& _inOutFrame)
 {
     ProfileCurrentFunction();
 
@@ -146,8 +147,6 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
     GenerateSceneCamera(_world, _camera, sceneTemplate);
     GenerateSceneGlobalLighting(_world, _camera, sceneTemplate);
-
-
 
     for (const WorldZone& zone : _world->GetActiveZones())
     {
@@ -198,14 +197,14 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
         }
 
         UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, zone.GetTerrainModelTransform(),
-                          m_HACKTerrainShader, sceneToRender.m_SceneObjects, 0);
+                          m_HACKTerrainShader, sceneToRender.m_SceneObjects, _inOutFrame, 0);
 
         if (zone.ContainsPlayer())
         {
             m_DebugZoneRawMeshForDebugDraw = zone.GetTerrainComponent().m_DynamicMesh.m_RawMesh;
         }
 
-        _scenes.push_back(sceneToRender);
+        _inOutFrame.m_PendingScenes.push_back(sceneToRender);
     }
 
     if (m_ShouldRenderVista)
@@ -217,16 +216,31 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
         UpdateDynamicMesh(_world->GetVistaHandler()->m_DynamicMesh,
                           _world->GetVistaHandler()->GetTerrainModelTransform(), m_HACKTerrainShader,
-                          sceneToRender.m_SceneObjects, m_MaxTerrainLOD);
-        _scenes.push_back(sceneToRender);
+                          sceneToRender.m_SceneObjects, _inOutFrame, m_MaxTerrainLOD);
+        _inOutFrame.m_PendingScenes.push_back(sceneToRender);
     }
 }
 
-void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle &_handle, const glm::mat4 &_transform,
-                                      const AssetHandle<ShaderProgram> &_shader,
-                                      std::vector<Renderable::SceneObject> &_outSceneObjects,
+void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat4& _transform,
+                                      const AssetHandle<ShaderProgram>& _shader,
+                                      std::vector<Renderable::SceneObject>& _outSceneObjects,
+                                      Renderable::Frame& _inOutFrame,
                                       u32 _terrainLOD)
 {
+    Renderable::SceneObject sceneObject;
+    sceneObject.m_Transform = _transform;
+    sceneObject.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
+
+    // TODO Support multiple textures, have somewhere to source them.
+    sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
+    sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
+
+    // TODO a more generic source for this.
+    // We should use ifdefs to make this a compile-time switch (e.g. multiple versions of the
+    // shader with different switches applied). Can also avoid binding the detail textures for
+    // these lower LOD shaders.
+    sceneObject.m_Material.m_IntUniforms.emplace_back("frplTerrainLod", _terrainLOD);
+
     if (_handle.m_DynamicMeshId == DYNAMICMESHID_INVALID)
     {
         // The GPU DynamicMesh needs updating.
@@ -234,20 +248,6 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle &_handle, const glm::mat
         if (_handle.m_PreviousDynamicMeshId != DYNAMICMESHID_INVALID)
         {
             // This frame, we will render the previous version of the mesh while we request a new one.
-            Renderable::SceneObject sceneObject;
-            sceneObject.m_Transform = _transform;
-            sceneObject.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
-
-            // TODO Support multiple textures, have somewhere to source them.
-            sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
-            sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
-
-            // TODO a more generic source for this.
-            // We should use ifdefs to make this a compile-time switch (e.g. multiple versions of the
-            // shader with different switches applied). Can also avoid binding the detail textures for
-            // these lower LOD shaders.
-            sceneObject.m_Material.m_IntUniforms.emplace_back("frplTerrainLod", _terrainLOD);
-
             sceneObject.m_MeshID = _handle.m_PreviousDynamicMeshId;
 
             _outSceneObjects.push_back(sceneObject);
@@ -256,7 +256,11 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle &_handle, const glm::mat
         // Make the request for a new GPU mesh.
         if (!_handle.m_RawMesh.IsEmpty())
         {
-            _handle.m_DynamicMeshId = m_SceneRenderer.RequestDynamicMeshCreation(_handle.m_RawMesh);
+            Renderable::MeshRequest& request = _inOutFrame.m_MeshCreationRequests.emplace_back();
+            request.m_ID = m_NextAvailableDynamicMeshID++;
+            request.m_PendingMesh = _handle.m_RawMesh;
+
+            _handle.m_DynamicMeshId = request.m_ID;
         }
     }
     else
@@ -266,33 +270,21 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle &_handle, const glm::mat
         if (_handle.m_PreviousDynamicMeshId != DYNAMICMESHID_INVALID)
         {
             // We don't need the old mesh any more, we can clean it up.
-            m_SceneRenderer.RequestDynamicMeshDestruction(_handle.m_PreviousDynamicMeshId);
+            _inOutFrame.m_MeshDestructionRequests.push_back(_handle.m_PreviousDynamicMeshId);
             _handle.m_PreviousDynamicMeshId = DYNAMICMESHID_INVALID;
-
         }
 
-        Renderable::SceneObject sceneObject;
-        sceneObject.m_Transform = _transform;
-        sceneObject.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
-
-        // TODO Support multiple textures, have somewhere to source them.
-        sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
-        sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
-
-        // TODO a more generic source for this.
-        sceneObject.m_Material.m_IntUniforms.emplace_back("frplTerrainLod", _terrainLOD);
-
         sceneObject.m_MeshID = _handle.m_DynamicMeshId;
-
-        _outSceneObjects.push_back(sceneObject);
     }
+
+    _outSceneObjects.push_back(sceneObject);
 }
 
 void RenderHandler::OnDynamicMeshDestroyed(DynamicMeshID _id)
 {
     if (_id != DYNAMICMESHID_INVALID)
     {
-        m_SceneRenderer.RequestDynamicMeshDestruction(_id);
+        m_ExtraMeshDesructionRequests.push_back(_id);
     }
 }
 

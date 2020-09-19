@@ -43,4 +43,10 @@ public:
 
         return EnumType::Count;
     }
+
+    template<typename Container>
+    static void Append(Container& _container, const Container& _toAppend)
+    {
+        _container.insert(std::end(_container), std::begin(_toAppend), std::end(_toAppend));
+    }
 };

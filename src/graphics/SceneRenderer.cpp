@@ -35,27 +35,6 @@ void SceneRenderer::Run(std::shared_ptr<sf::RenderWindow> _window)
             }
         }
 
-        {
-            std::unique_lock<std::mutex> lock(m_RenderMutex);
-            for (const MeshRequest& meshRequest : m_MeshCreationRequests)
-            {
-                DynamicMesh dynamicMesh;
-                dynamicMesh.LoadToGPU(meshRequest.m_PendingMesh);
-
-                m_LoadedDynamicMeshes.emplace(std::make_pair(meshRequest.m_ID, dynamicMesh));
-            }
-            m_MeshCreationRequests.clear();
-
-            for(const DynamicMeshID& meshID : m_MeshDestructionRequests)
-            {
-                DynamicMesh& dynamicMesh = m_LoadedDynamicMeshes[meshID];
-                dynamicMesh.ReleaseFromGPU();
-
-                m_LoadedDynamicMeshes.erase(meshID);
-            }
-            m_MeshDestructionRequests.clear();
-        }
-
         m_ShaderLoader.HandleLoadRequests();
         m_TextureLoader.HandleLoadRequests();
         m_MeshLoader.HandleLoadRequests();
@@ -66,6 +45,7 @@ void SceneRenderer::Run(std::shared_ptr<sf::RenderWindow> _window)
             m_StartRenderCV.wait(lock, [this](){return m_ReadyToRender;});
 
             m_ReadyToRender = false;
+            HandleDynamicMeshRequests();
             Render(m_CurrentScenes, _window);
             Render(m_CurrentUIElements, _window);
             _window->display();
@@ -83,7 +63,7 @@ void SceneRenderer::HandleEvent(EngineEvent _event)
     m_EventHandler.PushEvent(_event);
 }
 
-void SceneRenderer::RequestRender(std::vector<Renderable::Scene> _scenes, std::vector<Renderable::DrawableVariant> _uiElements)
+void SceneRenderer::RequestRender(Renderable::Frame _frame)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Main);
 
@@ -97,8 +77,10 @@ void SceneRenderer::RequestRender(std::vector<Renderable::Scene> _scenes, std::v
 
     m_IsFirstFrame = false;
 
-    m_CurrentScenes = _scenes;
-    m_CurrentUIElements = _uiElements;
+    m_CurrentScenes = _frame.m_PendingScenes;
+    m_CurrentUIElements = _frame.m_PendingUIElements;
+    m_MeshCreationRequests = _frame.m_MeshCreationRequests;
+    m_MeshDestructionRequests = _frame.m_MeshDestructionRequests;
     m_RenderComplete = false;
     m_ReadyToRender = true;
 
@@ -120,25 +102,6 @@ void SceneRenderer::RequestTerminate()
     m_CurrentUIElements.clear();
     lock.unlock();
     m_StartRenderCV.notify_one();
-}
-
-DynamicMeshID SceneRenderer::RequestDynamicMeshCreation(const RawMesh &_mesh)
-{
-    assert(ThreadUtils::tl_ThreadType == ThreadType::Main);
-    assert(m_NextAvailableID < std::numeric_limits<DynamicMeshID >::max());
-
-    std::unique_lock<std::mutex> lock(m_RenderMutex);   // TODO Separate lock for dynamic requests?
-    m_MeshCreationRequests.push_back({m_NextAvailableID, _mesh});
-
-    return m_NextAvailableID++;
-}
-
-void SceneRenderer::RequestDynamicMeshDestruction(DynamicMeshID _meshID)
-{
-    assert(ThreadUtils::tl_ThreadType == ThreadType::Main);
-
-    std::unique_lock<std::mutex> lock(m_RenderMutex);   // TODO Separate lock for dynamic requests?
-    m_MeshDestructionRequests.push_back(_meshID);
 }
 
 void SceneRenderer::Init()
@@ -428,6 +391,29 @@ void SceneRenderer::PostRender()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glUseProgram(0);
+}
+
+void SceneRenderer::HandleDynamicMeshRequests()
+{
+    assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
+
+    for (const Renderable::MeshRequest& meshRequest : m_MeshCreationRequests)
+    {
+        DynamicMesh dynamicMesh;
+        dynamicMesh.LoadToGPU(meshRequest.m_PendingMesh);
+
+        m_LoadedDynamicMeshes.emplace(std::make_pair(meshRequest.m_ID, dynamicMesh));
+    }
+    m_MeshCreationRequests.clear();
+
+    for(const DynamicMeshID& meshID : m_MeshDestructionRequests)
+    {
+        DynamicMesh& dynamicMesh = m_LoadedDynamicMeshes[meshID];
+        dynamicMesh.ReleaseFromGPU();
+
+        m_LoadedDynamicMeshes.erase(meshID);
+    }
+    m_MeshDestructionRequests.clear();
 }
 
 void SceneRenderer::Render(std::vector<Renderable::DrawableVariant> _uiElements, std::shared_ptr<sf::RenderWindow> _window)
