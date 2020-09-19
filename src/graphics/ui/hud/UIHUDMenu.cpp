@@ -15,26 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "UIHUDMenu.h"
 
-#include <src/engine/InputTypes.h>
-#include <src/world/inventory/InventoryTypes.h>
+#include <src/world/inventory/InventoryHandler.h>
+#include <src/world/World.h>
 
-class World;
-
-class InventoryHandler
+void UIHUDMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world)
 {
-public:
-    explicit InventoryHandler(World* _world);
-    void RegisterLocalPlayer(u32 _playerIndex);
-    void OnButtonInput(InputType _inputType);
+    const InventoryHandler* inventoryHandler = _world->GetInventoryHandler();
 
-    const Inventory& GetInventory(u32 _playerIndex) const;
+    constexpr u32 PLAYER_IDX = 0;
+    const Inventory& inventory = inventoryHandler->GetInventory(PLAYER_IDX);
 
-private:
-    void ChangeSlot(u32 _playerIndex, u32 _slotIndex);
+    u32 slotIdx = 0;
+    for (const InventorySlot& slot : inventory.m_Slots)
+    {
+        const bool isSelected = slotIdx == inventory.m_SelectedIndex;
 
-private:
-    std::vector<Inventory> m_Inventories;
-    World* m_World = nullptr;
-};
+        _display.DrawString(glm::vec2(20,40 * slotIdx), (isSelected ? ">" : "-") + ToString(slot.m_Substance), 24.f);
+
+        ++slotIdx;
+    }
+}

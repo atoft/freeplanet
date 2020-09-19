@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <string>
+
 enum class TerrainSubstanceType
 {
     Topsoil,
@@ -26,6 +28,8 @@ enum class TerrainSubstanceType
 
     Count
 };
+
+std::string ToString(TerrainSubstanceType _type);
 
 struct TerrainSubstance
 {

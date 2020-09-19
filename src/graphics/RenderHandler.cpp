@@ -293,8 +293,6 @@ void RenderHandler::OnDynamicMeshDestroyed(DynamicMeshID _id)
     if (_id != DYNAMICMESHID_INVALID)
     {
         m_SceneRenderer.RequestDynamicMeshDestruction(_id);
-        _id = DYNAMICMESHID_INVALID;
-
     }
 }
 

@@ -52,6 +52,7 @@ public:
 
     void RequestQuit();
 
+    void OpenHUD();
     void CloseGameMenu();
 
 public:

@@ -248,7 +248,18 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
 
         if (sceneObject.m_MeshID != DYNAMICMESHID_INVALID)
         {
-            mesh = m_LoadedDynamicMeshes.find(sceneObject.m_MeshID)->second.GetMesh();
+            const auto dynamicMeshIt = m_LoadedDynamicMeshes.find(sceneObject.m_MeshID);
+
+            if (dynamicMeshIt != m_LoadedDynamicMeshes.end())
+            {
+                mesh = dynamicMeshIt->second.GetMesh();
+            }
+            else
+            {
+                LogError("Tried to render a DynamicMesh that is not loaded.");
+                assert(false);
+                continue;
+            }
         }
         else
         {
@@ -423,6 +434,7 @@ void SceneRenderer::Render(std::vector<Renderable::DrawableVariant> _uiElements,
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
+    _window->resetGLStates();
     for(const Renderable::DrawableVariant& variant : _uiElements)
     {
         std::visit([_window](auto&& value){_window->draw(value);}, variant);

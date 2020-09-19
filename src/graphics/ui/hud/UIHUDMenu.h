@@ -17,24 +17,10 @@
 
 #pragma once
 
-#include <src/engine/InputTypes.h>
-#include <src/world/inventory/InventoryTypes.h>
+#include <src/graphics/ui/UIBaseMenu.h>
 
-class World;
-
-class InventoryHandler
+class UIHUDMenu : public UIBaseMenu
 {
 public:
-    explicit InventoryHandler(World* _world);
-    void RegisterLocalPlayer(u32 _playerIndex);
-    void OnButtonInput(InputType _inputType);
-
-    const Inventory& GetInventory(u32 _playerIndex) const;
-
-private:
-    void ChangeSlot(u32 _playerIndex, u32 _slotIndex);
-
-private:
-    std::vector<Inventory> m_Inventories;
-    World* m_World = nullptr;
+    void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
 };

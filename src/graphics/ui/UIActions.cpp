@@ -39,7 +39,6 @@ void UIActions::CreatePlanetFromSeed(std::string _seedString)
     LogMessage("Requesting planet with parsed seed " + std::to_string(static_cast<u32>(intSeed)) + " from string " + _seedString);
 
     m_UIDisplay->AddEvent(EngineEvent(EngineEvent::Type::EngineLoadPlanetFromSeed, intSeed));
-    m_UIDisplay->CloseGameMenu();
 }
 
 void UIActions::SetUIDisplay(UIDisplay* _display)

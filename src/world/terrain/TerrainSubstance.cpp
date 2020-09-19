@@ -35,3 +35,20 @@ TerrainSubstance TerrainSubstance::FromType(TerrainSubstanceType _type)
     }
     static_assert(static_cast<u32>(TerrainSubstanceType::Count) == 4);
 }
+
+std::string ToString(TerrainSubstanceType _type)
+{
+    switch (_type)
+    {
+        case TerrainSubstanceType::Topsoil:
+            return "Topsoil";
+        case TerrainSubstanceType::Dirt:
+            return "Dirt";
+        case TerrainSubstanceType::Rock:
+            return "Rock";
+        case TerrainSubstanceType::Sand:
+        default:
+            return "Sand";
+    }
+    static_assert(static_cast<u32>(TerrainSubstanceType::Count) == 4);
+}

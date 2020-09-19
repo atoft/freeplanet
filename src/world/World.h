@@ -67,6 +67,7 @@ public:
     const TerrainHandler* GetTerrainHandler() const { return m_TerrainHandler.get(); };
     const VistaHandler* GetVistaHandler() const { return m_VistaHandler.get(); };
     const PlayerHandler* GetPlayerHandler() const { return m_PlayerHandler.get(); };
+    const InventoryHandler* GetInventoryHandler() const { return m_InventoryHandler.get(); };
 
     void HandleEvent(EngineEvent _event);
     void HandleCommandLineArgs(const CommandLineArgs& _args);

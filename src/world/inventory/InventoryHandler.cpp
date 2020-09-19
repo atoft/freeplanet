@@ -129,3 +129,8 @@ void InventoryHandler::ChangeSlot(u32 _playerIndex, u32 _slotIndex)
         }
     }
 }
+
+const Inventory& InventoryHandler::GetInventory(u32 _playerIndex) const
+{
+    return m_Inventories[_playerIndex];
+}

@@ -21,6 +21,7 @@
 #include <src/profiling/Profiler.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
+#include <src/graphics/ui/hud/UIHUDMenu.h>
 
 void UIDisplay::Update(TimeMS delta, const World* _world)
 {
@@ -230,6 +231,11 @@ void UIDisplay::HandleEvent(EngineEvent _event)
 void UIDisplay::RequestQuit()
 {
     Engine::GetInstance().RequestQuit();
+}
+
+void UIDisplay::OpenHUD()
+{
+    RequestMenu<UIHUDMenu>();
 }
 
 void UIDisplay::CloseGameMenu()

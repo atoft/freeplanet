@@ -256,12 +256,13 @@ void Engine::HandleEvent(EngineEvent _event)
     case EngineEvent::Type::EngineTestWorld:
     {
         m_RequestedWorld = Test::BuildTestWorld(_event.GetStringData());
-        m_UIDisplay->CloseGameMenu();
+        m_UIDisplay->OpenHUD();
         break;
     }
     case EngineEvent::Type::EngineLoadPlanetFromSeed:
     {
         m_RequestedWorld = std::make_shared<World>("Generated World", PlanetGeneration::GenerateFromSeed(_event.GetIntData()));
+        m_UIDisplay->OpenHUD();
         break;
     }
     case EngineEvent::Type::OnQuit:

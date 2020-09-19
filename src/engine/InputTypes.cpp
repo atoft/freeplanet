@@ -123,6 +123,12 @@ std::string ToString(KeyboardKey _key)
         return std::string(1, character);
     }
 
+    if (_key >= KeyboardKey::Num0 && _key <= KeyboardKey::Num9)
+    {
+        const u8 character = 48 - static_cast<u8>(sf::Keyboard::Num0) + static_cast<u8>(_key);
+        return std::string(1, character);
+    }
+
     switch (_key)
     {
         case KeyboardKey::Space:
