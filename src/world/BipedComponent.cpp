@@ -91,45 +91,6 @@ void BipedComponent::Update(TimeMS _delta)
     m_WalkDirection = glm::vec3();
     m_LinearVelocity = glm::vec3();
     m_IsSprinting = false;
-
-    // TODO Only do the raycast if an action is requested. For now it's every frame for the debug display.
-    const FreelookCameraComponent* camera = ComponentAccess::GetComponent<FreelookCameraComponent>(*self);
-
-    const glm::vec3 lookDirection = camera->GetLookDirection();
-    std::optional<f32> rayIntersect = m_World->GetCollisionHandler()->DoRaycast(self->GetWorldPosition(), lookDirection);
-
-    if (rayIntersect.has_value())
-    {
-        m_DebugLastRaycastDistance = *rayIntersect;
-    }
-    else
-    {
-        m_DebugLastRaycastDistance = -1.f;
-    }
-
-    if (m_RequestedAction != BipedAction::None && rayIntersect.has_value())
-    {
-        WorldEvent terrainEvent;
-
-        if (m_RequestedAction == BipedAction::AddTerrain)
-        {
-            terrainEvent.m_Type = WorldEvent::Type::AddTerrain;
-        }
-        else if (m_RequestedAction == BipedAction::RemoveTerrain)
-        {
-            terrainEvent.m_Type = WorldEvent::Type::RemoveTerrain;
-        }
-
-        constexpr f32 TERRAIN_INTERACTION_RADIUS = 2.f;
-
-        terrainEvent.m_Radius = TERRAIN_INTERACTION_RADIUS;
-        terrainEvent.m_Source = GetOwner();
-        terrainEvent.m_TargetPosition = self->GetWorldPosition() + lookDirection * (*rayIntersect);
-
-        m_World->AddWorldEvent(terrainEvent);
-
-        m_RequestedAction = BipedAction::None;
-    }
 }
 
 void BipedComponent::OnMouseInput(f32 _mouseX, f32 _mouseY)
@@ -187,14 +148,6 @@ void BipedComponent::OnButtonInput(InputType _type)
     {
         self->Rotate(glm::vec3(0,0,-1), -ROLL_SPEED);
     }
-    else if (_type == InputType::Interact)
-    {
-        m_RequestedAction = BipedAction::AddTerrain;
-    }
-    else if (_type == InputType::InteractAlternate)
-    {
-        m_RequestedAction = BipedAction::RemoveTerrain;
-    }
     else if (_type == InputType::Sprint)
     {
         m_IsSprinting = true;
@@ -234,16 +187,7 @@ void BipedComponent::DebugDraw(UIDrawInterface& _interface) const
                                   + glm::to_string(self->GetRotation())
                                   + "\nWorldZone: "
                                   + glm::to_string(self->GetWorldPosition().m_ZoneCoordinates)
-                                  + "\nLook distance: "
-                                  + std::to_string(m_DebugLastRaycastDistance);
+                                  ;
 
     _interface.DrawString(glm::ivec2(20, 20), debugInfoString, 32.f);
-
-    const FreelookCameraComponent* camera = ComponentAccess::GetComponent<FreelookCameraComponent>(*self);
-
-    // TODO don't we have a better way to ask for our zone?
-    _interface.DebugDrawSphere(GetOwnerObject()->GetWorldPosition().m_ZoneCoordinates,
-                               GetOwnerObject()->GetPosition()
-                                   + camera->GetLookDirection() * m_DebugLastRaycastDistance,
-                               1.f);
 }

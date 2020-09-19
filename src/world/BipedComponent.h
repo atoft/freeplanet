@@ -22,15 +22,6 @@ private:
     bool IsStandingOnGround(const WorldObject* self) const;
 
 private:
-    // For now all player gameplay logic is in here. In future it will probably move out
-    // to a separate component and only locomotion-related logic will stay in this component.
-    enum class BipedAction
-    {
-        None,
-        AddTerrain,
-        RemoveTerrain
-    };
-
     glm::vec3 m_LinearVelocity = glm::vec3();
 
     glm::vec3 m_WalkDirection = glm::vec3();
@@ -44,9 +35,6 @@ private:
     bool m_IsWalking = false;
     bool m_CanJump = true;
     bool m_IsSprinting = false;
-    BipedAction m_RequestedAction = BipedAction::None;
 
     Stopwatch m_JumpStopwatch;
-
-    f32 m_DebugLastRaycastDistance = 0.f;
 };

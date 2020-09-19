@@ -199,3 +199,15 @@ const FreelookCameraComponent* PlayerHandler::GetLocalCamera() const
     // To support players using a remote camera, add a controlled camera ID to the player struct.
     return ComponentAccess::GetComponent<FreelookCameraComponent>(*worldObject);
 }
+
+WorldObjectID PlayerHandler::GetControlledWorldObjectID(u32 _playerIndex) const
+{
+    // TODO How do indexes work for non local players?
+
+    if (m_LocalPlayers.size() <= _playerIndex)
+    {
+        return WORLDOBJECTID_INVALID;
+    }
+
+    return m_LocalPlayers[_playerIndex].GetControlledWorldObjectID();
+}

@@ -109,11 +109,11 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
 
             if (_event.m_Type == WorldEvent::Type::AddTerrain)
             {
-                terrainComponent.m_TerrainEdits.m_AdditiveElements.push_back(SphereTerrainElement(localPosition, radius));
+                terrainComponent.m_TerrainEdits.m_AdditiveElements.push_back(SphereTerrainElement(localPosition, radius, *_event.m_Substance));
             }
             else if (_event.m_Type == WorldEvent::Type::RemoveTerrain)
             {
-                terrainComponent.m_TerrainEdits.m_SubtractiveElements.push_back(SphereTerrainElement(localPosition, radius));
+                terrainComponent.m_TerrainEdits.m_SubtractiveElements.push_back(SphereTerrainElement(localPosition, radius, TerrainSubstanceType::Count));
             }
 
             LogMessage("Updated chunks in range " + glm::to_string(minRegion) + " - " + glm::to_string(maxRegion));

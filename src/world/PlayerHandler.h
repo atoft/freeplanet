@@ -27,6 +27,7 @@ public:
     std::vector<WorldObjectID> GetLocalPlayers() const;
     bool IsControlledByLocalPlayer(WorldObjectID _id) const;
     const FreelookCameraComponent* GetLocalCamera() const;
+    WorldObjectID GetControlledWorldObjectID(u32 _playerIndex) const;
 
 private:
     enum class RequestState

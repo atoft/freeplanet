@@ -11,7 +11,7 @@
 class SphereTerrainElement
 {
 public:
-    SphereTerrainElement(glm::vec3 _origin, float _radius);
+    SphereTerrainElement(glm::vec3 _origin, float _radius, TerrainSubstanceType _substance);
 
     f32 GetDensity(glm::vec3 _position) const;
     TerrainSubstanceType GetSubstance() const { return m_Substance; };

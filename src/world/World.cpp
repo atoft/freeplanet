@@ -9,6 +9,7 @@
 #include <src/world/FreelookCameraComponent.h>
 #include <src/world/SpawningHandler.h>
 #include <src/world/collision/CollisionHandler.h>
+#include <src/world/inventory/InventoryHandler.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/world/terrain/TerrainHandler.h>
 #include <src/world/vista/VistaHandler.h>
@@ -25,6 +26,7 @@ World::World(std::string _worldName, std::optional<Planet> _planet)
     m_SpawningHandler = std::make_unique<SpawningHandler>(this);
     m_TerrainHandler = std::make_unique<TerrainHandler>(this);
     m_VistaHandler = std::make_unique<VistaHandler>(this);
+    m_InventoryHandler = std::make_unique<InventoryHandler>(this);
 
     m_Planet = _planet;
 
@@ -89,6 +91,8 @@ const WorldZone* World::FindZoneAtCoordinates(glm::ivec3 _zoneCoordinates) const
 void World::RegisterLocalPlayer(u32 _playerIndex)
 {
     m_PlayerHandler->RegisterLocalPlayer(_playerIndex);
+
+    m_InventoryHandler->RegisterLocalPlayer(_playerIndex);
 }
 
 // TODO remove this entirely and send test world props through a similar flow to procedural objects.
@@ -385,6 +389,8 @@ void World::OnButtonInput(InputType _inputType)
     {
         zone.OnButtonInput(_inputType);
     }
+
+    m_InventoryHandler->OnButtonInput(_inputType);
 }
 
 void World::OnMouseInput(f32 _mouseX, f32 _mouseY)

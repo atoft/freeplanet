@@ -37,6 +37,11 @@ std::vector<InputKeyMapping> Input::DEFAULT_KEY_MAPPINGS
                 {InputType::LevitateDown, InputContext::Gameplay, KeyboardKey::F, InputButtonInteraction::IsDown},
                 {InputType::RollLeft, InputContext::Gameplay, KeyboardKey::Q, InputButtonInteraction::IsDown},
                 {InputType::RollRight, InputContext::Gameplay, KeyboardKey::E, InputButtonInteraction::IsDown},
+
+                {InputType::InventorySlot1, InputContext::Gameplay, KeyboardKey::Num1, InputButtonInteraction::OnPressed},
+                {InputType::InventorySlot2, InputContext::Gameplay, KeyboardKey::Num2, InputButtonInteraction::OnPressed},
+                {InputType::InventorySlot3, InputContext::Gameplay, KeyboardKey::Num3, InputButtonInteraction::OnPressed},
+                {InputType::InventorySlot4, InputContext::Gameplay, KeyboardKey::Num4, InputButtonInteraction::OnPressed},
         };
 
 const std::vector<InputMouseButtonMapping> DEFAULT_MOUSE_BUTTON_MAPPINGS

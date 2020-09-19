@@ -25,8 +25,15 @@ enum class InputType
     StrafeRight,
     Jump,
     Sprint,
+
     Interact,
     InteractAlternate,
+    InventorySlot1,
+    InventorySlot2,
+    InventorySlot3,
+    InventorySlot4,
+
+
     LevitateUp,
     LevitateDown,
     RollLeft,

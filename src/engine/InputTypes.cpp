@@ -36,6 +36,14 @@ std::string ToString(InputType _inputType)
         return "Interact";
     case InputType::InteractAlternate:
         return "InteractAlternate";
+    case InputType::InventorySlot1:
+        return "InventorySlot1";
+    case InputType::InventorySlot2:
+        return "InventorySlot2";
+    case InputType::InventorySlot3:
+        return "InventorySlot3";
+    case InputType::InventorySlot4:
+        return "InventorySlot4";
     case InputType::LevitateUp:
         return "LevitateUp";
     case InputType::LevitateDown:
@@ -64,7 +72,7 @@ std::string ToString(InputType _inputType)
         break;
     }
     return "";
-    static_assert(static_cast<u32>(InputType::Count) == 25);
+    static_assert(static_cast<u32>(InputType::Count) == 29);
 }
 
 std::string ToString(InputContext _inputContext)
