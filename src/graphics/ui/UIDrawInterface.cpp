@@ -163,6 +163,22 @@ void UIDrawInterface::DrawRectangle(glm::vec2 _position, glm::vec2 _scale, Color
     m_UIDisplay->m_DrawingQueue.push_back(sfRectangle);
 }
 
+void UIDrawInterface::DrawSprite(glm::vec2 _position, glm::vec2 _scale, AssetHandle<UITexture> _texture, Color _color, UIAnchorPosition _anchor)
+{
+    assert(m_UIDisplay != nullptr);
+    assert(m_UIDisplay->m_Window != nullptr);
+
+    const glm::ivec2 displayResolution = GetDisplayResolution();
+
+    UISprite sprite;
+    sprite.m_Origin = GetScaledPosition<glm::vec2>(displayResolution, _position.x, _position.y, _anchor);
+    sprite.m_Scale = GetScaledSize<glm::vec2>(displayResolution, static_cast<f32>(_scale.x), static_cast<f32>(_scale.y)).x;
+    sprite.m_UITexture = _texture;
+    sprite.m_Color = _color;
+
+    m_UIDisplay->m_DrawingQueue.push_back(sprite);
+}
+
 void UIDrawInterface::FillScreen(Color _color)
 {
     assert(m_UIDisplay != nullptr);

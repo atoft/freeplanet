@@ -15,4 +15,9 @@ public:
     {
         AssetHandle<T>::GetAssetBank().HandleLoadRequests();
     }
+
+    void Shutdown()
+    {
+        AssetHandle<T>::GetAssetBank().Shutdown();
+    }
 };

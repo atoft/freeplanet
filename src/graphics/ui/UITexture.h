@@ -17,16 +17,29 @@
 
 #pragma once
 
-#include <src/graphics/ui/UIBaseMenu.h>
+#include <memory>
+#include <SFML/Graphics/Texture.hpp>
 
-class UIHUDMenu : public UIBaseMenu
+#include <src/assets/TextureAssets.h>
+#include <src/engine/AssetHandle.h>
+#include <src/graphics/Color.h>
+
+// Allows for loading textures as an asset for SFML.
+class UITexture
 {
 public:
-    void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
-    void OnButtonReleased(InputType _type, UIActions& _actions) override;
+    void AcquireResources(TextureAssetID _asset);
+    void ReleaseResources();
 
-private:
-    AssetHandle<UITexture> m_TestTexture = AssetHandle<UITexture>(TextureAsset_Dev_512);
+    std::shared_ptr<sf::Texture> m_Texture;
+};
 
-    float m_TimeSinceChange = 0.f;
+// Use as a drawable for the SFML UI.
+// This is needed to allow the sfml asset to be
+struct UISprite
+{
+    glm::vec2 m_Origin = glm::vec2(0.f);
+    f32 m_Scale = 1.f;
+    Color m_Color = Color(1.f);
+    AssetHandle<UITexture> m_UITexture;
 };

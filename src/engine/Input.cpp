@@ -42,6 +42,12 @@ std::vector<InputKeyMapping> Input::DEFAULT_KEY_MAPPINGS
                 {InputType::InventorySlot2, InputContext::Gameplay, KeyboardKey::Num2, InputButtonInteraction::OnPressed},
                 {InputType::InventorySlot3, InputContext::Gameplay, KeyboardKey::Num3, InputButtonInteraction::OnPressed},
                 {InputType::InventorySlot4, InputContext::Gameplay, KeyboardKey::Num4, InputButtonInteraction::OnPressed},
+
+                // TODO avoid this duplication.
+                {InputType::InventorySlot1, InputContext::UI, KeyboardKey::Num1, InputButtonInteraction::OnPressed},
+                {InputType::InventorySlot2, InputContext::UI, KeyboardKey::Num2, InputButtonInteraction::OnPressed},
+                {InputType::InventorySlot3, InputContext::UI, KeyboardKey::Num3, InputButtonInteraction::OnPressed},
+                {InputType::InventorySlot4, InputContext::UI, KeyboardKey::Num4, InputButtonInteraction::OnPressed},
         };
 
 const std::vector<InputMouseButtonMapping> DEFAULT_MOUSE_BUTTON_MAPPINGS

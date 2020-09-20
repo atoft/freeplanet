@@ -9,6 +9,7 @@
 #include <src/graphics/SceneRenderer.h>
 #include <src/graphics/ShaderProgram.h>
 #include <src/graphics/Texture.h>
+#include <src/graphics/ui/SFMLDraw.h>
 
 void SceneRenderer::Run(std::shared_ptr<sf::RenderWindow> _window)
 {
@@ -38,6 +39,7 @@ void SceneRenderer::Run(std::shared_ptr<sf::RenderWindow> _window)
         m_ShaderLoader.HandleLoadRequests();
         m_TextureLoader.HandleLoadRequests();
         m_MeshLoader.HandleLoadRequests();
+        m_UITextureLoader.HandleLoadRequests();
 
         if(!quitRequested)
         {
@@ -56,6 +58,11 @@ void SceneRenderer::Run(std::shared_ptr<sf::RenderWindow> _window)
             m_StartRenderCV.notify_one();
         }
     }
+
+    m_ShaderLoader.Shutdown();
+    m_TextureLoader.Shutdown();
+    m_MeshLoader.Shutdown();
+    m_UITextureLoader.Shutdown();
 }
 
 void SceneRenderer::HandleEvent(EngineEvent _event)
@@ -423,6 +430,6 @@ void SceneRenderer::Render(std::vector<Renderable::DrawableVariant> _uiElements,
     _window->resetGLStates();
     for(const Renderable::DrawableVariant& variant : _uiElements)
     {
-        std::visit([_window](auto&& value){_window->draw(value);}, variant);
+        std::visit([_window](auto&& value){SFMLDraw::Draw(value, _window);}, variant);
     }
 }

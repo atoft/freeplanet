@@ -12,6 +12,7 @@
 
 #include <src/tools/globals.h>
 #include <src/tools/STL.h>
+#include <iostream>
 
 using AssetID = u32;
 constexpr AssetID ASSETID_INVALID = 0;
@@ -204,5 +205,22 @@ private:
 
         m_AssetsToDestroy.clear();
         m_AssetsToCreate.clear();
+    }
+
+    // Attempt to fix a crash on quit caused by non-trivial types inside the asset.
+    // They seem to get destructor calls on the main thread even after everything should have
+    // been freed on the Render thread.
+    void Shutdown()
+    {
+        for (T& asset : m_Data)
+        {
+            asset.ReleaseResources();
+        }
+
+        m_Data.clear();
+        m_Data.shrink_to_fit();
+        m_AssetsToDestroy.clear();
+        m_AssetsToCreate.clear();
+        m_Map.clear();
     }
 };

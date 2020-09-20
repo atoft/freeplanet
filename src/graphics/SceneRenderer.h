@@ -51,6 +51,7 @@ private:
     AssetLoader<ShaderProgram> m_ShaderLoader;
     AssetLoader<Texture> m_TextureLoader;
     AssetLoader<StaticMesh> m_MeshLoader;
+    AssetLoader<UITexture> m_UITextureLoader;
 
     std::mutex m_RenderMutex;
     std::condition_variable m_StartRenderCV;

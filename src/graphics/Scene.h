@@ -19,6 +19,7 @@
 #include <src/graphics/GLHelpers.h>
 #include <src/graphics/MeshType.h>
 #include <src/graphics/RawMesh.h>
+#include <src/graphics/ui/UITexture.h>
 
 class ShaderProgram;
 class Texture;
@@ -120,7 +121,7 @@ namespace Renderable
         glm::vec3 m_LocalUpDirection;
     };
 
-    using DrawableVariant = std::variant<sf::RectangleShape, sf::Text, sf::Sprite>;
+    using DrawableVariant = std::variant<sf::RectangleShape, sf::Text, sf::Sprite, UISprite>;
 
     struct MeshRequest
     {
