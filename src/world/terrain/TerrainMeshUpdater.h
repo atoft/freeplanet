@@ -13,6 +13,7 @@
 #include <src/world/GeometryTypes.h>
 #include <src/world/planet/TerrainGeneration.h>
 #include <src/world/terrain/TerrainHelpers.h>
+#include <src/world/events/WorldEvent.h>
 
 struct Planet;
 
@@ -33,6 +34,7 @@ struct TerrainMeshUpdateParams
     NormalGenerationMethod m_NormalGenerationMethod = NormalGenerationMethod::FromVolume;
     TerrainLevelOfDetail m_LevelOfDetail = TerrainLevelOfDetail::ActiveZone;
     bool m_IsFringe = false;
+    std::vector<WorldEvent> m_AssociatedEvents;
 };
 
 class TerrainMeshUpdater
@@ -42,6 +44,7 @@ public:
 
     RawMesh GetRawMesh() const { return m_Mesh; };
     std::vector<TerrainChunk> GetChunks() const { return m_Chunks; };
+    std::vector<WorldEvent> GetAssociatedEvents() const { return m_AssociatedEvents; };
 
 private:
     void UpdateChunks(const TerrainMeshUpdateParams& _params, std::vector<TerrainChunk>& _existingChunks) const;
@@ -50,4 +53,5 @@ private:
 private:
     RawMesh m_Mesh;
     std::vector<TerrainChunk> m_Chunks;
+    std::vector<WorldEvent> m_AssociatedEvents;
 };

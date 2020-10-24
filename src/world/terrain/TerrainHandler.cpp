@@ -4,6 +4,7 @@
 
 #include "TerrainHandler.h"
 
+#include <src/world/collision/CollisionHandler.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
 #include <src/tools/MathsHelpers.h>
@@ -30,6 +31,43 @@ void TerrainHandler::Update(TimeMS _dt)
             // Trigger the renderer to make a new DynamicMesh for this TerrainComponent.
             terrainComponent.m_DynamicMesh.RequestMeshUpdate(finishedUpdater->GetRawMesh());
 
+            for (const WorldEvent& event : finishedUpdater->GetAssociatedEvents())
+            {
+                if (event.m_Type == WorldEvent::Type::AddTerrain)
+                {
+                    AABB eventBounds;
+                    eventBounds.m_Dimensions = glm::vec3(*event.m_Radius);
+
+                    std::vector<WorldObjectID> overlaps = m_World->GetCollisionHandler()->DoShapecast(*event.m_TargetPosition, eventBounds);
+
+                    for (const WorldObjectID& overlapID : overlaps)
+                    {
+                        WorldObject* overlappedObject = m_World->GetWorldObject(overlapID);
+
+                        if (overlappedObject == nullptr)
+                        {
+                            continue;
+                        }
+
+                        const glm::vec3 objectLocalPosition = overlappedObject->GetPosition();
+                        const glm::vec3 eventPosition = event.m_TargetPosition->m_LocalPosition;
+
+                        const glm::vec3 eventToObject = objectLocalPosition - eventPosition;
+                        const f32 distanceFromEvent = glm::length(eventToObject);
+
+                        const f32 correctionDistance = *event.m_Radius - distanceFromEvent;
+
+                        constexpr f32 OVERLAPPED_OBJECT_RADIUS = 1.f;
+
+                        if (correctionDistance > 0.f)
+                        {
+                            const glm::vec3 correctionVector = (eventToObject / distanceFromEvent) * (correctionDistance + OVERLAPPED_OBJECT_RADIUS);
+                            overlappedObject->SetPosition(overlappedObject->GetPosition() + correctionVector);
+                        }
+                    }
+                }
+            }
+
             m_TerrainMeshUpdaters.Clear(zone.GetCoordinates());
         }
 
@@ -45,7 +83,10 @@ void TerrainHandler::Update(TimeMS _dt)
                         terrainComponent.m_TerrainChunks,
                         terrainComponent.m_Properties,
                         *terrainComponent.m_DirtyRegion,
-                        m_NormalGenerationMethod
+                        m_NormalGenerationMethod,
+                        TerrainLevelOfDetail::ActiveZone,
+                        false,
+                        terrainComponent.m_AssociatedEvents
                     };
 
             const bool canUpdate = m_TerrainMeshUpdaters.RequestLoad(zone.GetCoordinates(), params);
@@ -118,7 +159,8 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
 
             LogMessage("Updated chunks in range " + glm::to_string(minRegion) + " - " + glm::to_string(maxRegion));
 
-            terrainComponent.m_DirtyRegion = region;
+            terrainComponent.m_DirtyRegion = region;    // TODO is this entirely valid if another event comes before the terrain update returns?
+            terrainComponent.m_AssociatedEvents.push_back(_event);
         }
     }
     default:

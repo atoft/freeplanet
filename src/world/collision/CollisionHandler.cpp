@@ -375,6 +375,35 @@ std::optional<f32> CollisionHandler::DoRaycast(WorldPosition _origin, glm::vec3 
     return std::nullopt;
 }
 
+std::vector<WorldObjectID> CollisionHandler::DoShapecast(WorldPosition _origin, AABB _aabb) const
+{
+    std::vector<WorldObjectID> overlaps;
+
+    for (const WorldZone& zone : m_World->GetActiveZones())
+    {
+        if (zone.GetCoordinates() != _origin.m_ZoneCoordinates) // TODO support multiple zones
+        {
+            continue;
+        }
+
+        glm::mat4 targetTransform = glm::mat4(1.f);
+        MathsHelpers::TranslateWorldSpace(targetTransform, _origin.m_LocalPosition);
+
+        for (const ColliderComponent& component : zone.GetComponents<ColliderComponent>())
+        {
+            const WorldObject* object = component.GetOwnerObject();
+            const AABB boundsForOBB = CollisionHelpers::GetAABBForOBB(MathsHelpers::GetRotationMatrix(object->GetZoneTransform()), component.m_Bounds);
+            const std::optional<CollisionResult> result = CollideOBBOBB::Collide(object->GetZoneTransform(), boundsForOBB, targetTransform, _aabb);
+
+            if (result != std::nullopt)
+            {
+                overlaps.push_back(object->GetWorldObjectID());
+            }
+        }
+    }
+    return overlaps;
+}
+
 void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
 {
     u32 collisionCount = 0;

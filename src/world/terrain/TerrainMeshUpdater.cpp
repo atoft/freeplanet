@@ -14,6 +14,7 @@
 TerrainMeshUpdater::TerrainMeshUpdater(TerrainMeshUpdateParams _params)
 {
     m_Chunks = _params.m_ExistingChunks;
+    m_AssociatedEvents = _params.m_AssociatedEvents;
     UpdateChunks(_params, m_Chunks);
     ConvertToRawMesh(_params, m_Chunks, m_Mesh);
 }

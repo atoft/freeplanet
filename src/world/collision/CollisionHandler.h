@@ -8,6 +8,8 @@
 #include <vector>
 
 #include <src/tools/globals.h>
+#include <src/world/WorldObjectID.h>
+#include <src/world/GeometryTypes.h>
 
 struct CollisionResult;
 class ColliderComponent;
@@ -32,6 +34,7 @@ public:
     };
 
     std::optional<f32> DoRaycast(WorldPosition _origin, glm::vec3 _direction, RaycastRange _range = RaycastRange::AllLoadedZones);
+    std::vector<WorldObjectID> DoShapecast(WorldPosition _origin, AABB _aabb) const;
 
     void SetShouldResolveCollisions(bool _shouldResolve) { m_ShouldResolveCollisions = _shouldResolve; };
 

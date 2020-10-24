@@ -13,6 +13,7 @@
 #include <src/world/GeometryTypes.h>
 #include <src/world/terrain/TerrainEdits.h>
 #include <src/world/terrain/TerrainMeshUpdater.h>
+#include <src/world/events/WorldEvent.h>
 
 class TerrainComponent
 {
@@ -46,4 +47,5 @@ private:
     glm::ivec3 m_ZoneCoordinates;
 
     std::optional<TerrainRegion> m_DirtyRegion;
+    std::vector<WorldEvent> m_AssociatedEvents;
 };
