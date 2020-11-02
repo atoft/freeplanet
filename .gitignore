@@ -21,3 +21,5 @@ CMakeFiles/
 vcpkg/
 
 .clangd/
+
+compile_commands.json
