@@ -17,6 +17,7 @@
 
 #include "InventoryHandler.h"
 
+#include <src/assets/TextureAssets.h>
 #include <src/world/collision/CollisionHandler.h>
 #include <src/world/World.h>
 
@@ -31,10 +32,10 @@ void InventoryHandler::RegisterLocalPlayer(u32 _playerIndex)
     defaultInventory.m_PlayerID = _playerIndex;
     defaultInventory.m_Slots =
         {
-            {TerrainSubstanceType::Topsoil, 100},
-            {TerrainSubstanceType::Dirt, 100},
-            {TerrainSubstanceType::Rock, 100},
-            {TerrainSubstanceType::Sand, 100},
+            {TerrainSubstanceType::Topsoil, 100, AssetHandle<UITexture>(TextureAsset_Icon_Topsoil512)},
+            {TerrainSubstanceType::Dirt, 100, AssetHandle<UITexture>(TextureAsset_Icon_Dirt512)},
+            {TerrainSubstanceType::Rock, 100, AssetHandle<UITexture>(TextureAsset_Icon_Stone512)},
+            {TerrainSubstanceType::Sand, 100, AssetHandle<UITexture>(TextureAsset_Icon_Sand512)},
         };
 
 }

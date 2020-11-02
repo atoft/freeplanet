@@ -10,23 +10,33 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
 
     switch(static_cast<TextureAsset>(_assetID))
     {
-        case TextureAsset_Dev_512:
-            return "Dev_512.png";
-        case TextureAsset_Cubemap_Dev:
-            return "cubemaps/dev/";
-        case TextureAsset_Tree:
-            return "Tree.jpg";
-        case TextureAsset_Billboard_Grass:
-            return "Billboard_Grass.png";
-        case TextureAsset_Volume_Perlin128:
-            return "volumes/Volume_Perlin128.png";
-        case TextureAsset_Volume_Grass128:
-            return "volumes/Volume_Grass128.png";
-        case TextureAsset_Invalid:
+    case TextureAsset_Dev_512:
+        return "Dev_512.png";
+    case TextureAsset_Cubemap_Dev:
+        return "cubemaps/dev/";
+    case TextureAsset_Tree:
+        return "Tree.jpg";
+    case TextureAsset_Billboard_Grass:
+        return "Billboard_Grass.png";
+    case TextureAsset_Volume_Perlin128:
+        return "volumes/Volume_Perlin128.png";
+    case TextureAsset_Volume_Grass128:
+        return "volumes/Volume_Grass128.png";
+
+    case TextureAsset_Icon_Topsoil512:
+        return "ui/Icon_Topsoil_512.png";
+    case TextureAsset_Icon_Dirt512:
+        return "ui/Icon_Dirt_512.png";
+    case TextureAsset_Icon_Stone512:
+        return "ui/Icon_Stone_512.png";
+    case TextureAsset_Icon_Sand512:
+        return "ui/Icon_Sand_512.png";
+        
+    case TextureAsset_Invalid:
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 7);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 11);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -47,10 +57,20 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             [[fallthrough]];
         case TextureAsset_Billboard_Grass:
             [[fallthrough]];
+            
+        case TextureAsset_Icon_Topsoil512:
+            [[fallthrough]];
+        case TextureAsset_Icon_Dirt512:
+            [[fallthrough]];
+        case TextureAsset_Icon_Stone512:
+            [[fallthrough]];
+        case TextureAsset_Icon_Sand512:
+            [[fallthrough]];
+            
         case TextureAsset_Invalid:
         default:
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 7);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 11);
 }

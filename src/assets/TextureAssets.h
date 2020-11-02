@@ -17,6 +17,12 @@ enum TextureAsset
     TextureAsset_Billboard_Grass,
     TextureAsset_Volume_Perlin128,
     TextureAsset_Volume_Grass128,
+
+    TextureAsset_Icon_Topsoil512,
+    TextureAsset_Icon_Dirt512,
+    TextureAsset_Icon_Stone512,
+    TextureAsset_Icon_Sand512,
+    
     TextureAsset_Count
 };
 

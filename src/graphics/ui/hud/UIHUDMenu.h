@@ -26,7 +26,5 @@ public:
     void OnButtonReleased(InputType _type, UIActions& _actions) override;
 
 private:
-    AssetHandle<UITexture> m_TestTexture = AssetHandle<UITexture>(TextureAsset_Dev_512);
-
     float m_TimeSinceChange = 0.f;
 };
