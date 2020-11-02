@@ -119,6 +119,25 @@ vec3 GetDirtColor()
     return DIRT_COLOR * vec3(scaledColor);
 }
 
+vec3 GetSandColor()
+{
+    float baseColor = 0.4;
+
+    if (frplTerrainLod < 1)
+    {
+        baseColor = texture(texPerlin, WorldPosition.xzy * 4.0).r * 0.5;
+    }
+
+    const float SAND_CONTRAST = 0.25;
+    const float SAND_BRIGHTNESS = 1.0;
+
+    float scaledColor = (baseColor * SAND_CONTRAST * SAND_BRIGHTNESS) + (1.0 - SAND_CONTRAST);
+
+    const vec3 SAND_COLOR = vec3(0.8, 0.749, 0.419);
+
+    return SAND_COLOR * vec3(scaledColor);
+}
+
 vec3 GetRockColor()
 {
     float baseColor = 0.4;
@@ -176,8 +195,9 @@ vec3 GetSurfaceColor()
     vec3 topsoilColor = (grassColor * foliageMask + soilColor * (1.0 - foliageMask)) * TerrainSubstance.x;
     vec3 dirtColor = soilColor * TerrainSubstance.y ;
     vec3 rockColor = GetRockColor() * TerrainSubstance.z;
+    vec3 sandColor = GetSandColor() * TerrainSubstance.w;
 
-    return topsoilColor + dirtColor + rockColor;
+    return topsoilColor + dirtColor + rockColor + sandColor;
 }
 
 void main()
