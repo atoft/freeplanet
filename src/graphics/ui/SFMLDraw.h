@@ -19,10 +19,10 @@
 
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <memory>
 #include <src/graphics/ui/UITexture.h>
-#include <vcpkg/installed/x64-linux/include/SFML/Graphics/Sprite.hpp>
-#include "UIDisplay.h"
+#include <src/graphics/ui/UIDisplay.h>
 
 class SFMLDraw
 {
