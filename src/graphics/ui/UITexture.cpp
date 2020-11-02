@@ -2,12 +2,10 @@
 // Created by alastair on 19/09/2020.
 //
 
-#include <vcpkg/installed/x64-linux/include/SFML/Graphics/Sprite.hpp>
 #include "UITexture.h"
 
 void UITexture::AcquireResources(TextureAssetID _asset)
 {
-    LogMessage("ACQUIRE!!!!");
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
     const std::string assetName = Assets::GetTextureAssetName(_asset);
@@ -26,5 +24,4 @@ void UITexture::AcquireResources(TextureAssetID _asset)
 void UITexture::ReleaseResources()
 {
     m_Texture = nullptr;
-    LogMessage("RELEASE!!!");
 }

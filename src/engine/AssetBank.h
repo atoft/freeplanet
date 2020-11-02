@@ -48,7 +48,8 @@ private:
 
     std::map<AssetID, AssetValue> m_Map;
     std::vector<T> m_Data;
-
+    bool m_HasShutdown = false;
+    
 public:
     AssetBank()
     {
@@ -59,6 +60,11 @@ private:
     void OnHandleCreated(AssetID _asset)
     {
         if(_asset == ASSETID_INVALID)
+        {
+            return;
+        }
+
+        if (m_HasShutdown)
         {
             return;
         }
@@ -92,6 +98,11 @@ private:
             return;
         }
 
+        if (m_HasShutdown)
+        {
+            return;
+        }
+            
         std::lock_guard<std::mutex> lock(m_AccessMutex);
 
         auto&& result = m_Map.find(_asset);
@@ -157,6 +168,9 @@ private:
     void HandleLoadRequests()
     {
         std::lock_guard<std::mutex> lock(m_AccessMutex);
+
+        assert(!m_HasShutdown);
+
         for(AssetID id : m_AssetsToDestroy)
         {
             auto&& result = m_Map.find(id);
@@ -222,5 +236,6 @@ private:
         m_AssetsToDestroy.clear();
         m_AssetsToCreate.clear();
         m_Map.clear();
+        m_HasShutdown = true;
     }
 };
