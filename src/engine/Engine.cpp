@@ -107,7 +107,7 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
 
     m_RenderHandler = std::make_shared<RenderHandler>(m_Window, m_EngineConfig.m_GraphicsConfig);
 
-    m_Input = new Input(m_Window, m_EngineConfig.m_InputConfig);
+    m_Input = std::make_shared<Input>(m_Window, m_EngineConfig.m_InputConfig, m_CommandLineArgs.m_ForceUnlockedMouse);
     m_UIDisplay = std::make_shared<UIDisplay>(m_Window.get());
     m_UIDisplay->UpdateSplashScreen();
 
@@ -221,6 +221,7 @@ void Engine::HandleEvents(TimeMS _delta)
         HandleEvent(event);
         m_StandardInputTask.HandleEvent(event);
         m_RenderHandler->HandleEvent(event);
+        m_Input->HandleEvent(event);
 
         if (m_UIDisplay != nullptr)
         {
@@ -276,19 +277,6 @@ void Engine::HandleEvent(EngineEvent _event)
     default:
         break;
     }
-}
-
-bool Engine::IsInMenu() const
-{
-    // TODO: I don't really think this should be an engine method. I'd like
-    // a nicer way to handle this
-    if (m_UIDisplay == nullptr)
-    {
-        LogWarning("Tried to check for menu when there is no UI");
-        return false;
-    }
-
-    return m_UIDisplay->IsInMenu();
 }
 
 const CommandLineArgs& Engine::GetCommandLineArgs() const

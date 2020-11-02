@@ -35,6 +35,8 @@ const std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS =
 
             {EngineEvent::Type::TerrainSetNormalGenerationMethod, true, "normals", "Set how to compute terrain normals. From face normals = 0, From volume = 1.", EngineEvent::ArgumentType::Int},
 
+            {EngineEvent::Type::InputSetMouseLock, true, "mouse", "Toggle mouse lock. Mouse is free = 0, Mouse is controlled by the engine = 1.", EngineEvent::ArgumentType::Int},
+            
             {EngineEvent::Type::OnQuit, false, "", "Fired when Engine has started quitting.", EngineEvent::ArgumentType::Void},
             {EngineEvent::Type::RenderOnDynamicMeshDestroyed, false, "", "Fired when a Dynamic Mesh is destroyed.", EngineEvent::ArgumentType::Int}
 

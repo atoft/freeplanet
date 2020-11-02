@@ -43,6 +43,8 @@ public:
 
         TerrainSetNormalGenerationMethod,
 
+        InputSetMouseLock,
+        
         OnQuit,
 
         Count

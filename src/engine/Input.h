@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <src/engine/InputTypes.h>
+#include <src/engine/events/EngineEvent.h>
 
 namespace sf
 {
@@ -23,8 +24,9 @@ class Input
 {
 public:
     void UpdateUserInput(World *_world, UIDisplay *_display);
+    void HandleEvent(EngineEvent _event);
 
-    Input(std::shared_ptr<sf::Window> _window, InputConfig _config);
+    Input(std::shared_ptr<sf::Window> _window, const InputConfig& _config, bool _unlockMouse);
 
 private:
     void HandleKeyInput(KeyboardKey _key, InputButtonInteraction _interaction, World* _world, UIDisplay* _display);
@@ -47,4 +49,6 @@ private:
 
     sf::Vector2i m_PreviousMousePosition = sf::Vector2i(0, 0);
     bool m_IsUsingMouseInput = false;
+
+    bool m_IsMouseUnlocked = false;
 };

@@ -37,8 +37,6 @@ public:
 
     const CommandLineArgs& GetCommandLineArgs() const;
 
-    bool IsInMenu() const;
-
 private:
     Engine() = default;
 
@@ -57,12 +55,11 @@ private:
 
     std::shared_ptr<RenderHandler> m_RenderHandler = nullptr;
     std::shared_ptr<UIDisplay> m_UIDisplay = nullptr;
-
+    std::shared_ptr<Input> m_Input = nullptr;
+    
     EventHandler<EngineEvent> m_EventHandler;
 
     u64 m_FrameCount = 0;
-
-    Input* m_Input = nullptr;
 
     bool m_IsGameplayRunning = false;
 

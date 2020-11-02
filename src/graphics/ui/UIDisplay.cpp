@@ -110,17 +110,6 @@ void UIDisplay::Update(TimeMS delta, const World* _world)
             m_DebugMenu->Draw(delta, m_Interface, _world);
         }
     }
-
-    if (m_DisplayLog || (m_GameMenu != nullptr && m_GameMenu->ShouldTakeFocus()) || Engine::GetInstance().GetCommandLineArgs().m_ForceUnlockedMouse)
-    {
-        m_Window->setMouseCursorVisible(true);
-        m_Window->setMouseCursorGrabbed(false);
-    }
-    else
-    {
-        m_Window->setMouseCursorVisible(false);
-        m_Window->setMouseCursorGrabbed(true);
-    }
 }
 
 UIDisplay::UIDisplay(sf::RenderWindow *_window)

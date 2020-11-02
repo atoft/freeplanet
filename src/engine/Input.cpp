@@ -3,6 +3,7 @@
 //
 
 #include "Input.h"
+#include "src/engine/events/EngineEvent.h"
 
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window.hpp>
@@ -57,14 +58,15 @@ const std::vector<InputMouseButtonMapping> DEFAULT_MOUSE_BUTTON_MAPPINGS
                 {InputType::MenuAccept, InputContext::UI, sf::Mouse::Left, InputButtonInteraction::OnReleased},
         };
 
-Input::Input(std::shared_ptr<sf::Window> _window, InputConfig _config)
+Input::Input(std::shared_ptr<sf::Window> _window, const InputConfig& _config, bool _unlockMouse)
 {
     m_Window = _window;
 
     // TODO Read from a config.
     m_KeyMappings = _config.m_KeyMappings;
     m_MouseButtonMappings = DEFAULT_MOUSE_BUTTON_MAPPINGS;
-
+    m_IsMouseUnlocked = _unlockMouse;
+    
     RecenterMouse();
 }
 
@@ -117,7 +119,7 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
         }
     }
 
-    if (!Engine::GetInstance().IsInMenu() && _world != nullptr)
+    if (!_display->IsInMenu() && _world != nullptr)
     {
         for (InputKeyMapping mapping : m_KeyMappings)
         {
@@ -132,8 +134,7 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
 
     const sf::Vector2i pos = sf::Mouse::getPosition(*m_Window);
 
-    const Engine& engine = Engine::GetInstance();
-    if (!engine.IsInMenu() && !engine.GetCommandLineArgs().m_ForceUnlockedMouse && _world != nullptr)
+    if (!_display->IsInMenu() && !m_IsMouseUnlocked && _world != nullptr)
     {
         const f32 pX = pos.x / static_cast<f32>(m_Window->getSize().x) - 0.5f;
         const f32 pY = pos.y / static_cast<f32>(m_Window->getSize().y) - 0.5f;
@@ -157,6 +158,32 @@ void Input::UpdateUserInput(World* _world, UIDisplay* _display)
     }
 
     m_PreviousMousePosition = pos;
+
+    
+    if (_display->IsInMenu() || m_IsMouseUnlocked)
+    {
+        m_Window->setMouseCursorVisible(true);
+        m_Window->setMouseCursorGrabbed(false);
+    }
+    else
+    {
+        m_Window->setMouseCursorVisible(false);
+        m_Window->setMouseCursorGrabbed(true);
+    }
+}
+
+void Input::HandleEvent(EngineEvent _event)
+{
+    switch (_event.GetType())
+    {
+    case EngineEvent::Type::InputSetMouseLock:
+    {
+        m_IsMouseUnlocked = (_event.GetIntData() != 1);
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void Input::HandleKeyInput(KeyboardKey _key, InputButtonInteraction _interaction, World* _world, UIDisplay* _display)
@@ -165,7 +192,7 @@ void Input::HandleKeyInput(KeyboardKey _key, InputButtonInteraction _interaction
     {
         if (mapping.m_Key == _key && mapping.m_Interaction == _interaction)
         {
-            if (mapping.m_InputContext == InputContext::UI && Engine::GetInstance().IsInMenu())
+            if (mapping.m_InputContext == InputContext::UI && _display->IsInMenu())
             {
                 m_IsUsingMouseInput = false;
             }
@@ -203,7 +230,7 @@ void Input::HandleInput(InputType _inputType, InputContext _context, World* _wor
     }
     case InputContext::Gameplay:
     {
-        if(Engine::GetInstance().IsInMenu())
+        if(_display->IsInMenu())
         {
             break;
         }
