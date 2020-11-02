@@ -139,7 +139,7 @@ void UIDisplay::OnButtonInput(InputType _type)
         m_DisplayLog = !m_DisplayLog;
     }
 
-    if (m_GameMenu != nullptr)
+    if (m_GameMenu != nullptr && !m_DisplayLog)
     {
         m_GameMenu->OnButtonReleased(_type, m_Actions);
     }

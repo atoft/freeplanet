@@ -44,11 +44,6 @@ void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World*)
 
         currentY -= (CONSOLE_LOG_SIZE + 4) * lineCount(logDisplay);
 
-        if(currentY < MARGIN_Y)
-        {
-            break;
-        }
-
         Color fontColor = Color(1.f,1.f,1.f,1.f);
 
         switch (log[logIdx].first)
@@ -72,6 +67,10 @@ void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World*)
 
         _display.DrawString(glm::vec2(10.f, currentY), logDisplay, CONSOLE_LOG_SIZE, fontColor, FontStyle::Sans, UIAnchorPosition::Centered, true);
 
+        if (currentY < MARGIN_Y)
+        {
+            break;
+        }
     }
 }
 
