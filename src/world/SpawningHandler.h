@@ -5,6 +5,11 @@
 
 #pragma once
 
+#include <vector>
+
+#include <src/world/flora/FloraGeneration.h>
+
+class UIDrawInterface;
 class World;
 class WorldEvent;
 
@@ -18,6 +23,10 @@ public:
 
     void HandleWorldEvent(WorldEvent _event);
 
+    void DebugDraw(UIDrawInterface& _interface) const;
+    
 private:
     World* m_World = nullptr;
+
+    std::vector<PlantInstance> m_PlantInstances;
 };

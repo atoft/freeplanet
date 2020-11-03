@@ -26,6 +26,16 @@ void SpawningHandler::Update()
         return;
     }
 
+    // TODO: Actually, this happens per biome, and we need to be smart about when it occurs.
+    if (m_PlantInstances.empty())
+    {
+        m_PlantInstances.push_back(FloraGeneration::GeneratePlant(FloraGenerationParams(), 0));
+
+        // TODO Request generation of the mesh.
+
+        // Generate the leaves.
+    }
+
     for (WorldZone& zone : m_World->GetActiveZones())
     {
         // Use the terrain's RawMesh to allow us to query vertices directly.
@@ -74,12 +84,12 @@ void SpawningHandler::Update()
 
                     MathsHelpers::SetRotationPart(worldObject.GetZoneTransform(), rotationMatrix);
 
-                    zone.AddComponent<RenderComponent>
-                            (worldObject,
-                             AssetHandle<StaticMesh>(MeshAsset_Tree),
-                             AssetHandle<ShaderProgram>(ShaderAsset_Lit_Textured),
-                             AssetHandle<Texture>(TextureAsset_Tree),
-                             MeshType::Normal);
+//                    zone.AddComponent<RenderComponent>
+//                            (worldObject,
+//                             AssetHandle<StaticMesh>(MeshAsset_Tree),
+//                             AssetHandle<ShaderProgram>(ShaderAsset_Lit_Textured),
+//                             AssetHandle<Texture>(TextureAsset_Tree),
+//                             MeshType::Normal);
 
                     ColliderComponent& collider = zone.AddComponent<ColliderComponent>(worldObject,
                                                                                        CollisionPrimitiveType::OBB,
@@ -154,5 +164,35 @@ void SpawningHandler::HandleWorldEvent(WorldEvent _event)
     }
     default:
     break;
+    }
+}
+
+void SpawningHandler::DebugDraw(UIDrawInterface& _interface) const
+{
+    for (WorldZone& zone : m_World->GetActiveZones())
+    {
+        for (ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
+        {
+            const PlantInstance& plant = m_PlantInstances[0];
+
+            glm::vec3 localPosition = collider.GetOwnerObject()->GetPosition();
+
+            for (const PlantInstanceNode& node : plant.m_Nodes)
+            {
+                const glm::vec3 startPos = localPosition + node.m_RelativePosition;
+                
+                for (u32 childIdx = 0; childIdx < node.m_ChildCount; ++childIdx)
+                {
+                    const u32 childNodeIdx = node.m_Children[childIdx];
+                    
+                    const glm::vec3 endPos = localPosition + plant.m_Nodes[childNodeIdx].m_RelativePosition;
+
+                    const f32 length = glm::length(endPos - startPos);
+                    const glm::vec3 normal = (endPos - startPos) / length;
+
+                    _interface.DebugDrawArrow(zone.GetCoordinates(), startPos, length, normal);
+                }
+            }
+        }
     }
 }

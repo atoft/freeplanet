@@ -591,4 +591,8 @@ void World::DebugDraw(UIDrawInterface& _interface) const
     }
 
     _interface.DrawString(glm::vec2(1700, 20), loadingZones, 24.f, Color(0, 1.f, 1.f, 1.f));
+
+    // TODO separate debug UI for this.
+    m_SpawningHandler->DebugDraw(_interface);
 }
+
