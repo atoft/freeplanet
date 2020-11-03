@@ -21,6 +21,8 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <random>
 
+#include <src/tools/MathsHelpers.h>
+
 PlantInstance FloraGeneration::GeneratePlant(const FloraGenerationParams& _params, u32 _seed)
 {
     PlantInstance result;
@@ -66,6 +68,11 @@ PlantInstance FloraGeneration::GeneratePlant(const FloraGenerationParams& _param
         + (_params.m_MaxBranchingFactor - _params.m_MinBranchingFactor) * unsignedDistribution(gen);
 
         currentNode.m_ChildCount = childCount;
+
+        const glm::vec3 branchingBasis = MathsHelpers::GenerateArbitraryNormal(currentNode.m_Normal);
+
+        const f32 branchingOffset = unsignedDistribution(gen) * glm::pi<f32>();
+        const f32 branchingSpread = glm::pi<f32>() * 2.f / static_cast<f32>(childCount);
         
         for (u32 childIdx = 0; childIdx < childCount; ++childIdx)
         {
@@ -74,20 +81,22 @@ PlantInstance FloraGeneration::GeneratePlant(const FloraGenerationParams& _param
             currentNode.m_Children[childIdx] = newChildNodeIdx;
             
             PlantInstanceNode& newChildNode = result.m_Nodes.emplace_back();
-
-            const f32 sign = (childIdx % 2) ? 1.f : -1.f;
             
-            const f32 rotationAngleDegrees =_params.m_MinBranchingAngle + (_params.m_MaxBranchingAngle - _params.m_MinBranchingAngle) * unsignedDistribution(gen);
+            const f32 rotationAngleDegrees = _params.m_MinBranchingAngle + (_params.m_MaxBranchingAngle - _params.m_MinBranchingAngle) * unsignedDistribution(gen);
 
-            const f32 signedRotationAngle = glm::radians(rotationAngleDegrees * sign);
+            const f32 rotationAngle = glm::radians(rotationAngleDegrees);
             
-            // TODO Distribute the rotation axes based on the branching factor.
-            const glm::vec3 newNormal = glm::rotateZ(currentNode.m_Normal, signedRotationAngle);
+            // Rotate within the specified range from the previous branch direction.
+            glm::vec3 newNormal = glm::rotate(currentNode.m_Normal, rotationAngle, branchingBasis);
 
+            // Distribute the branches around the axis of the parent branch.
+            newNormal = glm::rotate(newNormal, branchingOffset + (branchingSpread * childIdx), currentNode.m_Normal);
+            
             newChildNode.m_Normal = newNormal;
             newChildNode.m_Depth = currentNode.m_Depth + 1;
 
-            const f32 length = _params.m_TrunkBaseHeight * glm::pow(_params.m_BranchScaleFactor, newChildNode.m_Depth);
+            const f32 scaleFactor = _params.m_MinBranchScaleFactor + (_params.m_MaxBranchScaleFactor - _params.m_MinBranchScaleFactor) * unsignedDistribution(gen);
+            const f32 length = _params.m_TrunkBaseHeight * glm::pow(scaleFactor, newChildNode.m_Depth);
 
             newChildNode.m_RelativePosition = currentNode.m_RelativePosition + newNormal * length;
             

@@ -29,8 +29,10 @@ void SpawningHandler::Update()
     // TODO: Actually, this happens per biome, and we need to be smart about when it occurs.
     if (m_PlantInstances.empty())
     {
-        m_PlantInstances.push_back(FloraGeneration::GeneratePlant(FloraGenerationParams(), 0));
-
+        for (u32 seed = 0; seed < 4; ++seed)
+        {
+            m_PlantInstances.push_back(FloraGeneration::GeneratePlant(FloraGenerationParams(), seed));
+        }
         // TODO Request generation of the mesh.
 
         // Generate the leaves.
@@ -171,10 +173,13 @@ void SpawningHandler::DebugDraw(UIDrawInterface& _interface) const
 {
     for (WorldZone& zone : m_World->GetActiveZones())
     {
+        u32 index = 0;
         for (ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
         {
-            const PlantInstance& plant = m_PlantInstances[0];
+            const PlantInstance& plant = m_PlantInstances[index];
 
+            index = (index + 1) % m_PlantInstances.size();
+            
             glm::vec3 localPosition = collider.GetOwnerObject()->GetPosition();
 
             for (const PlantInstanceNode& node : plant.m_Nodes)
@@ -190,7 +195,8 @@ void SpawningHandler::DebugDraw(UIDrawInterface& _interface) const
                     const f32 length = glm::length(endPos - startPos);
                     const glm::vec3 normal = (endPos - startPos) / length;
 
-                    _interface.DebugDrawArrow(zone.GetCoordinates(), startPos, length, normal);
+                    const f32 shading = static_cast<f32>(index) / static_cast<f32>(m_PlantInstances.size()); 
+                    _interface.DebugDrawArrow(zone.GetCoordinates(), startPos, length, normal, Color(shading, 0.f, 0.f, 1.f));
                 }
             }
         }

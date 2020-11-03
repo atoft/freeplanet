@@ -188,3 +188,20 @@ glm::vec3 MathsHelpers::GenerateNormalFromPitchYaw(f32 _pitch, f32 _yaw)
 
     return glm::vec3(unitVector);
 }
+
+glm::vec3 MathsHelpers::GenerateArbitraryNormal(glm::vec3 _tangent)
+{
+    // Pick an arbitrary vector
+    glm::vec3 other = glm::vec3(0,1,0);
+
+    // Make sure it's not parallel
+    if(glm::abs(glm::dot(_tangent, other)) > 0.99f)
+    {
+        other = glm::vec3(1,0,0);
+    }
+
+    const glm::vec3 normal = glm::normalize(glm::cross(_tangent, other));
+
+    return normal;
+}
+

@@ -23,16 +23,17 @@
 struct FloraGenerationParams
 {
     f32 m_TrunkBaseHeight = 3.f;
-    f32 m_BranchScaleFactor = 0.8f;
-
+    f32 m_MinBranchScaleFactor = 0.7f;
+    f32 m_MaxBranchScaleFactor = 0.9f;
+    
     u32 m_MinBranchingFactor = 2;
-    u32 m_MaxBranchingFactor = 3;
+    u32 m_MaxBranchingFactor = 4;
 
     u32 m_MinBranchingDepth = 3;
-    u32 m_MaxBranchingDepth = 3;
+    u32 m_MaxBranchingDepth = 4;
 
     f32 m_MinBranchingAngle = 20.f;
-    f32 m_MaxBranchingAngle = 45.f;
+    f32 m_MaxBranchingAngle = 60.f;
 };
 
 constexpr u32 MaxPossibleFloraBranchingFactor = 6;
