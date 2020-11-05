@@ -29,12 +29,13 @@ struct FloraGenerationParams
     f32 m_TrunkBaseHeight = 3.f;
     f32 m_MinBranchScaleFactor = 0.7f;
     f32 m_MaxBranchScaleFactor = 0.9f;
+    f32 m_BranchThicknessScaleFactor = 0.6f;
     
     u32 m_MinBranchingFactor = 2;
     u32 m_MaxBranchingFactor = 4;
 
     u32 m_MinBranchingDepth = 3;
-    u32 m_MaxBranchingDepth = 4;
+    u32 m_MaxBranchingDepth = 6;
 
     f32 m_MinBranchingAngle = 20.f;
     f32 m_MaxBranchingAngle = 60.f;
@@ -50,7 +51,8 @@ constexpr u32 MaxPossibleFloraBranchingFactor = 6;
 struct PlantInstanceNode
 {
     glm::vec3 m_RelativePosition = glm::vec3(0.f);
-
+    f32 m_ThicknessScale = 1.f;
+    
     u32 m_Children[MaxPossibleFloraBranchingFactor];
     u32 m_ChildCount = 0;
 

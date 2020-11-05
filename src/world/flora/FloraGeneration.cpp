@@ -52,6 +52,7 @@ PlantInstance FloraGeneration::GeneratePlant(const FloraGenerationParams& _param
     {
         PlantInstanceNode node;
         node.m_RelativePosition = glm::vec3(0.f, _params.m_TrunkBaseHeight, 0.f);
+        node.m_ThicknessScale = _params.m_BranchThicknessScaleFactor;
         node.m_Depth = 1;
         result.m_Nodes.push_back(node);
     }
@@ -104,7 +105,7 @@ PlantInstance FloraGeneration::GeneratePlant(const FloraGenerationParams& _param
             const f32 length = _params.m_TrunkBaseHeight * glm::pow(scaleFactor, newChildNode.m_Depth);
 
             newChildNode.m_RelativePosition = currentNode.m_RelativePosition + newNormal * length;
-            
+            newChildNode.m_ThicknessScale = glm::pow(_params.m_BranchThicknessScaleFactor, newChildNode.m_Depth);
         }
 
     }
@@ -144,7 +145,10 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
             
             const glm::mat4 rotation = MathsHelpers::GenerateRotationMatrixFromUp(normal);
 
-            const glm::mat4 scale = glm::scale(glm::vec3(meshXZScale, glm::length(childPosition - node.m_RelativePosition), meshXZScale));
+            const glm::mat4 scale = glm::scale(glm::vec3(
+                                                   meshXZScale * node.m_ThicknessScale,
+                                                   glm::length(childPosition - node.m_RelativePosition),
+                                                   meshXZScale * node.m_ThicknessScale));
             
             RawMesh branch = branchMesh;
             branch.Transform(rotation * scale * offset);
