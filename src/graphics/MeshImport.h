@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 #include <GL/glew.h>
+#include <src/graphics/RawMesh.h>
 
 class MeshImport
 {
@@ -20,4 +21,5 @@ public:
 
 public:
     static std::optional<ImportedMeshData> ImportOBJ(const std::string& _path);
+    static RawMesh ConvertToRawMesh(const MeshImport::ImportedMeshData& _importedMesh);
 };

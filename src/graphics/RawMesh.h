@@ -20,7 +20,8 @@ struct RawMesh
     bool IsEmpty() const { return  m_Vertices.empty(); };
 
     void Translate(const glm::vec3& _offset);
-
+    void Transform(const glm::mat4& _transform);
+    
     // Joins two meshes together. Does not merge identical verts.
     void Append(const RawMesh& _other);
 

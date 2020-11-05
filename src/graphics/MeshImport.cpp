@@ -274,3 +274,41 @@ std::optional<MeshImport::ImportedMeshData> MeshImport::ImportOBJ(const std::str
 
     return result;
 }
+
+// TODO ideally this should be the other way round, the mesh import should
+// produce a RawMesh that can get shuffled about to produce the vtex array for
+// OpenGL.
+RawMesh MeshImport::ConvertToRawMesh(const MeshImport::ImportedMeshData& _importedMesh)
+{
+    RawMesh result;
+
+    for (u32 elementIdx = 0; elementIdx < _importedMesh.m_Elements.size(); elementIdx += 3)
+    {
+        result.m_Faces.push_back({
+            _importedMesh.m_Elements[elementIdx],
+            _importedMesh.m_Elements[elementIdx + 1],
+            _importedMesh.m_Elements[elementIdx + 2]});
+    }
+
+    for (u32 vertIdx = 0; vertIdx < _importedMesh.m_Vertices.size(); vertIdx += 8)
+    {
+        result.m_Vertices.emplace_back(
+            _importedMesh.m_Vertices[vertIdx],
+            _importedMesh.m_Vertices[vertIdx + 1],
+            _importedMesh.m_Vertices[vertIdx + 2]);
+
+        result.m_Normals.emplace_back(
+            _importedMesh.m_Vertices[vertIdx + 3],
+            _importedMesh.m_Vertices[vertIdx + 4],
+            _importedMesh.m_Vertices[vertIdx + 5]);
+
+        result.m_TextureCoordinates.emplace_back(
+            _importedMesh.m_Vertices[vertIdx + 6],
+            _importedMesh.m_Vertices[vertIdx + 7]);
+    }
+
+    result.m_Colors.resize(result.m_Vertices.size());
+    
+    return result;
+}
+

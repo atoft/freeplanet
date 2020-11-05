@@ -16,9 +16,14 @@
  */
 
 #include "FloraGeneration.h"
+#include "src/assets/MeshAssets.h"
+#include "src/engine/AssetHandle.h"
+#include "src/graphics/MeshImport.h"
+#include "src/graphics/StaticMesh.h"
 
 #include <glm/fwd.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/transform.hpp>
 #include <random>
 
 #include <src/tools/MathsHelpers.h>
@@ -104,6 +109,50 @@ PlantInstance FloraGeneration::GeneratePlant(const FloraGenerationParams& _param
 
     }
 
+    return result;
+}
+
+RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, const FloraGenerationParams& _params)
+{
+    RawMesh result;
+
+    std::string modelPath = Globals::FREEPLANET_ASSET_PATH + "models/" + Assets::GetMeshAssetName(_params.m_BranchMesh) + ".obj";
+    
+    std::optional<MeshImport::ImportedMeshData> mesh = MeshImport::ImportOBJ(modelPath);
+
+    if (!mesh.has_value())
+    {
+        LogError("Failed to import " + modelPath);
+        return result;
+    }
+
+    const RawMesh branchMesh = MeshImport::ConvertToRawMesh(*mesh);
+
+    for (const PlantInstanceNode& node : _plantInstance.m_Nodes)
+    {
+        for (u32 childIdx = 0; childIdx < node.m_ChildCount; ++childIdx)
+        {
+            const u32 childNodeIdx = node.m_Children[childIdx];
+            const glm::vec3 childPosition = _plantInstance.m_Nodes[childNodeIdx].m_RelativePosition;
+
+            const glm::vec3 meshOriginOffset = glm::vec3(0.f, 0.5f, 0.f);
+            const f32 meshXZScale = 0.5f;
+            
+            const glm::vec3 normal = glm::normalize(childPosition - node.m_RelativePosition);
+
+            const glm::mat4 offset = glm::translate(meshOriginOffset);
+            
+            const glm::mat4 rotation = MathsHelpers::GenerateRotationMatrixFromUp(normal);
+
+            const glm::mat4 scale = glm::scale(glm::vec3(meshXZScale, glm::length(childPosition - node.m_RelativePosition), meshXZScale));
+            
+            RawMesh branch = branchMesh;
+            branch.Transform(rotation * scale * offset);
+            branch.Translate(node.m_RelativePosition);
+            result.Append(branch);
+        }
+    }
+    
     return result;
 }
 

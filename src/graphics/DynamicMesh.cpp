@@ -30,10 +30,18 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
         vertices.push_back(_mesh.m_Normals[vertIdx].y);
         vertices.push_back(_mesh.m_Normals[vertIdx].z);
 
-        // Placeholder texture coordinates
-        vertices.push_back(0.f);
-        vertices.push_back(0.f);
-
+        if (!_mesh.m_TextureCoordinates.empty())
+        {
+            vertices.push_back(_mesh.m_TextureCoordinates[vertIdx].x);
+            vertices.push_back(_mesh.m_TextureCoordinates[vertIdx].y);            
+        }
+        else
+        {
+            // Placeholder texture coordinates due to terrain not providing any.
+            vertices.push_back(0.f);
+            vertices.push_back(0.f);
+        }
+        
         vertices.push_back(_mesh.m_Colors[vertIdx].x);
         vertices.push_back(_mesh.m_Colors[vertIdx].y);
         vertices.push_back(_mesh.m_Colors[vertIdx].z);

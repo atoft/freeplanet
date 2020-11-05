@@ -44,6 +44,8 @@ public:
 
     static glm::mat4x4 GenerateRotationMatrixFromRight(glm::vec3 _rightVector);
 
+    static glm::mat4x4 GenerateRotationMatrixFromUp(glm::vec3 _rightVector);
+    
     static glm::mat3x3 GenerateRotationMatrix3x3FromRight(glm::vec3 _rightVector);
 
     static glm::mat3x3 GenerateRotationMatrix3x3FromUp(glm::vec3 _upVector);

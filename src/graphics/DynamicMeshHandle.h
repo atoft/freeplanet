@@ -20,7 +20,8 @@ public:
     bool IsUpToDate() const { return m_DynamicMeshId != DYNAMICMESHID_INVALID; };
 
     const RawMesh& GetRawMesh() const { return m_RawMesh; };
-
+    DynamicMeshID GetID() const { return m_DynamicMeshId; };
+    
 private:
     DynamicMeshID m_DynamicMeshId = DYNAMICMESHID_INVALID;
     DynamicMeshID m_PreviousDynamicMeshId = DYNAMICMESHID_INVALID;

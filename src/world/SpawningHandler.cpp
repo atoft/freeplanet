@@ -3,6 +3,9 @@
 //
 
 #include "SpawningHandler.h"
+#include "src/engine/AssetBank.h"
+#include "src/graphics/DynamicMeshHandle.h"
+#include "src/world/flora/FloraGeneration.h"
 
 #include <random>
 #include <glm/gtx/norm.hpp>
@@ -27,15 +30,32 @@ void SpawningHandler::Update()
     }
 
     // TODO: Actually, this happens per biome, and we need to be smart about when it occurs.
+    // Will most likely need a DynamicLoader to do this async once different biomes have different plants.
     if (m_PlantInstances.empty())
     {
         for (u32 seed = 0; seed < 4; ++seed)
         {
-            m_PlantInstances.push_back(FloraGeneration::GeneratePlant(FloraGenerationParams(), seed));
-        }
-        // TODO Request generation of the mesh.
+            const PlantInstance plantInstance = FloraGeneration::GeneratePlant(FloraGenerationParams(), seed);
 
-        // Generate the leaves.
+            const RawMesh plantRawMesh = FloraGeneration::ConvertToRawMesh(plantInstance, FloraGenerationParams()); 
+            
+            DynamicMeshHandle plantMeshHandle;
+            plantMeshHandle.RequestMeshUpdate(plantRawMesh);
+
+            m_PlantInstances.push_back(plantInstance);
+            m_SpawnedPlantMeshes.push_back(plantMeshHandle);
+        }
+
+        // TODO Generate the leaves.
+    }
+
+    for (const DynamicMeshHandle& handle : m_SpawnedPlantMeshes)
+    {
+        if (!handle.IsUpToDate())
+        {
+            // Don't spawn until the meshes are ready.
+            return;
+        }
     }
 
     for (WorldZone& zone : m_World->GetActiveZones())
@@ -86,12 +106,15 @@ void SpawningHandler::Update()
 
                     MathsHelpers::SetRotationPart(worldObject.GetZoneTransform(), rotationMatrix);
 
-//                    zone.AddComponent<RenderComponent>
-//                            (worldObject,
-//                             AssetHandle<StaticMesh>(MeshAsset_Tree),
-//                             AssetHandle<ShaderProgram>(ShaderAsset_Lit_Textured),
-//                             AssetHandle<Texture>(TextureAsset_Tree),
-//                             MeshType::Normal);
+                    const u32 meshIdx = spawnedCount % m_SpawnedPlantMeshes.size();
+                    
+                    zone.AddComponent<RenderComponent>
+                            (worldObject,
+                             AssetHandle<StaticMesh>(ASSETID_INVALID),
+                             FloraGenerationParams().m_BranchShader,
+                             FloraGenerationParams().m_BranchTexture,
+                             MeshType::Normal,
+                             m_SpawnedPlantMeshes[meshIdx].GetID());
 
                     ColliderComponent& collider = zone.AddComponent<ColliderComponent>(worldObject,
                                                                                        CollisionPrimitiveType::OBB,

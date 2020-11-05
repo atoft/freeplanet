@@ -145,6 +145,14 @@ glm::mat4x4 MathsHelpers::GenerateRotationMatrixFromRight(glm::vec3 _rightVector
     return matrix;
 }
 
+glm::mat4x4 MathsHelpers::GenerateRotationMatrixFromUp(glm::vec3 _rightVector)
+{
+    glm::mat4x4 matrix = GenerateRotationMatrix3x3FromUp(_rightVector);
+    matrix[3][3] = 1.f;
+
+    return matrix;
+}
+
 glm::mat3x3 MathsHelpers::GenerateRotationMatrix3x3FromRight(glm::vec3 _rightVector)
 {
     // Pick an arbitrary vector

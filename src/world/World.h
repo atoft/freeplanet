@@ -68,6 +68,7 @@ public:
     const VistaHandler* GetVistaHandler() const { return m_VistaHandler.get(); };
     const PlayerHandler* GetPlayerHandler() const { return m_PlayerHandler.get(); };
     const InventoryHandler* GetInventoryHandler() const { return m_InventoryHandler.get(); };
+    const SpawningHandler* GetSpawningHandler() const { return m_SpawningHandler.get(); };
 
     void HandleEvent(EngineEvent _event);
     void HandleCommandLineArgs(const CommandLineArgs& _args);

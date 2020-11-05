@@ -13,7 +13,8 @@ RenderComponent::RenderComponent(
     AssetHandle<StaticMesh> _mesh,
     AssetHandle<ShaderProgram> _shader,
     AssetHandle<Texture> _texture,
-    MeshType _meshType)
+    MeshType _meshType,
+    DynamicMeshID _dynamicID)
 {
     m_World = _world;
     m_WorldObjectID = _ownerID;
@@ -23,4 +24,6 @@ RenderComponent::RenderComponent(
 
     m_Mesh = _mesh;
     m_MeshType = _meshType;
+
+    m_DynamicID = _dynamicID;
 }

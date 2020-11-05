@@ -17,8 +17,12 @@
 
 #pragma once
 
+#include "src/assets/MeshAssets.h"
+#include "src/assets/ShaderAssets.h"
+#include "src/assets/TextureAssets.h"
 #include <vector>
 #include <src/tools/globals.h>
+#include <src/graphics/RawMesh.h>
 
 struct FloraGenerationParams
 {
@@ -34,6 +38,11 @@ struct FloraGenerationParams
 
     f32 m_MinBranchingAngle = 20.f;
     f32 m_MaxBranchingAngle = 60.f;
+
+    // TODO probably want pools of meshes we can pick from, and optionally different meshes as the branch thickness changes.
+    MeshAssetID m_BranchMesh = MeshAsset_UnitCube;
+    TextureAssetID m_BranchTexture = TextureAsset_Dev_512;
+    ShaderAssetID m_BranchShader = ShaderAsset_Lit_Textured;
 };
 
 constexpr u32 MaxPossibleFloraBranchingFactor = 6;
@@ -58,5 +67,6 @@ class FloraGeneration
 {
 public:
     static PlantInstance GeneratePlant(const FloraGenerationParams& _params, u32 _seed);
+    static RawMesh ConvertToRawMesh(const PlantInstance& _plantInstance, const FloraGenerationParams& _params);
 };
 

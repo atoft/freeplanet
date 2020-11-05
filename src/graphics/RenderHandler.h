@@ -51,6 +51,8 @@ private:
     void GenerateSceneCamera(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
     void GenerateSceneGlobalLighting(const World* _world, const FreelookCameraComponent* _camera, Renderable::Scene& _outScene) const;
 
+    void UpdateSharedDynamicMeshes(const World* _world, Renderable::Frame& _inOutFrame);
+    
     void UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat4& _transform,
                            const AssetHandle<ShaderProgram>& _shader,
                            std::vector<Renderable::SceneObject>& _outSceneObjects,

@@ -10,6 +10,7 @@
 #include <src/tools/MathsHelpers.h>
 #include <src/world/FreelookCameraComponent.h>
 #include <src/world/planet/PlanetGeneration.h>
+#include <src/world/SpawningHandler.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
 #include <src/world/WorldObject.h>
@@ -147,6 +148,7 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
     GenerateSceneCamera(_world, _camera, sceneTemplate);
     GenerateSceneGlobalLighting(_world, _camera, sceneTemplate);
+    UpdateSharedDynamicMeshes(_world, _inOutFrame);
 
     for (const WorldZone& zone : _world->GetActiveZones())
     {
@@ -174,9 +176,13 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
             {
                 sceneObject.m_Mesh = mesh->GetMesh();
             }
+            else if (component.m_DynamicID != DYNAMICMESHID_INVALID)
+            {
+                sceneObject.m_MeshID = component.m_DynamicID;
+            }
             else
             {
-                LogError("StaticMesh wasn't loaded");
+                LogError("StaticMesh wasn't loaded, and no dynamic ID was specified.");
             }
 
             sceneToRender.m_SceneObjects.push_back(sceneObject);
@@ -218,6 +224,27 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                           _world->GetVistaHandler()->GetTerrainModelTransform(), m_HACKTerrainShader,
                           sceneToRender.m_SceneObjects, _inOutFrame, m_MaxTerrainLOD);
         _inOutFrame.m_PendingScenes.push_back(sceneToRender);
+    }
+}
+
+void RenderHandler::UpdateSharedDynamicMeshes(const World* _world, Renderable::Frame& _inOutFrame)
+{
+    const SpawningHandler* spawningHandler = _world->GetSpawningHandler();
+
+    if (spawningHandler != nullptr)
+    {
+        for (DynamicMeshHandle& handle : spawningHandler->m_SpawnedPlantMeshes)
+        {
+            // TODO Factor this out to be more shared with how the terrain uses DynamicMeshes.
+            if (handle.m_DynamicMeshId == DYNAMICMESHID_INVALID && !handle.GetRawMesh().IsEmpty())
+            {
+                Renderable::MeshRequest& request = _inOutFrame.m_MeshCreationRequests.emplace_back();
+                request.m_ID = m_NextAvailableDynamicMeshID++;
+                request.m_PendingMesh = handle.m_RawMesh;
+
+                handle.m_DynamicMeshId = request.m_ID;
+            }
+        }
     }
 }
 
