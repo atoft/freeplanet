@@ -41,8 +41,10 @@ struct FloraGenerationParams
     f32 m_MaxBranchingAngle = 60.f;
 
     // TODO probably want pools of meshes we can pick from, and optionally different meshes as the branch thickness changes.
-    MeshAssetID m_BranchMesh = MeshAsset_UnitCube;
-    TextureAssetID m_BranchTexture = TextureAsset_Dev_512;
+    MeshAssetID m_BranchMesh = MeshAsset_Branch_01;
+
+    // TODO as the final mesh will be made out of multiple meshes with different texturing, need to send a texture index for each vert.
+    TextureAssetID m_BranchTexture = TextureAsset_Branch_01_01;
     ShaderAssetID m_BranchShader = ShaderAsset_Lit_Textured;
 };
 

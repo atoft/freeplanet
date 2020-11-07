@@ -136,8 +136,11 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
             const u32 childNodeIdx = node.m_Children[childIdx];
             const glm::vec3 childPosition = _plantInstance.m_Nodes[childNodeIdx].m_RelativePosition;
 
-            const glm::vec3 meshOriginOffset = glm::vec3(0.f, 0.5f, 0.f);
-            const f32 meshXZScale = 0.5f;
+            const glm::vec3 meshOriginOffset = glm::vec3(0.f, 0.f, 0.f);
+            constexpr f32 meshXZScale = 1.f;
+
+            // Allow to be slightly oversized in y so that branches protrude from their parent.
+            constexpr f32 meshYScale = 0.6f;
             
             const glm::vec3 normal = glm::normalize(childPosition - node.m_RelativePosition);
 
@@ -147,7 +150,7 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
 
             const glm::mat4 scale = glm::scale(glm::vec3(
                                                    meshXZScale * node.m_ThicknessScale,
-                                                   glm::length(childPosition - node.m_RelativePosition),
+                                                   meshYScale * glm::length(childPosition - node.m_RelativePosition),
                                                    meshXZScale * node.m_ThicknessScale));
             
             RawMesh branch = branchMesh;

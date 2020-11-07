@@ -13,7 +13,10 @@ enum TextureAsset
     TextureAsset_Invalid = 0,
     TextureAsset_Dev_512,
     TextureAsset_Cubemap_Dev,
+    
     TextureAsset_Tree,
+    TextureAsset_Branch_01_01,
+    
     TextureAsset_Billboard_Grass,
     TextureAsset_Volume_Perlin128,
     TextureAsset_Volume_Grass128,

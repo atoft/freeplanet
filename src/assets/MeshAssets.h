@@ -18,6 +18,9 @@ enum MeshAsset
 
     MeshAsset_Tree,
 
+    MeshAsset_Branch_01,
+    MeshAsset_Branch_Narrow_01,
+    
     MeshAsset_Count
 };
 
