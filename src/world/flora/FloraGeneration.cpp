@@ -113,11 +113,11 @@ PlantInstance FloraGeneration::GeneratePlant(const FloraGenerationParams& _param
     return result;
 }
 
-RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, const FloraGenerationParams& _params)
+RawMesh ImportMesh(MeshAssetID _id)
 {
     RawMesh result;
-
-    std::string modelPath = Globals::FREEPLANET_ASSET_PATH + "models/" + Assets::GetMeshAssetName(_params.m_BranchMesh) + ".obj";
+    
+    std::string modelPath = Globals::FREEPLANET_ASSET_PATH + "models/" + Assets::GetMeshAssetName(_id) + ".obj";
     
     std::optional<MeshImport::ImportedMeshData> mesh = MeshImport::ImportOBJ(modelPath);
 
@@ -127,8 +127,18 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
         return result;
     }
 
-    const RawMesh branchMesh = MeshImport::ConvertToRawMesh(*mesh);
+    result = MeshImport::ConvertToRawMesh(*mesh);
 
+    return result;
+}
+
+RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, const FloraGenerationParams& _params)
+{
+    RawMesh result;
+
+    const RawMesh branchMesh = ImportMesh(_params.m_BranchMesh);
+    const RawMesh narrowBranchMesh = ImportMesh(_params.m_NarrowBranchMesh);
+    
     for (const PlantInstanceNode& node : _plantInstance.m_Nodes)
     {
         for (u32 childIdx = 0; childIdx < node.m_ChildCount; ++childIdx)
@@ -136,11 +146,13 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
             const u32 childNodeIdx = node.m_Children[childIdx];
             const glm::vec3 childPosition = _plantInstance.m_Nodes[childNodeIdx].m_RelativePosition;
 
+            const bool isNarrow = _plantInstance.m_Nodes[childNodeIdx].m_ChildCount == 0;
+
             const glm::vec3 meshOriginOffset = glm::vec3(0.f, 0.f, 0.f);
-            constexpr f32 meshXZScale = 1.f;
+            const f32 meshXZScale = isNarrow ? 2.f : 1.f;
 
             // Allow to be slightly oversized in y so that branches protrude from their parent.
-            constexpr f32 meshYScale = 0.6f;
+            const f32 meshYScale = isNarrow ? 0.5f : 0.6f;
             
             const glm::vec3 normal = glm::normalize(childPosition - node.m_RelativePosition);
 
@@ -153,7 +165,7 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
                                                    meshYScale * glm::length(childPosition - node.m_RelativePosition),
                                                    meshXZScale * node.m_ThicknessScale));
             
-            RawMesh branch = branchMesh;
+            RawMesh branch = isNarrow ? narrowBranchMesh : branchMesh;
             branch.Transform(rotation * scale * offset);
             branch.Translate(node.m_RelativePosition);
             result.Append(branch);

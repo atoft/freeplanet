@@ -34,14 +34,15 @@ struct FloraGenerationParams
     u32 m_MinBranchingFactor = 2;
     u32 m_MaxBranchingFactor = 4;
 
-    u32 m_MinBranchingDepth = 3;
-    u32 m_MaxBranchingDepth = 6;
+    u32 m_MinBranchingDepth = 4;
+    u32 m_MaxBranchingDepth = 7;
 
     f32 m_MinBranchingAngle = 20.f;
     f32 m_MaxBranchingAngle = 60.f;
 
     // TODO probably want pools of meshes we can pick from, and optionally different meshes as the branch thickness changes.
     MeshAssetID m_BranchMesh = MeshAsset_Branch_01;
+    MeshAssetID m_NarrowBranchMesh = MeshAsset_Branch_Narrow_01;
 
     // TODO as the final mesh will be made out of multiple meshes with different texturing, need to send a texture index for each vert.
     TextureAssetID m_BranchTexture = TextureAsset_Branch_01_01;
