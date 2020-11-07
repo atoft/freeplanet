@@ -44,9 +44,11 @@ void SpawningHandler::Update()
 
             m_PlantInstances.push_back(plantInstance);
             m_SpawnedPlantMeshes.push_back(plantMeshHandle);
-        }
 
-        // TODO Generate the leaves.
+            const ParticleSystem foliageParticles = FloraGeneration::GenerateFoliage(plantInstance, FloraGenerationParams());
+
+            m_SpawnedParticleSystems.push_back(foliageParticles);
+        }
     }
 
     for (const DynamicMeshHandle& handle : m_SpawnedPlantMeshes)
@@ -115,6 +117,9 @@ void SpawningHandler::Update()
                              FloraGenerationParams().m_BranchTexture,
                              MeshType::Normal,
                              m_SpawnedPlantMeshes[meshIdx].GetID());
+
+                    ParticleSystemComponent& particleSystem = zone.AddComponent<ParticleSystemComponent>(worldObject);
+                    particleSystem.m_ParticleSystem = m_SpawnedParticleSystems[meshIdx];
 
                     ColliderComponent& collider = zone.AddComponent<ColliderComponent>(worldObject,
                                                                                        CollisionPrimitiveType::OBB,

@@ -25,7 +25,8 @@ WorldZone::WorldZone(World* _world, glm::ivec3 _position, glm::vec3 _dimensions)
     m_CameraComponents.reserve(INITIAL_COMPONENT_COUNT);
     m_RenderComponents.reserve(INITIAL_COMPONENT_COUNT);
     m_LightComponents.reserve(INITIAL_COMPONENT_COUNT);
-    static_assert(ComponentConstants::ComponentCount == 5);
+    m_ParticleSystemComponents.reserve(INITIAL_COMPONENT_COUNT);
+    static_assert(ComponentConstants::ComponentCount == 6);
 
     // TODO either remove this requirement or replace dimensions with f32
     assert(_dimensions.x == _dimensions.y && _dimensions.y == _dimensions.z);
@@ -100,7 +101,8 @@ bool WorldZone::DestroyWorldObject_Internal(WorldObjectID _objectID, bool _remov
     DestroyComponentOfObject(m_CameraComponents, _objectID, _removedFromWorld);
     DestroyComponentOfObject(m_RenderComponents, _objectID, _removedFromWorld);
     DestroyComponentOfObject(m_LightComponents, _objectID, _removedFromWorld);
-    static_assert(ComponentConstants::ComponentCount == 5);
+    DestroyComponentOfObject(m_ParticleSystemComponents, _objectID, _removedFromWorld);
+    static_assert(ComponentConstants::ComponentCount == 6);
 
     WorldObjectRef ref = swapObject->GetRef();
     *swapObject = m_WorldObjects.back();

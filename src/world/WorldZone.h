@@ -15,6 +15,7 @@
 #include <src/world/FreelookCameraComponent.h>
 #include <src/world/collision/ColliderComponent.h>
 #include <src/world/LightComponent.h>
+#include <src/world/particles/ParticleSystemComponent.h>
 #include <src/graphics/RenderComponent.h>
 #include <src/world/terrain/TerrainComponent.h>
 
@@ -78,11 +79,15 @@ public:
         {
             return m_RenderComponents;
         }
-        else // if constexpr (std::is_same<T, LightComponent>())
+        else if constexpr (std::is_same<T, LightComponent>())
         {
             return m_LightComponents;
         }
-        static_assert(ComponentConstants::ComponentCount == 5);
+        else // if constexpr (std::is_same<T, ParticleSystemComponent>())
+        {
+            return m_ParticleSystemComponents;
+        }
+        static_assert(ComponentConstants::ComponentCount == 6);
     }
 
     template<typename T>
@@ -139,5 +144,6 @@ private:
     std::vector<FreelookCameraComponent>   m_CameraComponents;
     std::vector<RenderComponent>           m_RenderComponents;
     std::vector<LightComponent>            m_LightComponents;
-    static_assert(ComponentConstants::ComponentCount == 5);
+    std::vector<ParticleSystemComponent>   m_ParticleSystemComponents;
+    static_assert(ComponentConstants::ComponentCount == 6);
 };

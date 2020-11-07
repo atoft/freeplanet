@@ -17,9 +17,12 @@
 
 #include "FloraGeneration.h"
 #include "src/assets/MeshAssets.h"
+#include "src/assets/ShaderAssets.h"
+#include "src/assets/TextureAssets.h"
 #include "src/engine/AssetHandle.h"
 #include "src/graphics/MeshImport.h"
 #include "src/graphics/StaticMesh.h"
+#include "src/world/particles/ParticleSystemComponent.h"
 
 #include <glm/fwd.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -172,6 +175,26 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
         }
     }
     
+    return result;
+}
+
+ParticleSystem FloraGeneration::GenerateFoliage(const PlantInstance& _plantInstance, const FloraGenerationParams& _params)
+{
+    ParticleSystem result;
+
+    ParticleEmitter& emitter = result.m_Emitters.emplace_back();
+    emitter.m_RelativePosition = glm::vec3(0.f);
+
+    emitter.m_Mesh = AssetHandle<StaticMesh>(MeshAsset_UnitQuad);
+    emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_AlphaTest_NormalUp);
+    emitter.m_Texture = AssetHandle<Texture>(TextureAsset_Billboard_Grass);
+    
+    for (const PlantInstanceNode& node : _plantInstance.m_Nodes)
+    {
+        Particle& particle = emitter.m_Particles.emplace_back();
+        particle.m_RelativePosition = node.m_RelativePosition;
+    }
+
     return result;
 }
 

@@ -40,6 +40,7 @@ public:
         RenderSetVista,
         RenderOnDynamicMeshDestroyed,
         RenderMaxTerrainLOD,
+        RenderSetParticles,
 
         TerrainSetNormalGenerationMethod,
 

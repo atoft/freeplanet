@@ -73,5 +73,6 @@ class FloraGeneration
 public:
     static PlantInstance GeneratePlant(const FloraGenerationParams& _params, u32 _seed);
     static RawMesh ConvertToRawMesh(const PlantInstance& _plantInstance, const FloraGenerationParams& _params);
+    static struct ParticleSystem GenerateFoliage(const PlantInstance& _plantInstance, const FloraGenerationParams& _params);
 };
 

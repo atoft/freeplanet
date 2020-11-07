@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <src/graphics/DynamicMeshHandle.h>
+#include <src/world/particles/ParticleSystemComponent.h>
 #include <src/world/flora/FloraGeneration.h>
 
 class UIDrawInterface;
@@ -27,6 +28,7 @@ public:
     void DebugDraw(UIDrawInterface& _interface) const;
 
     mutable std::vector<DynamicMeshHandle> m_SpawnedPlantMeshes;
+    std::vector<ParticleSystem> m_SpawnedParticleSystems;
     
 private:
     World* m_World = nullptr;

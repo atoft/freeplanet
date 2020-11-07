@@ -3,6 +3,9 @@
 //
 
 #include "RenderHandler.h"
+#include "src/graphics/MeshType.h"
+#include "src/graphics/Scene.h"
+#include "src/world/particles/ParticleSystemComponent.h"
 
 #include <memory>
 
@@ -96,6 +99,11 @@ void RenderHandler::HandleEvent(EngineEvent _event)
         m_MaxTerrainLOD = _event.GetIntData();
         break;
     }
+    case EngineEvent::Type::RenderSetParticles:
+    {
+        m_ShouldRenderParticles = static_cast<bool>(_event.GetIntData());
+        break;
+    }
     default:
         break;
     }
@@ -158,6 +166,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                                                              : Renderable::RenderMode::Normal;
 
         // Offset the view to account for zone.
+        // TODO re-evaluate whether to have a different scene for each zone. It doesn't seem to solve anything
+        // since they are reconstructed each frame anyway.
         sceneToRender.m_ViewTransform *= zone.GetRelativeTransform(_camera->GetOwnerObject()->GetRef().m_ZoneCoordinates);
 
         for (const RenderComponent& component : zone.GetComponents<RenderComponent>())
@@ -202,6 +212,61 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
             sceneToRender.m_PointLights.push_back(light);
         }
 
+        if (m_ShouldRenderParticles)
+        {
+            std::vector<Renderable::InstancedSceneObject> particleInstances;
+        
+            for (const ParticleSystemComponent& component : zone.GetComponents<ParticleSystemComponent>())
+            {
+                glm::mat4 objectTransform = component.GetOwnerObject()->GetZoneTransform();
+                
+                for (const ParticleEmitter& emitter : component.m_ParticleSystem.m_Emitters)
+                {
+                    auto it = std::find_if(particleInstances.begin(), particleInstances.end(), [&emitter](const Renderable::InstancedSceneObject& instance)
+                                                                                 {
+                                                                                     // TODO We should have a smarter way to do this.
+                                                                                     return emitter.m_Shader == instance.m_Material.m_Shader
+                                                                                         && emitter.m_Texture == instance.m_Material.m_Textures[0].second;
+                                                                                 });
+                    Renderable::InstancedSceneObject* instance = nullptr;
+                    
+                    if (it == particleInstances.end())
+                    {
+                        instance = &particleInstances.emplace_back();
+            
+                        const StaticMesh* mesh = emitter.m_Mesh.GetAsset();
+                        if (mesh != nullptr)
+                        {
+                            instance->m_Mesh = mesh->GetMesh();
+                        }
+                        else
+                        {
+                            LogError("StaticMesh wasn't loaded for particle emitter.");
+                        }
+            
+                        instance->m_Material.m_Shader = emitter.m_Shader;
+                        instance->m_Material.m_Textures.emplace_back("tex2D_0", emitter.m_Texture);
+                        instance->m_MeshType = MeshType::Billboard;
+                    }
+                    else
+                    {
+                        instance = &(*it);
+                    }
+            
+                    for (const Particle& particle : emitter.m_Particles)
+                    {
+                        const glm::mat4 transform = glm::translate(objectTransform, emitter.m_RelativePosition + particle.m_RelativePosition);
+            
+                        instance->m_Transforms.push_back(transform);
+                    }
+                }
+            }
+
+            // TODO sort the instances from back to front, unless they are set to use AlphaTest.
+
+            STL::Append(sceneToRender.m_Instances, particleInstances);    
+        }
+        
         UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, zone.GetTerrainModelTransform(),
                           m_HACKTerrainShader, sceneToRender.m_SceneObjects, _inOutFrame, 0);
 

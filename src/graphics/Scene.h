@@ -99,6 +99,20 @@ namespace Renderable
         glm::mat4 m_Transform;
     };
 
+
+    struct InstancedSceneObject
+    {
+        Material m_Material;
+
+        Mesh m_Mesh;
+        u32 m_MeshID = 0;
+        MeshType m_MeshType = MeshType::Normal;
+
+        Color m_BaseColor = Color(0.f, 0.f, 0.f, 1.f);
+
+        std::vector<glm::mat4> m_Transforms;
+    };
+    
     struct Scene
     {
         // Usually view * zoneOffset
@@ -115,7 +129,8 @@ namespace Renderable
         Atmosphere m_Atmosphere;
 
         std::vector<SceneObject> m_SceneObjects;
-
+        std::vector<InstancedSceneObject> m_Instances;
+        
         RenderMode m_RenderMode;
 
         glm::vec3 m_LocalUpDirection;

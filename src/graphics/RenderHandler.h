@@ -65,6 +65,7 @@ private:
     bool m_ShouldRenderWireframe = false;
     bool m_ShouldRenderVista = true;
     u32 m_MaxTerrainLOD = 1;
+    bool m_ShouldRenderParticles = false;
 
     // Make sure to release these in HandleEvent for quit
     AssetHandle<StaticMesh> m_UnitCube;

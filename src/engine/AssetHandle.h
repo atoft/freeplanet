@@ -60,6 +60,16 @@ public:
     {
         return m_AssetBank;
     }
+
+    AssetID GetID() const
+    {
+        return m_Asset;
+    }
+
+    bool operator==(const AssetHandle<T>& _other) const
+    {
+        return GetID() == _other.GetID();
+    }
 };
 
 template<typename T>
