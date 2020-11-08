@@ -186,8 +186,8 @@ ParticleSystem FloraGeneration::GenerateFoliage(const PlantInstance& _plantInsta
     emitter.m_RelativePosition = glm::vec3(0.f);
 
     emitter.m_Mesh = AssetHandle<StaticMesh>(MeshAsset_UnitQuad);
-    emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_AlphaTest_NormalUp);
-    emitter.m_Texture = AssetHandle<Texture>(TextureAsset_Billboard_Grass);
+    emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaTest_NormalUp);
+    emitter.m_Texture = AssetHandle<Texture>(TextureAsset_Dev_512);
     
     for (const PlantInstanceNode& node : _plantInstance.m_Nodes)
     {

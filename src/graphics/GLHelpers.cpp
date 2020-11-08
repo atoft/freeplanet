@@ -188,6 +188,22 @@ void GLHelpers::SetupForShader(const ShaderProgram& _shader, VertexDataBitfield 
         const GLint attrib = BindVertexAttribToVertexData(_shader, "frplTerrainSubstance", GetDimensions(VertexData_TerrainSubstance), dimensions, offsetIntoVertexData);
         _inOutMesh.m_VertexAttribs.push_back(attrib);
     }
+
+    if (_vertexDataMask & VertexData_Inst_Transform)
+    {
+        GLint attribLocation = glGetAttribLocation(_shader.GetProgramHandle(), "frplInstanceTransform");
+        GLHelpers::ReportError("glGetAttribLocation");
+        glBindBuffer(GL_ARRAY_BUFFER, attribLocation);
+
+        constexpr u32 MATRIX_SIZE = 4;
+        for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
+        {
+            glEnableVertexAttribArray(attribLocation + attribIdx);
+            glVertexAttribPointer(attribLocation + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                                    (const GLvoid*)(sizeof(GLfloat) * attribIdx * 4));
+            glVertexAttribDivisor(attribLocation + attribIdx, 1);
+        }
+    }
 }
 
 GLint GLHelpers::BindVertexAttribToVertexData(const ShaderProgram& _shader, const char* _name, u32 _numberOfDimensions, u32 _totalVertexDimensions, u32& _inOutOffsetIntoVertex)

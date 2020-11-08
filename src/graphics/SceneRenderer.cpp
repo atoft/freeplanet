@@ -426,13 +426,15 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
             glEnableVertexAttribArray(attrib);
         }
 
+        std::vector<glm::mat4> instanceTransforms;
+
         for (const glm::mat4& transform : sceneObject.m_Transforms)
         {
             switch (sceneObject.m_MeshType)
             {
             case MeshType::Normal:
             {
-                shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * _scene.m_ViewTransform * transform);
+                instanceTransforms.push_back( _scene.m_ProjectionTransform * _scene.m_ViewTransform * transform);
                 break;
             }
             case MeshType::Billboard:
@@ -440,7 +442,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
                 glm::mat4 mvMatrix = _scene.m_ViewTransform * transform;
                 MathsHelpers::SetRotationPart(mvMatrix, glm::mat3(1.f));
         
-                shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * mvMatrix);
+                instanceTransforms.push_back(_scene.m_ProjectionTransform * mvMatrix);
         
                 break;
             }
@@ -457,18 +459,31 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
                 mvMatrix[2][1] = 0.f;
                 mvMatrix[2][2] = 1.f;
         
-                shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * mvMatrix);
+                instanceTransforms.push_back(_scene.m_ProjectionTransform * mvMatrix);
         
                 break;
             }
             }
+        }
+
+        GLint instanceTransformLocation = glGetUniformLocation(shaderProgram->GetProgramHandle(), "frplInstanceTransform");
+
+        if (instanceTransformLocation == 0)
+        {
+            LogError("Couldn't get location for instance transforms");
+        }
         
+        glBindBuffer(GL_ARRAY_BUFFER, instanceTransformLocation);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceTransforms.size(), instanceTransforms.data(), GL_DYNAMIC_DRAW);
+        
+// for (const glm::mat4& transform : sceneObject.m_Transforms)
+        {       
             shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
             shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
         
-            shaderProgram->SetUniformMat4("frplModelTransform", transform);
+            // HACK address this: shaderProgram->SetUniformMat4("frplModelTransform", transform);
         
-            shaderProgram->SetUniformMat4("frplNormalTransform", MathsHelpers::GetRotationMatrix(transform));
+            // HACK address this: shaderProgram->SetUniformMat4("frplNormalTransform", MathsHelpers::GetRotationMatrix(transform));
             // TODO
             shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_BaseColor);
             shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
@@ -543,7 +558,9 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
                 shaderProgram->SetUniformInt(uniform.first, uniform.second);
             }
         
-            glDrawElements(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, nullptr);
+            glDrawElementsInstanced(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, nullptr, instanceTransforms.size());
+            LogMessage("Rendering a mesh with " + std::to_string(instanceTransforms.size()) + " instances");
+            GLHelpers::ReportError("glDrawElementsInstanced");
         
             for (s32 texIdx = sceneObject.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
             {

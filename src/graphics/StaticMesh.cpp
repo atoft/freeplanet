@@ -3,6 +3,7 @@
 //
 
 #include "StaticMesh.h"
+#include "src/graphics/GLHelpers.h"
 
 #include <src/tools/globals.h>
 #include <src/graphics/MeshImport.h>
@@ -16,7 +17,7 @@ void StaticMesh::AcquireResources(MeshAssetID _meshAsset)
     
     std::optional<MeshImport::ImportedMeshData> mesh = MeshImport::ImportOBJ(modelPath);
 
-    const GLHelpers::VertexDataBitfield vertexDataMask = GLHelpers::VertexData_Position | GLHelpers::VertexData_Normal | GLHelpers::VertexData_TexCoords;
+    const GLHelpers::VertexDataBitfield vertexDataMask = GLHelpers::VertexData_Position | GLHelpers::VertexData_Normal | GLHelpers::VertexData_TexCoords | GLHelpers::VertexData_Inst_Transform;
 
     if (mesh.has_value())
     {
