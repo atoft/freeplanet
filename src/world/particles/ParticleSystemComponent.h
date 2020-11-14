@@ -39,7 +39,7 @@ struct ParticleEmitter
     glm::vec3 m_RelativePosition = glm::vec3(0.f);
     AssetHandle<ShaderProgram> m_Shader;
     AssetHandle<Texture> m_Texture;
-    AssetHandle<StaticMesh> m_Mesh;
+    DynamicMeshID m_MeshID;
 
     // TODO properties for emission rate, initial velocity, etc.
 };

@@ -37,6 +37,8 @@ struct FloraGenerationParams
     u32 m_MinBranchingDepth = 4;
     u32 m_MaxBranchingDepth = 7;
 
+    u32 m_MinFoliageRelativeDepth = 2;
+    
     f32 m_MinBranchingAngle = 20.f;
     f32 m_MaxBranchingAngle = 60.f;
 
@@ -61,6 +63,8 @@ struct PlantInstanceNode
 
     u32 m_Depth = 0;
     glm::vec3 m_Normal = glm::vec3(0.f, 1.f, 0.f);
+
+    bool m_Foliage = false;
 };
 
 struct PlantInstance

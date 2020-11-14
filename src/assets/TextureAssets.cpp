@@ -22,6 +22,8 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
         
     case TextureAsset_Billboard_Grass:
         return "Billboard_Grass.png";
+    case TextureAsset_Billboard_Leaves:
+        return "Billboard_Leaves.png";
     case TextureAsset_Volume_Perlin128:
         return "volumes/Volume_Perlin128.png";
     case TextureAsset_Volume_Grass128:
@@ -40,7 +42,7 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 12);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 13);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -63,7 +65,8 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             [[fallthrough]];
         case TextureAsset_Billboard_Grass:
             [[fallthrough]];
-            
+        case TextureAsset_Billboard_Leaves:
+            [[fallthrough]];
         case TextureAsset_Icon_Topsoil512:
             [[fallthrough]];
         case TextureAsset_Icon_Dirt512:
@@ -78,5 +81,5 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 12);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 13);
 }

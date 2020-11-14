@@ -33,4 +33,6 @@ struct RawMesh
     static constexpr u32 ms_VertexTypesCount = 5;
 
     std::vector<RawTriangle> m_Faces;
+
+    bool m_SupportInstancing = false;
 };

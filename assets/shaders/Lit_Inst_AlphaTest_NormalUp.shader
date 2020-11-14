@@ -80,6 +80,8 @@ void main()
         discard;
     }
 
+    texel.a = 1.0;
+
     vec3 FIXED_NORMAL = vec3(0,1,0);
 
     vec3 sunDiffuse = clamp(dot(FIXED_NORMAL, frplDirectionalLight.direction), 0, 1) * frplDirectionalLight.color * frplDirectionalLight.intensity;

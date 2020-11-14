@@ -3,6 +3,7 @@
 //
 
 #include "RenderHandler.h"
+#include "src/graphics/DynamicMeshID.h"
 #include "src/graphics/MeshType.h"
 #include "src/graphics/Scene.h"
 #include "src/world/particles/ParticleSystemComponent.h"
@@ -233,17 +234,16 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                     if (it == particleInstances.end())
                     {
                         instance = &particleInstances.emplace_back();
-            
-                        const StaticMesh* mesh = emitter.m_Mesh.GetAsset();
-                        if (mesh != nullptr)
+
+                        if (emitter.m_MeshID != DYNAMICMESHID_INVALID)
                         {
-                            instance->m_Mesh = mesh->GetMesh();
+                            instance->m_MeshID = emitter.m_MeshID;
                         }
                         else
                         {
-                            LogError("StaticMesh wasn't loaded for particle emitter.");
+                            LogError("DynamicMesh wasn't loaded for particle emitter.");
                         }
-            
+                                    
                         instance->m_Material.m_Shader = emitter.m_Shader;
                         instance->m_Material.m_Textures.emplace_back("tex2D_0", emitter.m_Texture);
                         instance->m_MeshType = MeshType::Billboard;
@@ -309,6 +309,16 @@ void RenderHandler::UpdateSharedDynamicMeshes(const World* _world, Renderable::F
 
                 handle.m_DynamicMeshId = request.m_ID;
             }
+        }
+
+        // TODO Factor this out to be more shared with how the terrain uses DynamicMeshes.
+        if (spawningHandler->m_ParticleSystemMesh.m_DynamicMeshId == DYNAMICMESHID_INVALID && !spawningHandler->m_ParticleSystemMesh.GetRawMesh().IsEmpty())
+        {
+            Renderable::MeshRequest& request = _inOutFrame.m_MeshCreationRequests.emplace_back();
+            request.m_ID = m_NextAvailableDynamicMeshID++;
+            request.m_PendingMesh = spawningHandler->m_ParticleSystemMesh.m_RawMesh;
+       
+            spawningHandler->m_ParticleSystemMesh.m_DynamicMeshId = request.m_ID;
         }
     }
 }

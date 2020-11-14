@@ -73,6 +73,11 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
         vertexDataMask = vertexDataMask | GLHelpers::VertexData_TerrainSubstance;
     }
 
+    if (_mesh.m_SupportInstancing)
+    {
+        vertexDataMask = vertexDataMask | GLHelpers::VertexData_Inst_Transform;
+    }
+
     GLHelpers::LoadToGPU(vertices.data(), numberOfVertices, elements.data(), numberOfElements, vertexDataMask, m_Mesh);
 }
 

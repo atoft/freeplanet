@@ -17,7 +17,7 @@ void StaticMesh::AcquireResources(MeshAssetID _meshAsset)
     
     std::optional<MeshImport::ImportedMeshData> mesh = MeshImport::ImportOBJ(modelPath);
 
-    const GLHelpers::VertexDataBitfield vertexDataMask = GLHelpers::VertexData_Position | GLHelpers::VertexData_Normal | GLHelpers::VertexData_TexCoords | GLHelpers::VertexData_Inst_Transform;
+    const GLHelpers::VertexDataBitfield vertexDataMask = GLHelpers::VertexData_Position | GLHelpers::VertexData_Normal | GLHelpers::VertexData_TexCoords;
 
     if (mesh.has_value())
     {

@@ -18,6 +18,7 @@ enum TextureAsset
     TextureAsset_Branch_01_01,
     
     TextureAsset_Billboard_Grass,
+    TextureAsset_Billboard_Leaves,
     TextureAsset_Volume_Perlin128,
     TextureAsset_Volume_Grass128,
 

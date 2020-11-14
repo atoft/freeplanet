@@ -10,6 +10,7 @@
 #include <random>
 #include <glm/gtx/norm.hpp>
 
+#include <src/graphics/MeshImport.h>
 #include <src/graphics/RenderComponent.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/world/World.h>
@@ -19,6 +20,29 @@
 SpawningHandler::SpawningHandler(World* _world)
     : m_World(_world)
 {}
+
+// HACK To work around the limitations of static mesh. We don't have a way to
+// say that we want a version of a static mesh that supports instancing.
+RawMesh ImportMeshWithInstancing(MeshAssetID _id)
+{
+    RawMesh result;
+    
+    std::string modelPath = Globals::FREEPLANET_ASSET_PATH + "models/" + Assets::GetMeshAssetName(_id) + ".obj";
+    
+    std::optional<MeshImport::ImportedMeshData> mesh = MeshImport::ImportOBJ(modelPath);
+
+    if (!mesh.has_value())
+    {
+        LogError("Failed to import " + modelPath);
+        return result;
+    }
+
+    result = MeshImport::ConvertToRawMesh(*mesh);
+    result.m_SupportInstancing = true;
+    
+    return result;
+}
+
 
 void SpawningHandler::Update()
 {
@@ -33,6 +57,15 @@ void SpawningHandler::Update()
     // Will most likely need a DynamicLoader to do this async once different biomes have different plants.
     if (m_PlantInstances.empty())
     {
+        // HACK To work around the limitations of static mesh. We don't have a way to
+        // say that we want a version of a static mesh that supports instancing.
+
+        const RawMesh particleMesh = ImportMeshWithInstancing(MeshAsset_UnitQuad);
+
+        DynamicMeshHandle particleMeshHandle;
+        particleMeshHandle.RequestMeshUpdate(particleMesh);
+        m_ParticleSystemMesh = particleMeshHandle;
+        
         for (u32 seed = 0; seed < 4; ++seed)
         {
             const PlantInstance plantInstance = FloraGeneration::GeneratePlant(FloraGenerationParams(), seed);
@@ -44,8 +77,8 @@ void SpawningHandler::Update()
 
             m_PlantInstances.push_back(plantInstance);
             m_SpawnedPlantMeshes.push_back(plantMeshHandle);
-
-            const ParticleSystem foliageParticles = FloraGeneration::GenerateFoliage(plantInstance, FloraGenerationParams());
+            
+            ParticleSystem foliageParticles = FloraGeneration::GenerateFoliage(plantInstance, FloraGenerationParams());
 
             m_SpawnedParticleSystems.push_back(foliageParticles);
         }
@@ -120,6 +153,7 @@ void SpawningHandler::Update()
 
                     ParticleSystemComponent& particleSystem = zone.AddComponent<ParticleSystemComponent>(worldObject);
                     particleSystem.m_ParticleSystem = m_SpawnedParticleSystems[meshIdx];
+                    particleSystem.m_ParticleSystem.m_Emitters[0].m_MeshID = m_ParticleSystemMesh.GetID();
 
                     ColliderComponent& collider = zone.AddComponent<ColliderComponent>(worldObject,
                                                                                        CollisionPrimitiveType::OBB,

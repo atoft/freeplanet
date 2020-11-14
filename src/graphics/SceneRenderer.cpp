@@ -441,7 +441,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
             {
                 glm::mat4 mvMatrix = _scene.m_ViewTransform * transform;
                 MathsHelpers::SetRotationPart(mvMatrix, glm::mat3(1.f));
-        
+
                 instanceTransforms.push_back(_scene.m_ProjectionTransform * mvMatrix);
         
                 break;
@@ -466,112 +466,111 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
             }
         }
 
-        GLint instanceTransformLocation = glGetUniformLocation(shaderProgram->GetProgramHandle(), "frplInstanceTransform");
+        
+        GLint instanceTransformLocation = glGetAttribLocation(shaderProgram->GetProgramHandle(), "frplInstanceTransform");
 
-        if (instanceTransformLocation == 0)
+        if (instanceTransformLocation < 0)
         {
             LogError("Couldn't get location for instance transforms");
         }
         
         glBindBuffer(GL_ARRAY_BUFFER, instanceTransformLocation);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceTransforms.size(), instanceTransforms.data(), GL_DYNAMIC_DRAW);
-        
-// for (const glm::mat4& transform : sceneObject.m_Transforms)
-        {       
-            shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
-            shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
-        
-            // HACK address this: shaderProgram->SetUniformMat4("frplModelTransform", transform);
-        
-            // HACK address this: shaderProgram->SetUniformMat4("frplNormalTransform", MathsHelpers::GetRotationMatrix(transform));
-            // TODO
-            shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_BaseColor);
-            shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
-            shaderProgram->SetUniformFloat3("frplLocalUpDirection", _scene.m_LocalUpDirection);
-        
-            shaderProgram->SetUniformFloat3("frplDirectionalLight.direction", _scene.m_DirectionalLight.m_Direction);
-            shaderProgram->SetUniformFloat3("frplDirectionalLight.color", _scene.m_DirectionalLight.m_Color);
-            shaderProgram->SetUniformFloat("frplDirectionalLight.intensity", _scene.m_DirectionalLight.m_Intensity);
-        
-            shaderProgram->SetUniformFloat3("frplAmbientLight.color", _scene.m_AmbientLight.m_Color);
-            shaderProgram->SetUniformFloat("frplAmbientLight.intensity", _scene.m_AmbientLight.m_Intensity);
-        
-            // TODO Pick the n nearest lights to the camera.
-            // TODO Lights shared across zones/scenes.
-            // Can set only once per frame?
-            for (u32 lightIdx = 0; lightIdx < 8; ++lightIdx)
+              
+        shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
+        shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
+    
+        // HACK address this: shaderProgram->SetUniformMat4("frplModelTransform", transform);
+    
+        // HACK address this: shaderProgram->SetUniformMat4("frplNormalTransform", MathsHelpers::GetRotationMatrix(transform));
+        // TODO
+        shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_BaseColor);
+        shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
+        shaderProgram->SetUniformFloat3("frplLocalUpDirection", _scene.m_LocalUpDirection);
+    
+        shaderProgram->SetUniformFloat3("frplDirectionalLight.direction", _scene.m_DirectionalLight.m_Direction);
+        shaderProgram->SetUniformFloat3("frplDirectionalLight.color", _scene.m_DirectionalLight.m_Color);
+        shaderProgram->SetUniformFloat("frplDirectionalLight.intensity", _scene.m_DirectionalLight.m_Intensity);
+    
+        shaderProgram->SetUniformFloat3("frplAmbientLight.color", _scene.m_AmbientLight.m_Color);
+        shaderProgram->SetUniformFloat("frplAmbientLight.intensity", _scene.m_AmbientLight.m_Intensity);
+    
+        // TODO Pick the n nearest lights to the camera.
+        // TODO Lights shared across zones/scenes.
+        // Can set only once per frame?
+        for (u32 lightIdx = 0; lightIdx < 8; ++lightIdx)
+        {
+            const std::string lightName = "frplLights[" + std::to_string(lightIdx) + "]";
+    
+            if (_scene.m_PointLights.size() <= lightIdx)
             {
-                const std::string lightName = "frplLights[" + std::to_string(lightIdx) + "]";
-        
-                if (_scene.m_PointLights.size() <= lightIdx)
-                {
-                    shaderProgram->SetUniformFloat3(lightName + ".position", glm::vec3(0.f));
-                    shaderProgram->SetUniformFloat3(lightName + ".color", Color(0.f));
-                    shaderProgram->SetUniformFloat(lightName + ".intensity", 0.f);
-                    continue;
-                }
-        
-                shaderProgram->SetUniformFloat3(lightName + ".position", _scene.m_PointLights[lightIdx].m_Origin);
-                shaderProgram->SetUniformFloat3(lightName + ".color", _scene.m_PointLights[lightIdx].m_Color);
-                shaderProgram->SetUniformFloat(lightName + ".intensity", _scene.m_PointLights[lightIdx].m_Intensity);
+                shaderProgram->SetUniformFloat3(lightName + ".position", glm::vec3(0.f));
+                shaderProgram->SetUniformFloat3(lightName + ".color", Color(0.f));
+                shaderProgram->SetUniformFloat(lightName + ".intensity", 0.f);
+                continue;
             }
-        
-            shaderProgram->SetUniformFloat3("frplAtmosphere.origin", _scene.m_Atmosphere.m_Origin);
-            shaderProgram->SetUniformFloat("frplAtmosphere.groundRadius", _scene.m_Atmosphere.m_GroundRadius);
-            shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
-            shaderProgram->SetUniformFloat("frplAtmosphere.blendOutHeight", _scene.m_Atmosphere.m_AtmosphereBlendOutHeight);
-        
-            u32 textureUnitIdx = 0;
-            for (const std::pair<std::string, AssetHandle<Texture>>& texturePair : sceneObject.m_Material.m_Textures)
+    
+            shaderProgram->SetUniformFloat3(lightName + ".position", _scene.m_PointLights[lightIdx].m_Origin);
+            shaderProgram->SetUniformFloat3(lightName + ".color", _scene.m_PointLights[lightIdx].m_Color);
+            shaderProgram->SetUniformFloat(lightName + ".intensity", _scene.m_PointLights[lightIdx].m_Intensity);
+        }
+    
+        shaderProgram->SetUniformFloat3("frplAtmosphere.origin", _scene.m_Atmosphere.m_Origin);
+        shaderProgram->SetUniformFloat("frplAtmosphere.groundRadius", _scene.m_Atmosphere.m_GroundRadius);
+        shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
+        shaderProgram->SetUniformFloat("frplAtmosphere.blendOutHeight", _scene.m_Atmosphere.m_AtmosphereBlendOutHeight);
+    
+        u32 textureUnitIdx = 0;
+        for (const std::pair<std::string, AssetHandle<Texture>>& texturePair : sceneObject.m_Material.m_Textures)
+        {
+            Texture* texture = texturePair.second.GetAsset();
+    
+            if (texture != nullptr)
             {
-                Texture* texture = texturePair.second.GetAsset();
-        
-                if (texture != nullptr)
+                texture->Bind(shaderProgram, texturePair.first, textureUnitIdx);
+    
+                switch (sceneObject.m_MeshType)
                 {
-                    texture->Bind(shaderProgram, texturePair.first, textureUnitIdx);
-        
-                    switch (sceneObject.m_MeshType)
+                    case MeshType::Normal:
                     {
-                        case MeshType::Normal:
-                        {
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        
-                            break;
-                        }
-                        case MeshType::Billboard:
-                            [[fallthrough]];
-                        case MeshType::OrientedBillboard:
-                        {
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        
-                            break;
-                        }
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+                        break;
                     }
-                    ++textureUnitIdx;
+                    case MeshType::Billboard:
+                        [[fallthrough]];
+                    case MeshType::OrientedBillboard:
+                    {
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+                        break;
+                    }
                 }
-            }
-        
-            for (const std::pair<std::string, u32>& uniform : sceneObject.m_Material.m_IntUniforms)
-            {
-                shaderProgram->SetUniformInt(uniform.first, uniform.second);
-            }
-        
-            glDrawElementsInstanced(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, nullptr, instanceTransforms.size());
-            LogMessage("Rendering a mesh with " + std::to_string(instanceTransforms.size()) + " instances");
-            GLHelpers::ReportError("glDrawElementsInstanced");
-        
-            for (s32 texIdx = sceneObject.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
-            {
-                Texture* texture = sceneObject.m_Material.m_Textures[texIdx].second.GetAsset();
-        
-                if (texture != nullptr)
-                {
-                    texture->Unbind(texIdx);
-                }
+                ++textureUnitIdx;
             }
         }
+    
+        for (const std::pair<std::string, u32>& uniform : sceneObject.m_Material.m_IntUniforms)
+        {
+            shaderProgram->SetUniformInt(uniform.first, uniform.second);
+        }
+    
+        glDrawElementsInstanced(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, nullptr, instanceTransforms.size());
+        //LogMessage("Rendering a mesh with " + std::to_string(instanceTransforms.size()) + " instances");
+        GLHelpers::ReportError("glDrawElementsInstanced");
+    
+        for (s32 texIdx = sceneObject.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
+        {
+            Texture* texture = sceneObject.m_Material.m_Textures[texIdx].second.GetAsset();
+    
+            if (texture != nullptr)
+            {
+                texture->Unbind(texIdx);
+            }
+        }
+
         //Unbind vertex array
         glBindVertexArray(0);
     }

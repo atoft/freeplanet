@@ -28,6 +28,7 @@ public:
     void DebugDraw(UIDrawInterface& _interface) const;
 
     mutable std::vector<DynamicMeshHandle> m_SpawnedPlantMeshes;
+    mutable DynamicMeshHandle m_ParticleSystemMesh;
     std::vector<ParticleSystem> m_SpawnedParticleSystems;
     
 private:
