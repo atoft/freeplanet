@@ -42,6 +42,15 @@ private:
     void HandleDynamicMeshRequests();
     static void Render(std::vector<Renderable::DrawableVariant> _uiElements, std::shared_ptr<sf::RenderWindow> _window);
 
+    const Renderable::Mesh* BindMesh(const Renderable::Solid& _solid) const;
+    void UnbindMesh(const Renderable::Mesh* _mesh) const;
+    ShaderProgram* UseShaderWithMesh(const Renderable::Solid& _solid, const Renderable::Mesh* _mesh) const;
+    glm::mat4 ComputeTransform(const Renderable::Scene& _scene, const Renderable::Solid& _solid, const glm::mat4& _objectTransform) const;
+    void SetSceneShaderParameters(const Renderable::Scene& _scene, ShaderProgram* _shaderProgram, const std::shared_ptr<const sf::RenderWindow> _window) const;
+    void SetupTextures(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const;
+    void UnbindTextures(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const;
+    void SetMaterialShaderParameters(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const;
+    
 private:
     bool m_IsFirstFrame = true;
 

@@ -189,7 +189,6 @@ std::pair<std::string, std::string> ShaderProgram::ParseShader(std::string filen
     return result;
 }
 
-//TODO: Allow shader manipulation internally and do not expose GL details outside the class
 GLuint ShaderProgram::GetProgramHandle() const
 {
     return m_ShaderProgramHandle;

@@ -83,7 +83,7 @@ namespace Renderable
         std::vector<std::pair<std::string, u32>> m_IntUniforms;
     };
 
-    struct SceneObject
+    struct Solid
     {
         // TODO Need some serious thought about how to make this both threadsafe and performant
         // Eg. would need to make every Handle operation locking and that's not sufficient
@@ -96,20 +96,18 @@ namespace Renderable
 
         Color m_BaseColor = Color(0.f, 0.f, 0.f, 1.f);
 
+    };
+    
+    struct SceneObject
+    {
+        Solid m_Solid;
         glm::mat4 m_Transform;
     };
 
 
     struct InstancedSceneObject
     {
-        Material m_Material;
-
-        Mesh m_Mesh;
-        u32 m_MeshID = 0;
-        MeshType m_MeshType = MeshType::Normal;
-
-        Color m_BaseColor = Color(0.f, 0.f, 0.f, 1.f);
-
+        Solid m_Solid;
         std::vector<glm::mat4> m_Transforms;
     };
     

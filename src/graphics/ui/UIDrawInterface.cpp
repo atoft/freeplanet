@@ -203,10 +203,10 @@ void UIDrawInterface::DebugDrawSphere(glm::ivec3 zoneCoordinates, glm::vec3 _pos
     if(sphere != nullptr)
     {
         Renderable::SceneObject sceneObject;
-        sceneObject.m_Mesh = sphere->GetMesh();
+        sceneObject.m_Solid.m_Mesh = sphere->GetMesh();
         sceneObject.m_Transform = glm::scale(glm::translate(glm::mat4x4(1.f), _position),  glm::vec3(_radius));
-        sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
-        sceneObject.m_BaseColor = _color;
+        sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+        sceneObject.m_Solid.m_BaseColor = _color;
 
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
     }
@@ -219,12 +219,12 @@ void UIDrawInterface::DebugDrawArrow(glm::ivec3 zoneCoordinates, glm::vec3 _posi
     if(arrow != nullptr)
     {
         Renderable::SceneObject sceneObject;
-        sceneObject.m_Mesh = arrow->GetMesh();
+        sceneObject.m_Solid.m_Mesh = arrow->GetMesh();
 
         const glm::mat4 translation = glm::translate(glm::mat4(1.f), _position);
         sceneObject.m_Transform = glm::scale(translation * MathsHelpers::GenerateRotationMatrixFromRight(_normal), glm::vec3(_length, 1.f, 1.f));
-        sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
-        sceneObject.m_BaseColor = _color;
+        sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+        sceneObject.m_Solid.m_BaseColor = _color;
 
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
     }
@@ -237,11 +237,11 @@ void UIDrawInterface::DebugDrawAABB(glm::ivec3 zoneCoordinates, const glm::vec3&
     if(box != nullptr)
     {
         Renderable::SceneObject sceneObject;
-        sceneObject.m_Mesh = box->GetMesh();
+        sceneObject.m_Solid.m_Mesh = box->GetMesh();
 
         const glm::mat4 translation = glm::translate(glm::mat4(1.f), _position + _aabb.m_PositionOffset);
         sceneObject.m_Transform = glm::scale(translation,  2.f * _aabb.m_Dimensions);
-        sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+        sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
         m_UIDisplay->m_Debug3DDrawingQueue.emplace_back(zoneCoordinates, sceneObject);
     }

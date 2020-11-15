@@ -178,18 +178,18 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
             Renderable::SceneObject sceneObject;
             sceneObject.m_Transform = worldObject->GetZoneTransform();
-            sceneObject.m_Material.m_Shader = component.GetShader();
-            sceneObject.m_Material.m_Textures.emplace_back("tex2D_0",  component.GetTexture());
-            sceneObject.m_MeshType = component.GetMeshType();
+            sceneObject.m_Solid.m_Material.m_Shader = component.GetShader();
+            sceneObject.m_Solid.m_Material.m_Textures.emplace_back("tex2D_0",  component.GetTexture());
+            sceneObject.m_Solid.m_MeshType = component.GetMeshType();
 
             const StaticMesh* mesh = component.GetMesh().GetAsset();
             if (mesh != nullptr)
             {
-                sceneObject.m_Mesh = mesh->GetMesh();
+                sceneObject.m_Solid.m_Mesh = mesh->GetMesh();
             }
             else if (component.m_DynamicID != DYNAMICMESHID_INVALID)
             {
-                sceneObject.m_MeshID = component.m_DynamicID;
+                sceneObject.m_Solid.m_MeshID = component.m_DynamicID;
             }
             else
             {
@@ -226,8 +226,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                     auto it = std::find_if(particleInstances.begin(), particleInstances.end(), [&emitter](const Renderable::InstancedSceneObject& instance)
                                                                                  {
                                                                                      // TODO We should have a smarter way to do this.
-                                                                                     return emitter.m_Shader == instance.m_Material.m_Shader
-                                                                                         && emitter.m_Texture == instance.m_Material.m_Textures[0].second;
+                                                                                     return emitter.m_Shader == instance.m_Solid.m_Material.m_Shader
+                                                                                         && emitter.m_Texture == instance.m_Solid.m_Material.m_Textures[0].second;
                                                                                  });
                     Renderable::InstancedSceneObject* instance = nullptr;
                     
@@ -237,16 +237,16 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
                         if (emitter.m_MeshID != DYNAMICMESHID_INVALID)
                         {
-                            instance->m_MeshID = emitter.m_MeshID;
+                            instance->m_Solid.m_MeshID = emitter.m_MeshID;
                         }
                         else
                         {
                             LogError("DynamicMesh wasn't loaded for particle emitter.");
                         }
                                     
-                        instance->m_Material.m_Shader = emitter.m_Shader;
-                        instance->m_Material.m_Textures.emplace_back("tex2D_0", emitter.m_Texture);
-                        instance->m_MeshType = MeshType::Billboard;
+                        instance->m_Solid.m_Material.m_Shader = emitter.m_Shader;
+                        instance->m_Solid.m_Material.m_Textures.emplace_back("tex2D_0", emitter.m_Texture);
+                        instance->m_Solid.m_MeshType = MeshType::Billboard;
                     }
                     else
                     {
@@ -331,17 +331,17 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
 {
     Renderable::SceneObject sceneObject;
     sceneObject.m_Transform = _transform;
-    sceneObject.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
+    sceneObject.m_Solid.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
 
     // TODO Support multiple textures, have somewhere to source them.
-    sceneObject.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
-    sceneObject.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
+    sceneObject.m_Solid.m_Material.m_Textures.emplace_back("texPerlin", m_HACKTerrainVolumeTexture0);
+    sceneObject.m_Solid.m_Material.m_Textures.emplace_back("texGrass", m_HACKTerrainVolumeTexture1);
 
     // TODO a more generic source for this.
     // We should use ifdefs to make this a compile-time switch (e.g. multiple versions of the
     // shader with different switches applied). Can also avoid binding the detail textures for
     // these lower LOD shaders.
-    sceneObject.m_Material.m_IntUniforms.emplace_back("frplTerrainLod", _terrainLOD);
+    sceneObject.m_Solid.m_Material.m_IntUniforms.emplace_back("frplTerrainLod", _terrainLOD);
 
     if (_handle.m_DynamicMeshId == DYNAMICMESHID_INVALID)
     {
@@ -350,7 +350,7 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
         if (_handle.m_PreviousDynamicMeshId != DYNAMICMESHID_INVALID)
         {
             // This frame, we will render the previous version of the mesh while we request a new one.
-            sceneObject.m_MeshID = _handle.m_PreviousDynamicMeshId;
+            sceneObject.m_Solid.m_MeshID = _handle.m_PreviousDynamicMeshId;
 
             _outSceneObjects.push_back(sceneObject);
         }
@@ -376,7 +376,7 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
             _handle.m_PreviousDynamicMeshId = DYNAMICMESHID_INVALID;
         }
 
-        sceneObject.m_MeshID = _handle.m_DynamicMeshId;
+        sceneObject.m_Solid.m_MeshID = _handle.m_DynamicMeshId;
     }
 
     _outSceneObjects.push_back(sceneObject);
@@ -476,11 +476,11 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* _world, const Freeloo
         {
             Renderable::SceneObject sceneObject;
             sceneObject.m_Transform = glm::scale(glm::mat4(1.f), zone.GetDimensions());
-            sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+            sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
             if (cubeMesh != nullptr)
             {
-                sceneObject.m_Mesh = cubeMesh->GetMesh();
+                sceneObject.m_Solid.m_Mesh = cubeMesh->GetMesh();
             }
 
             sceneToRender.m_SceneObjects.push_back(sceneObject);
@@ -501,11 +501,11 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* _world, const Freeloo
                             Renderable::SceneObject sceneObject;
                             sceneObject.m_Transform = zone.GetTerrainModelTransform() * glm::scale(
                                     glm::translate(glm::mat4(1.f), glm::vec3(x, y, z) * chunkScale), chunkScale);
-                            sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+                            sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
                             if (cubeMesh != nullptr)
                             {
-                                sceneObject.m_Mesh = cubeMesh->GetMesh();
+                                sceneObject.m_Solid.m_Mesh = cubeMesh->GetMesh();
                             }
 
                             sceneToRender.m_SceneObjects.push_back(sceneObject);
@@ -529,11 +529,11 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* _world, const Freeloo
                     sceneObject.m_Transform = zone.GetTerrainModelTransform() *
                             glm::translate(glm::mat4x4(1.f), vertex)
                             * MathsHelpers::GenerateRotationMatrixFromRight(normal);
-                    sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+                    sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
                     if (arrowMesh != nullptr)
                     {
-                        sceneObject.m_Mesh = arrowMesh->GetMesh();
+                        sceneObject.m_Solid.m_Mesh = arrowMesh->GetMesh();
                     }
 
                     sceneToRender.m_SceneObjects.push_back(sceneObject);
@@ -558,11 +558,11 @@ void RenderHandler::AddBoundingBoxObject(const glm::mat4 _transform, const Stati
 {
     Renderable::SceneObject sceneObject;
     sceneObject.m_Transform = _transform;
-    sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
+    sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Unlit_Untextured);
 
     if (_mesh != nullptr)
     {
-        sceneObject.m_Mesh = _mesh->GetMesh();
+        sceneObject.m_Solid.m_Mesh = _mesh->GetMesh();
     }
     else
     {
@@ -609,9 +609,9 @@ void RenderHandler::GenerateBackgroundScene(const World* _world, const FreelookC
     sceneObject.m_Transform = glm::mat4(1.f);
     if (quadMesh != nullptr)
     {
-        sceneObject.m_Mesh = quadMesh->GetMesh();
+        sceneObject.m_Solid.m_Mesh = quadMesh->GetMesh();
     }
-    sceneObject.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Skybox);
+    sceneObject.m_Solid.m_Material.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Skybox);
 
     sceneToRender.m_SceneObjects.emplace_back(sceneObject);
 

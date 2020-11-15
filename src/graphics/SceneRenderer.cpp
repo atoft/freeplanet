@@ -2,6 +2,7 @@
 // Created by alastair on 05/10/18.
 //
 
+#include "src/graphics/Scene.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
@@ -212,262 +213,64 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
-    for (const auto& sceneObject : _scene.m_SceneObjects)
+    for (const Renderable::SceneObject& sceneObject : _scene.m_SceneObjects)
     {
-        Renderable::Mesh mesh;
+        const Renderable::Mesh* mesh = BindMesh(sceneObject.m_Solid);
 
-        if (sceneObject.m_MeshID != DYNAMICMESHID_INVALID)
+        if (mesh == nullptr)
         {
-            const auto dynamicMeshIt = m_LoadedDynamicMeshes.find(sceneObject.m_MeshID);
-
-            if (dynamicMeshIt != m_LoadedDynamicMeshes.end())
-            {
-                mesh = dynamicMeshIt->second.GetMesh();
-            }
-            else
-            {
-                LogError("Tried to render a DynamicMesh that is not loaded.");
-                assert(false);
-                continue;
-            }
-        }
-        else
-        {
-            mesh = sceneObject.m_Mesh;
-        }
-
-        glBindVertexArray(mesh.m_VaoHandle);
-        GLHelpers::ReportError("glBindVertexArray in renderer");
-
-        ShaderProgram* shaderProgram = sceneObject.m_Material.m_Shader.GetAsset();
-        if (shaderProgram == nullptr)
-        {
-            LogError("ShaderProgram was not loaded.");
             continue;
         }
 
-        shaderProgram->Use();
+        ShaderProgram* shaderProgram = UseShaderWithMesh(sceneObject.m_Solid, mesh);
 
-        for (const auto& attrib : mesh.m_VertexAttribs)
+        if (shaderProgram == nullptr)
         {
-            glEnableVertexAttribArray(attrib);
+            continue;
         }
-
-        switch (sceneObject.m_MeshType)
-        {
-        case MeshType::Normal:
-        {
-            shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * _scene.m_ViewTransform * sceneObject.m_Transform);
-            break;
-        }
-        case MeshType::Billboard:
-        {
-            glm::mat4 mvMatrix = _scene.m_ViewTransform * sceneObject.m_Transform;
-            MathsHelpers::SetRotationPart(mvMatrix, glm::mat3(1.f));
-
-            shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * mvMatrix);
-
-            break;
-        }
-        case MeshType::OrientedBillboard:
-        {
-            glm::mat4 mvMatrix = _scene.m_ViewTransform * sceneObject.m_Transform;
-
-            // Clear x and z rotation only.
-            mvMatrix[0][0] = 1.f;
-            mvMatrix[0][1] = 0.f;
-            mvMatrix[0][2] = 0.f;
-
-            mvMatrix[2][0] = 0.f;
-            mvMatrix[2][1] = 0.f;
-            mvMatrix[2][2] = 1.f;
-
-            shaderProgram->SetUniformMat4("frplTransform", _scene.m_ProjectionTransform * mvMatrix);
-
-            break;
-        }
-        }
-
-        shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
-        shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
-
+        
+        shaderProgram->SetUniformMat4("frplTransform", ComputeTransform(_scene, sceneObject.m_Solid, sceneObject.m_Transform));
         shaderProgram->SetUniformMat4("frplModelTransform", sceneObject.m_Transform);
 
         shaderProgram->SetUniformMat4("frplNormalTransform", MathsHelpers::GetRotationMatrix(sceneObject.m_Transform));
         // TODO
-        shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_BaseColor);
-        shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
-        shaderProgram->SetUniformFloat3("frplLocalUpDirection", _scene.m_LocalUpDirection);
+        shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_Solid.m_BaseColor);
 
-        shaderProgram->SetUniformFloat3("frplDirectionalLight.direction", _scene.m_DirectionalLight.m_Direction);
-        shaderProgram->SetUniformFloat3("frplDirectionalLight.color", _scene.m_DirectionalLight.m_Color);
-        shaderProgram->SetUniformFloat("frplDirectionalLight.intensity", _scene.m_DirectionalLight.m_Intensity);
+        SetSceneShaderParameters(_scene, shaderProgram, _window);
+        SetMaterialShaderParameters(shaderProgram, sceneObject.m_Solid);
+        SetupTextures(shaderProgram, sceneObject.m_Solid);
+        
+        glDrawElements(GL_TRIANGLES, mesh->m_NumberOfElements, GL_UNSIGNED_INT, nullptr);
 
-        shaderProgram->SetUniformFloat3("frplAmbientLight.color", _scene.m_AmbientLight.m_Color);
-        shaderProgram->SetUniformFloat("frplAmbientLight.intensity", _scene.m_AmbientLight.m_Intensity);
+        UnbindTextures(shaderProgram, sceneObject.m_Solid);
 
-        // TODO Pick the n nearest lights to the camera.
-        // TODO Lights shared across zones/scenes.
-        // Can set only once per frame?
-        for (u32 lightIdx = 0; lightIdx < 8; ++lightIdx)
-        {
-            const std::string lightName = "frplLights[" + std::to_string(lightIdx) + "]";
-
-            if (_scene.m_PointLights.size() <= lightIdx)
-            {
-                shaderProgram->SetUniformFloat3(lightName + ".position", glm::vec3(0.f));
-                shaderProgram->SetUniformFloat3(lightName + ".color", Color(0.f));
-                shaderProgram->SetUniformFloat(lightName + ".intensity", 0.f);
-                continue;
-            }
-
-            shaderProgram->SetUniformFloat3(lightName + ".position", _scene.m_PointLights[lightIdx].m_Origin);
-            shaderProgram->SetUniformFloat3(lightName + ".color", _scene.m_PointLights[lightIdx].m_Color);
-            shaderProgram->SetUniformFloat(lightName + ".intensity", _scene.m_PointLights[lightIdx].m_Intensity);
-        }
-
-        shaderProgram->SetUniformFloat3("frplAtmosphere.origin", _scene.m_Atmosphere.m_Origin);
-        shaderProgram->SetUniformFloat("frplAtmosphere.groundRadius", _scene.m_Atmosphere.m_GroundRadius);
-        shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
-        shaderProgram->SetUniformFloat("frplAtmosphere.blendOutHeight", _scene.m_Atmosphere.m_AtmosphereBlendOutHeight);
-
-        u32 textureUnitIdx = 0;
-        for (const std::pair<std::string, AssetHandle<Texture>>& texturePair : sceneObject.m_Material.m_Textures)
-        {
-            Texture* texture = texturePair.second.GetAsset();
-
-            if (texture != nullptr)
-            {
-                texture->Bind(shaderProgram, texturePair.first, textureUnitIdx);
-
-                switch (sceneObject.m_MeshType)
-                {
-                    case MeshType::Normal:
-                    {
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-                        break;
-                    }
-                    case MeshType::Billboard:
-                        [[fallthrough]];
-                    case MeshType::OrientedBillboard:
-                    {
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-                        break;
-                    }
-                }
-                ++textureUnitIdx;
-            }
-        }
-
-        for (const std::pair<std::string, u32>& uniform : sceneObject.m_Material.m_IntUniforms)
-        {
-            shaderProgram->SetUniformInt(uniform.first, uniform.second);
-        }
-
-        glDrawElements(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, nullptr);
-
-        for (s32 texIdx = sceneObject.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
-        {
-            Texture* texture = sceneObject.m_Material.m_Textures[texIdx].second.GetAsset();
-
-            if (texture != nullptr)
-            {
-                texture->Unbind(texIdx);
-            }
-        }
-
-        //Unbind vertex array
-        glBindVertexArray(0);
+        UnbindMesh(mesh);
     }
 
-    // HACK Just draw them separately, for testing.
-    for (const auto& sceneObject : _scene.m_Instances)
+    for (const Renderable::InstancedSceneObject& instancedSceneObject : _scene.m_Instances)
     {
-        Renderable::Mesh mesh;
+        const Renderable::Mesh* mesh = BindMesh(instancedSceneObject.m_Solid);
 
-        if (sceneObject.m_MeshID != DYNAMICMESHID_INVALID)
+        if (mesh == nullptr)
         {
-            const auto dynamicMeshIt = m_LoadedDynamicMeshes.find(sceneObject.m_MeshID);
-
-            if (dynamicMeshIt != m_LoadedDynamicMeshes.end())
-            {
-                mesh = dynamicMeshIt->second.GetMesh();
-            }
-            else
-            {
-                LogError("Tried to render a DynamicMesh that is not loaded.");
-                assert(false);
-                continue;
-            }
-        }
-        else
-        {
-            mesh = sceneObject.m_Mesh;
-        }
-
-        glBindVertexArray(mesh.m_VaoHandle);
-        GLHelpers::ReportError("glBindVertexArray in renderer");
-
-        ShaderProgram* shaderProgram = sceneObject.m_Material.m_Shader.GetAsset();
-        if (shaderProgram == nullptr)
-        {
-            LogError("ShaderProgram was not loaded.");
             continue;
         }
+        
+        ShaderProgram* shaderProgram = UseShaderWithMesh(instancedSceneObject.m_Solid, mesh);
 
-        shaderProgram->Use();
-
-        for (const auto& attrib : mesh.m_VertexAttribs)
+        if (shaderProgram == nullptr)
         {
-            glEnableVertexAttribArray(attrib);
+            continue;
         }
-
+        
         std::vector<glm::mat4> instanceTransforms;
 
-        for (const glm::mat4& transform : sceneObject.m_Transforms)
+        for (const glm::mat4& transform : instancedSceneObject.m_Transforms)
         {
-            switch (sceneObject.m_MeshType)
-            {
-            case MeshType::Normal:
-            {
-                instanceTransforms.push_back( _scene.m_ProjectionTransform * _scene.m_ViewTransform * transform);
-                break;
-            }
-            case MeshType::Billboard:
-            {
-                glm::mat4 mvMatrix = _scene.m_ViewTransform * transform;
-                MathsHelpers::SetRotationPart(mvMatrix, glm::mat3(1.f));
-
-                instanceTransforms.push_back(_scene.m_ProjectionTransform * mvMatrix);
-        
-                break;
-            }
-            case MeshType::OrientedBillboard:
-            {
-                glm::mat4 mvMatrix = _scene.m_ViewTransform * transform;
-        
-                // Clear x and z rotation only.
-                mvMatrix[0][0] = 1.f;
-                mvMatrix[0][1] = 0.f;
-                mvMatrix[0][2] = 0.f;
-        
-                mvMatrix[2][0] = 0.f;
-                mvMatrix[2][1] = 0.f;
-                mvMatrix[2][2] = 1.f;
-        
-                instanceTransforms.push_back(_scene.m_ProjectionTransform * mvMatrix);
-        
-                break;
-            }
-            }
+            instanceTransforms.push_back(ComputeTransform(_scene, instancedSceneObject.m_Solid, transform));
         }
 
-        
-        GLint instanceTransformLocation = glGetAttribLocation(shaderProgram->GetProgramHandle(), "frplInstanceTransform");
+        const GLint instanceTransformLocation = glGetAttribLocation(shaderProgram->GetProgramHandle(), "frplInstanceTransform");
 
         if (instanceTransformLocation < 0)
         {
@@ -476,103 +279,210 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         
         glBindBuffer(GL_ARRAY_BUFFER, instanceTransformLocation);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceTransforms.size(), instanceTransforms.data(), GL_DYNAMIC_DRAW);
-              
-        shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
-        shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
-    
-        // HACK address this: shaderProgram->SetUniformMat4("frplModelTransform", transform);
-    
-        // HACK address this: shaderProgram->SetUniformMat4("frplNormalTransform", MathsHelpers::GetRotationMatrix(transform));
-        // TODO
-        shaderProgram->SetUniformFloat3("frplBaseColor", sceneObject.m_BaseColor);
-        shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
-        shaderProgram->SetUniformFloat3("frplLocalUpDirection", _scene.m_LocalUpDirection);
-    
-        shaderProgram->SetUniformFloat3("frplDirectionalLight.direction", _scene.m_DirectionalLight.m_Direction);
-        shaderProgram->SetUniformFloat3("frplDirectionalLight.color", _scene.m_DirectionalLight.m_Color);
-        shaderProgram->SetUniformFloat("frplDirectionalLight.intensity", _scene.m_DirectionalLight.m_Intensity);
-    
-        shaderProgram->SetUniformFloat3("frplAmbientLight.color", _scene.m_AmbientLight.m_Color);
-        shaderProgram->SetUniformFloat("frplAmbientLight.intensity", _scene.m_AmbientLight.m_Intensity);
-    
-        // TODO Pick the n nearest lights to the camera.
-        // TODO Lights shared across zones/scenes.
-        // Can set only once per frame?
-        for (u32 lightIdx = 0; lightIdx < 8; ++lightIdx)
-        {
-            const std::string lightName = "frplLights[" + std::to_string(lightIdx) + "]";
-    
-            if (_scene.m_PointLights.size() <= lightIdx)
-            {
-                shaderProgram->SetUniformFloat3(lightName + ".position", glm::vec3(0.f));
-                shaderProgram->SetUniformFloat3(lightName + ".color", Color(0.f));
-                shaderProgram->SetUniformFloat(lightName + ".intensity", 0.f);
-                continue;
-            }
-    
-            shaderProgram->SetUniformFloat3(lightName + ".position", _scene.m_PointLights[lightIdx].m_Origin);
-            shaderProgram->SetUniformFloat3(lightName + ".color", _scene.m_PointLights[lightIdx].m_Color);
-            shaderProgram->SetUniformFloat(lightName + ".intensity", _scene.m_PointLights[lightIdx].m_Intensity);
-        }
-    
-        shaderProgram->SetUniformFloat3("frplAtmosphere.origin", _scene.m_Atmosphere.m_Origin);
-        shaderProgram->SetUniformFloat("frplAtmosphere.groundRadius", _scene.m_Atmosphere.m_GroundRadius);
-        shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
-        shaderProgram->SetUniformFloat("frplAtmosphere.blendOutHeight", _scene.m_Atmosphere.m_AtmosphereBlendOutHeight);
-    
-        u32 textureUnitIdx = 0;
-        for (const std::pair<std::string, AssetHandle<Texture>>& texturePair : sceneObject.m_Material.m_Textures)
-        {
-            Texture* texture = texturePair.second.GetAsset();
-    
-            if (texture != nullptr)
-            {
-                texture->Bind(shaderProgram, texturePair.first, textureUnitIdx);
-    
-                switch (sceneObject.m_MeshType)
-                {
-                    case MeshType::Normal:
-                    {
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
-                        break;
-                    }
-                    case MeshType::Billboard:
-                        [[fallthrough]];
-                    case MeshType::OrientedBillboard:
-                    {
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-                        break;
-                    }
-                }
-                ++textureUnitIdx;
-            }
-        }
-    
-        for (const std::pair<std::string, u32>& uniform : sceneObject.m_Material.m_IntUniforms)
-        {
-            shaderProgram->SetUniformInt(uniform.first, uniform.second);
-        }
-    
-        glDrawElementsInstanced(GL_TRIANGLES, mesh.m_NumberOfElements, GL_UNSIGNED_INT, nullptr, instanceTransforms.size());
-        //LogMessage("Rendering a mesh with " + std::to_string(instanceTransforms.size()) + " instances");
+
+        SetSceneShaderParameters(_scene, shaderProgram, _window);
+        SetMaterialShaderParameters(shaderProgram, instancedSceneObject.m_Solid);
+        SetupTextures(shaderProgram, instancedSceneObject.m_Solid);
+
+        glDrawElementsInstanced(GL_TRIANGLES, mesh->m_NumberOfElements, GL_UNSIGNED_INT, nullptr, instanceTransforms.size());
         GLHelpers::ReportError("glDrawElementsInstanced");
     
-        for (s32 texIdx = sceneObject.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
+        UnbindTextures(shaderProgram, instancedSceneObject.m_Solid);
+
+        UnbindMesh(mesh);
+    }
+}
+
+const Renderable::Mesh* SceneRenderer::BindMesh(const Renderable::Solid& _solid) const
+{
+    const Renderable::Mesh* mesh;
+
+    if (_solid.m_MeshID != DYNAMICMESHID_INVALID)
+    {
+        const auto dynamicMeshIt = m_LoadedDynamicMeshes.find(_solid.m_MeshID);
+
+        if (dynamicMeshIt != m_LoadedDynamicMeshes.end())
         {
-            Texture* texture = sceneObject.m_Material.m_Textures[texIdx].second.GetAsset();
-    
-            if (texture != nullptr)
-            {
-                texture->Unbind(texIdx);
-            }
+            mesh = &dynamicMeshIt->second.GetMesh();
+        }
+        else
+        {
+            LogError("Tried to render a DynamicMesh that is not loaded.");
+            assert(false);
+            return nullptr;
+        }
+    }
+    else
+    {
+        mesh = &_solid.m_Mesh;
+    }
+
+    glBindVertexArray(mesh->m_VaoHandle);
+    GLHelpers::ReportError("glBindVertexArray in renderer");
+
+    return mesh;
+}
+
+void SceneRenderer::UnbindMesh(const Renderable::Mesh* _mesh) const
+{
+    // Unbind vertex array
+    glBindVertexArray(0);
+}
+
+ShaderProgram* SceneRenderer::UseShaderWithMesh(const Renderable::Solid& _solid, const Renderable::Mesh* _mesh) const
+{
+    ShaderProgram* shaderProgram = _solid.m_Material.m_Shader.GetAsset();
+
+    if (shaderProgram == nullptr)
+    {
+        LogError("ShaderProgram was not loaded.");
+        return nullptr;
+    }
+
+    shaderProgram->Use();
+
+    for (const auto& attrib : _mesh->m_VertexAttribs)
+    {
+        glEnableVertexAttribArray(attrib);
+    }
+
+    return shaderProgram;
+}
+
+glm::mat4 SceneRenderer::ComputeTransform(const Renderable::Scene& _scene, const Renderable::Solid& _solid, const glm::mat4& _objectTransform) const
+{
+    switch (_solid.m_MeshType)
+    {
+    case MeshType::Normal:
+    {
+        return _scene.m_ProjectionTransform * _scene.m_ViewTransform * _objectTransform;
+    }
+    case MeshType::Billboard:
+    {
+        glm::mat4 mvMatrix = _scene.m_ViewTransform * _objectTransform;
+        MathsHelpers::SetRotationPart(mvMatrix, glm::mat3(1.f));
+
+        return _scene.m_ProjectionTransform * mvMatrix;
+    }
+    case MeshType::OrientedBillboard:
+    {
+        glm::mat4 mvMatrix = _scene.m_ViewTransform * _objectTransform;
+
+        // Clear x and z rotation only.
+        mvMatrix[0][0] = 1.f;
+        mvMatrix[0][1] = 0.f;
+        mvMatrix[0][2] = 0.f;
+
+        mvMatrix[2][0] = 0.f;
+        mvMatrix[2][1] = 0.f;
+        mvMatrix[2][2] = 1.f;
+
+        return _scene.m_ProjectionTransform * mvMatrix;
+    }
+    default:
+        break;
+    }
+
+    assert(false);
+    return glm::mat4(1.f);
+}
+
+void SceneRenderer::SetSceneShaderParameters(const Renderable::Scene& _scene, ShaderProgram* _shaderProgram, const std::shared_ptr<const sf::RenderWindow> _window) const
+{
+    _shaderProgram->SetUniformMat4("frplCameraInverseProjection", _scene.m_CameraInverseProjection);
+    _shaderProgram->SetUniformFloat("frplAspectRatio", static_cast<f32>(_window->getSize().x) / static_cast<f32>(_window->getSize().y));
+
+    _shaderProgram->SetUniformFloat3("frplCameraWorldPosition", _scene.m_CameraRelativePosition);
+
+    // TODO Should that really be per scene?
+    _shaderProgram->SetUniformFloat3("frplLocalUpDirection", _scene.m_LocalUpDirection);
+     
+    _shaderProgram->SetUniformFloat3("frplDirectionalLight.direction", _scene.m_DirectionalLight.m_Direction);
+    _shaderProgram->SetUniformFloat3("frplDirectionalLight.color", _scene.m_DirectionalLight.m_Color);
+    _shaderProgram->SetUniformFloat("frplDirectionalLight.intensity", _scene.m_DirectionalLight.m_Intensity);
+     
+    _shaderProgram->SetUniformFloat3("frplAmbientLight.color", _scene.m_AmbientLight.m_Color);
+    _shaderProgram->SetUniformFloat("frplAmbientLight.intensity", _scene.m_AmbientLight.m_Intensity);
+
+    // TODO Pick the n nearest lights to the camera.
+    // TODO Lights shared across zones/scenes.
+    // Can set only once per frame?
+    for (u32 lightIdx = 0; lightIdx < 8; ++lightIdx)
+    {
+        const std::string lightName = "frplLights[" + std::to_string(lightIdx) + "]";
+
+        if (_scene.m_PointLights.size() <= lightIdx)
+        {
+            _shaderProgram->SetUniformFloat3(lightName + ".position", glm::vec3(0.f));
+            _shaderProgram->SetUniformFloat3(lightName + ".color", Color(0.f));
+            _shaderProgram->SetUniformFloat(lightName + ".intensity", 0.f);
+            continue;
         }
 
-        //Unbind vertex array
-        glBindVertexArray(0);
+        _shaderProgram->SetUniformFloat3(lightName + ".position", _scene.m_PointLights[lightIdx].m_Origin);
+        _shaderProgram->SetUniformFloat3(lightName + ".color", _scene.m_PointLights[lightIdx].m_Color);
+        _shaderProgram->SetUniformFloat(lightName + ".intensity", _scene.m_PointLights[lightIdx].m_Intensity);
+    }
+
+    _shaderProgram->SetUniformFloat3("frplAtmosphere.origin", _scene.m_Atmosphere.m_Origin);
+    _shaderProgram->SetUniformFloat("frplAtmosphere.groundRadius", _scene.m_Atmosphere.m_GroundRadius);
+    _shaderProgram->SetUniformFloat("frplAtmosphere.height", _scene.m_Atmosphere.m_AtmosphereHeight);
+    _shaderProgram->SetUniformFloat("frplAtmosphere.blendOutHeight", _scene.m_Atmosphere.m_AtmosphereBlendOutHeight);
+}
+
+void SceneRenderer::SetupTextures(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const
+{
+    u32 textureUnitIdx = 0;
+     for (const std::pair<std::string, AssetHandle<Texture>>& texturePair : _solid.m_Material.m_Textures)
+     {
+         Texture* texture = texturePair.second.GetAsset();
+
+         if (texture != nullptr)
+         {
+             texture->Bind(_shaderProgram, texturePair.first, textureUnitIdx);
+
+             switch (_solid.m_MeshType)
+             {
+                 case MeshType::Normal:
+                 {
+                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+                     break;
+                 }
+                 case MeshType::Billboard:
+                     [[fallthrough]];
+                 case MeshType::OrientedBillboard:
+                 {
+                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+                     break;
+                 }
+             }
+             ++textureUnitIdx;
+         }
+     }
+}
+
+void SceneRenderer::UnbindTextures(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const
+{
+    for (s32 texIdx = _solid.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
+    {
+        Texture* texture = _solid.m_Material.m_Textures[texIdx].second.GetAsset();
+
+        if (texture != nullptr)
+        {
+            texture->Unbind(texIdx);
+        }
+    }
+}
+
+void SceneRenderer::SetMaterialShaderParameters(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const
+{
+    for (const std::pair<std::string, u32>& uniform : _solid.m_Material.m_IntUniforms)
+    {
+        _shaderProgram->SetUniformInt(uniform.first, uniform.second);
     }
 }
 
