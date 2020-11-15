@@ -26,6 +26,7 @@ class SpawningHandler;
 class TerrainHandler;
 class VistaHandler;
 class InventoryHandler;
+class ParticleSystemHandler;
 
 // A World represents an environment in which gameplay occurs.
 class World
@@ -129,7 +130,8 @@ private:
     std::shared_ptr<TerrainHandler> m_TerrainHandler;
     std::shared_ptr<VistaHandler> m_VistaHandler;
     std::shared_ptr<InventoryHandler> m_InventoryHandler;
-
+    std::shared_ptr<ParticleSystemHandler> m_ParticleSystemHandler;
+    
     EventHandler<WorldEvent> m_WorldEventHandler;
 
     std::optional<Planet> m_Planet;

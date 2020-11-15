@@ -189,6 +189,10 @@ ParticleSystem FloraGeneration::GenerateFoliage(const PlantInstance& _plantInsta
 
     emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaTest_NormalUp);
     emitter.m_Texture = AssetHandle<Texture>(TextureAsset_Billboard_Leaves);
+
+    emitter.m_Animation = ParticleAnimation::PerlinOffset;
+    emitter.m_AnimFrequency = 1.5f;
+    emitter.m_AnimAmplitude = 0.25f;
     
     for (const PlantInstanceNode& node : _plantInstance.m_Nodes)
     {

@@ -29,7 +29,16 @@ struct Particle
 {
     glm::vec3 m_RelativePosition = glm::vec3(0.f);
 
+    // An additional particle-space offset.
+    glm::vec3 m_OffsetPosition = glm::vec3(0.f);
+    
     // TODO lifetime, velocity, etc.
+};
+
+enum class ParticleAnimation
+{
+    None,
+    PerlinOffset
 };
 
 struct ParticleEmitter
@@ -42,6 +51,12 @@ struct ParticleEmitter
     DynamicMeshID m_MeshID;
 
     // TODO properties for emission rate, initial velocity, etc.
+
+    ParticleAnimation m_Animation = ParticleAnimation::None;
+    f32 m_AnimFrequency = 1.f;
+    f32 m_AnimAmplitude = 0.5f;
+    f32 m_TimePassed = 0.f;
+    f32 m_TimeModulus = 64.f;
 };
 
 struct ParticleSystem
