@@ -61,8 +61,8 @@ void ParticleSystemHandler::UpdateEmitter(ParticleEmitter& _emitter, TimeMS _del
 
             // TODO Not quite right, causing discontinuity.
             particle.m_OffsetPosition = glm::perlin(
-                glm::mod(particle.m_RelativePosition * noiseSampleScale + _emitter.m_TimePassed * _emitter.m_AnimFrequency * noiseSampleDirection, _emitter.m_TimeModulus),
-                glm::vec3(_emitter.m_TimeModulus)) * _emitter.m_AnimAmplitude * noiseOffsetDirection;
+                particle.m_RelativePosition * noiseSampleScale + _emitter.m_TimePassed * _emitter.m_AnimFrequency * noiseSampleDirection,
+                glm::vec3(_emitter.m_TimeModulus * _emitter.m_AnimFrequency)) * _emitter.m_AnimAmplitude * noiseOffsetDirection;
         }
 
         break;
