@@ -39,6 +39,7 @@ void ShaderProgram::AcquireResources(ShaderAssetID _assetID)
     glBindAttribLocation(m_ShaderProgramHandle, 3, "frplColor");
     glBindAttribLocation(m_ShaderProgramHandle, 4, "frplTerrainSubstance");
     glBindAttribLocation(m_ShaderProgramHandle, 5, "frplInstanceTransform");
+    glBindAttribLocation(m_ShaderProgramHandle, 9, "frplInstanceNormalTransform");
     GLHelpers::ReportError("glBindAttribLocation");
 
     glBindFragDataLocation(m_ShaderProgramHandle, 0, "outColor");

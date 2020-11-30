@@ -5,15 +5,13 @@ in vec3 frplPosition;
 in vec3 frplNormal;
 in vec2 frplTexcoord;
 in vec3 frplColor;
-in vec4 frplTerrainSubstance; // HACK
 in mat4 frplInstanceTransform;
+in mat4 frplInstanceNormalTransform;
 
 uniform vec3 frplBaseColor;
-// uniform mat4 frplTransform;
 uniform mat4 frplModelTransform;
 uniform mat4 frplNormalTransform;
 uniform vec3 frplCameraWorldPosition;
-
 
 out vec3 Color;
 out vec3 WorldPosition;
@@ -33,7 +31,7 @@ void main()
     gl_Position = frplInstanceTransform * vec4(frplPosition, 1.0);
     CameraWorldPosition = frplCameraWorldPosition;
 
-    vec4 norm = frplNormalTransform * vec4(frplNormal, 1.0);
+    vec4 norm = frplInstanceNormalTransform * vec4(0.0, 1.0, 0.0, 1.0);
     Normal = norm.xyz / norm.w;
 }
 
@@ -82,11 +80,9 @@ void main()
 
     texel.a = 1.0;
 
-    vec3 FIXED_NORMAL = vec3(0,1,0);
+    vec3 sunDiffuse = clamp(dot(Normal, frplDirectionalLight.direction), 0, 1) * frplDirectionalLight.color * frplDirectionalLight.intensity;
 
-    vec3 sunDiffuse = clamp(dot(FIXED_NORMAL, frplDirectionalLight.direction), 0, 1) * frplDirectionalLight.color * frplDirectionalLight.intensity;
+    vec3 ambient = clamp(dot(Normal, vec3(0,1,0)), 0.5, 1) * frplAmbientLight.color * frplAmbientLight.intensity;
 
-    vec3 ambient = clamp(dot(FIXED_NORMAL, vec3(0,1,0)), 0.5, 1) * frplAmbientLight.color * frplAmbientLight.intensity;
-
-    outColor = vec4((ambient + sunDiffuse), 1.0) * texel;
+    outColor = vec4((ambient + sunDiffuse + 0.5), 1.0) * texel;
 }

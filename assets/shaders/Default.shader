@@ -7,6 +7,7 @@ in vec2 frplTexcoord;
 in vec3 frplColor;
 in vec4 frplTerrainSubstance;
 in mat4 frplInstanceTransform;
+in mat4 frplInstanceNormalTransform;
 
 uniform vec3 frplBaseColor;
 uniform mat4 frplTransform;
@@ -30,7 +31,7 @@ void main()
     TexCoord = frplTexcoord;
     TerrainSubstance = frplTerrainSubstance;
 
-    WorldPosition = (frplModelTransform * frplInstanceTransform * vec4(frplPosition, 1.0)).xyz ;
+    WorldPosition = (frplModelTransform * frplInstanceTransform * frplInstanceNormalTransform * vec4(frplPosition, 1.0)).xyz ;
     gl_Position = frplTransform * vec4(frplPosition, 1.0);
     CameraWorldPosition = frplCameraWorldPosition;
 

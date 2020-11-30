@@ -264,10 +264,12 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         }
         
         std::vector<glm::mat4> instanceTransforms;
-
+        std::vector<glm::mat4> instanceNormalTransforms;
+        
         for (const glm::mat4& transform : instancedSceneObject.m_Transforms)
         {
             instanceTransforms.push_back(ComputeTransform(_scene, instancedSceneObject.m_Solid, transform));
+            instanceNormalTransforms.push_back(MathsHelpers::GetRotationMatrix(transform));
         }
 
         const GLint instanceTransformLocation = glGetAttribLocation(shaderProgram->GetProgramHandle(), "frplInstanceTransform");
@@ -280,6 +282,17 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         glBindBuffer(GL_ARRAY_BUFFER, instanceTransformLocation);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceTransforms.size(), instanceTransforms.data(), GL_DYNAMIC_DRAW);
 
+        const GLint instanceNormalTransformLocation = glGetAttribLocation(shaderProgram->GetProgramHandle(), "frplInstanceNormalTransform");
+
+        if (instanceNormalTransformLocation < 0)
+        {
+            LogError("Couldn't get location for instance normal transforms");
+        }
+        
+        glBindBuffer(GL_ARRAY_BUFFER, instanceNormalTransformLocation);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceNormalTransforms.size(), instanceNormalTransforms.data(), GL_DYNAMIC_DRAW);
+
+        
         SetSceneShaderParameters(_scene, shaderProgram, _window);
         SetMaterialShaderParameters(shaderProgram, instancedSceneObject.m_Solid);
         SetupTextures(shaderProgram, instancedSceneObject.m_Solid);

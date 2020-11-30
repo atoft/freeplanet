@@ -25,6 +25,7 @@
 #include "src/world/particles/ParticleSystemComponent.h"
 
 #include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 #include <random>
@@ -200,6 +201,9 @@ ParticleSystem FloraGeneration::GenerateFoliage(const PlantInstance& _plantInsta
         {
             Particle& particle = emitter.m_Particles.emplace_back();
             particle.m_RelativePosition = node.m_RelativePosition;
+
+            const glm::vec3 centreToParticle = glm::normalize(node.m_RelativePosition - emitter.m_RelativePosition);
+            particle.m_Rotation = MathsHelpers::GenerateRotationMatrixFromUp(centreToParticle);
         }
     }
 

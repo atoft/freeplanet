@@ -191,23 +191,47 @@ void GLHelpers::SetupForShader(const ShaderProgram& _shader, VertexDataBitfield 
 
     if (_vertexDataMask & VertexData_Inst_Transform)
     {
-        GLint attribLocation = glGetAttribLocation(_shader.GetProgramHandle(), "frplInstanceTransform");
-        GLHelpers::ReportError("glGetAttribLocation frplInstanceTransform");
-        glBindBuffer(GL_ARRAY_BUFFER, attribLocation);
-
-        constexpr u32 MATRIX_SIZE = 4;
-        for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
         {
-            glEnableVertexAttribArray(attribLocation + attribIdx);
-            GLHelpers::ReportError("glEnableVertexAttribArray instance");
-            glVertexAttribPointer(attribLocation + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
-                                    (const GLvoid*)(sizeof(GLfloat) * attribIdx * 4));
-            GLHelpers::ReportError("glGetAttribPointer instance");
-            glVertexAttribDivisor(attribLocation + attribIdx, 1);
-            GLHelpers::ReportError("glGetAttribDivisor instance");
+            GLint attribLocation = glGetAttribLocation(_shader.GetProgramHandle(), "frplInstanceTransform");
+            GLHelpers::ReportError("glGetAttribLocation frplInstanceTransform");
+            glBindBuffer(GL_ARRAY_BUFFER, attribLocation);
+     
+            constexpr u32 MATRIX_SIZE = 4;
+            for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
+            {
+                glEnableVertexAttribArray(attribLocation + attribIdx);
+                GLHelpers::ReportError("glEnableVertexAttribArray instance");
+                glVertexAttribPointer(attribLocation + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                                        (const GLvoid*)(sizeof(GLfloat) * attribIdx * 4));
+                GLHelpers::ReportError("glGetAttribPointer instance");
+                glVertexAttribDivisor(attribLocation + attribIdx, 1);
+                GLHelpers::ReportError("glGetAttribDivisor instance");
+            }
+     
+            _inOutMesh.m_VertexAttribs.push_back(attribLocation);
         }
 
-        _inOutMesh.m_VertexAttribs.push_back(attribLocation);
+        // @Performance Allow instances without normal transforms for cheaper particles.
+        {
+            GLint attribLocation = 9;//glGetAttribLocation(_shader.GetProgramHandle(), "frplInstanceNormalTransform");
+            GLHelpers::ReportError("glGetAttribLocation frplInstanceNormalTransform");
+            glBindBuffer(GL_ARRAY_BUFFER, attribLocation);
+     
+            constexpr u32 MATRIX_SIZE = 4;
+            for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
+            {
+                glEnableVertexAttribArray(attribLocation + attribIdx);
+                GLHelpers::ReportError("glEnableVertexAttribArray instance normal");
+                glVertexAttribPointer(attribLocation + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                                        (const GLvoid*)(sizeof(GLfloat) * attribIdx * 4));
+                GLHelpers::ReportError("glGetAttribPointer instance normal");
+                glVertexAttribDivisor(attribLocation + attribIdx, 1);
+                GLHelpers::ReportError("glGetAttribDivisor instance normal");
+            }
+     
+            _inOutMesh.m_VertexAttribs.push_back(attribLocation);
+        }
+
     }
 }
 

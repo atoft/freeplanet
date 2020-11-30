@@ -33,6 +33,8 @@ struct Particle
     glm::vec3 m_OffsetPosition = glm::vec3(0.f);
     
     // TODO lifetime, velocity, etc.
+
+    glm::mat4 m_Rotation = glm::mat4(1.f);
 };
 
 enum class ParticleAnimation

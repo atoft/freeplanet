@@ -255,9 +255,9 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
             
                     for (const Particle& particle : emitter.m_Particles)
                     {
-                        const glm::mat4 transform = glm::translate(objectTransform, emitter.m_RelativePosition + particle.m_RelativePosition + particle.m_OffsetPosition);
+                        const glm::mat4 translation = glm::translate(objectTransform, emitter.m_RelativePosition + particle.m_RelativePosition + particle.m_OffsetPosition);
             
-                        instance->m_Transforms.push_back(transform);
+                        instance->m_Transforms.push_back(translation * particle.m_Rotation);
                     }
                 }
             }
