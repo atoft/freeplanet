@@ -116,8 +116,6 @@ public:
     bool IsProceduralSpawningDone() const { return m_IsProceduralSpawningDone; };
     void SetProceduralSpawningDone() { m_IsProceduralSpawningDone = true; };
 
-    glm::ivec3 ComputeRelativeCoordinates(glm::vec3 _zonePosition) const;
-
     bool ContainsPlayer() const;
 
 private:

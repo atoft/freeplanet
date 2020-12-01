@@ -17,6 +17,9 @@ struct WorldPosition
     glm::vec3 GetPositionRelativeTo(glm::ivec3 _zoneCoordinates) const;
     glm::vec3 GetPositionRelativeTo(const WorldZone& _zone) const;
 
+    bool IsInsideZone() const;
+    WorldPosition GetInsideZone() const;
+    
     glm::ivec3 m_ZoneCoordinates;
     glm::vec3 m_LocalPosition;
 };

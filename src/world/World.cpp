@@ -172,31 +172,26 @@ void World::TransferEntitiesBetweenZones()
         glm::ivec3 m_SourceZone;
         glm::ivec3 m_DestinationZone;
 
-        WorldObject* m_Object;
+        WorldObjectID m_ObjectID;
 
         PendingZoneTransfer()
         {};
-
-        PendingZoneTransfer(bool _shouldDelete,
-                            glm::ivec3 _sourceZone,
-                            glm::ivec3 _destinationZone)
-                : m_ShouldDelete(_shouldDelete),
-                  m_SourceZone(_sourceZone),
-                  m_DestinationZone(_destinationZone)
-        {};
     };
+
     std::vector<PendingZoneTransfer> worldObjectsToTransfer;
 
     for (WorldZone& zone : m_ActiveZones)
     {
         for (WorldObject& worldObject : zone.GetWorldObjects())
         {
-            const glm::ivec3 relativeCoords = zone.ComputeRelativeCoordinates(worldObject.GetPosition());
-            if (relativeCoords != glm::ivec3(0))
+            //const glm::ivec3 relativeCoords = zone.ComputeRelativeCoordinates(worldObject.GetPosition());
+            const WorldPosition worldPosition = worldObject.GetWorldPosition();
+            
+            if (!worldPosition.IsInsideZone())
             {
                 static int i = 0;
 
-                glm::ivec3 destinationCoords = zone.GetCoordinates() + relativeCoords;
+                glm::ivec3 destinationCoords = worldPosition.GetInsideZone().m_ZoneCoordinates;
 
                 WorldZone* destinationZone = FindZoneAtCoordinates(destinationCoords);
 
@@ -204,7 +199,7 @@ void World::TransferEntitiesBetweenZones()
                 zoneTransfer.m_SourceZone = zone.GetCoordinates();
                 zoneTransfer.m_DestinationZone = destinationCoords;
                 zoneTransfer.m_ShouldDelete = destinationZone == nullptr && !m_PlayerHandler->IsControlledByLocalPlayer(worldObject.GetWorldObjectID());
-                zoneTransfer.m_Object = &worldObject;
+                zoneTransfer.m_ObjectID = worldObject.GetWorldObjectID();
                 worldObjectsToTransfer.push_back(zoneTransfer);
 
                 LogMessage(std::to_string(i++) + " The object " + worldObject.GetName()
@@ -222,7 +217,12 @@ void World::TransferEntitiesBetweenZones()
         // We don't want those resources to be released and reacquired.
 
         WorldZone* sourceZone = FindZoneAtCoordinates(pendingTransfer.m_SourceZone);
-
+        assert(sourceZone != nullptr);
+        
+        // Get it by ID in case it was moved in memory before we got to process the transfer. 
+        WorldObject* sourceObject = GetWorldObject(pendingTransfer.m_ObjectID);
+        assert(sourceObject != nullptr);
+        
         if (!pendingTransfer.m_ShouldDelete)
         {
             WorldZone* destinationZone = FindZoneAtCoordinates(pendingTransfer.m_DestinationZone);
@@ -232,19 +232,17 @@ void World::TransferEntitiesBetweenZones()
                 TryLoadZone(pendingTransfer.m_DestinationZone);
                 continue;
             }
-
-            assert(pendingTransfer.m_Object != nullptr);
-
-            destinationZone->GetWorldObjects().push_back(*pendingTransfer.m_Object);
+            
+            destinationZone->GetWorldObjects().push_back(*sourceObject);
             WorldObject& destinationObject = destinationZone->GetWorldObjects().back();
             destinationObject.SetName(destinationObject.GetName());
 
-            TransferComponent<BipedComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
-            TransferComponent<ColliderComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
-            TransferComponent<FreelookCameraComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
-            TransferComponent<RenderComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
-            TransferComponent<LightComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
-            TransferComponent<ParticleSystemComponent>(*pendingTransfer.m_Object, *destinationZone, destinationObject);
+            TransferComponent<BipedComponent>(*sourceObject, *destinationZone, destinationObject);
+            TransferComponent<ColliderComponent>(*sourceObject, *destinationZone, destinationObject);
+            TransferComponent<FreelookCameraComponent>(*sourceObject, *destinationZone, destinationObject);
+            TransferComponent<RenderComponent>(*sourceObject, *destinationZone, destinationObject);
+            TransferComponent<LightComponent>(*sourceObject, *destinationZone, destinationObject);
+            TransferComponent<ParticleSystemComponent>(*sourceObject, *destinationZone, destinationObject);
             static_assert(ComponentConstants::ComponentCount == 6);
 
             glm::vec3 positionOffset =
@@ -254,7 +252,10 @@ void World::TransferEntitiesBetweenZones()
             destinationObject.GetRef().m_ZoneCoordinates = pendingTransfer.m_DestinationZone;
             destinationObject.GetRef().m_LocalRef = destinationZone->GetWorldObjects().size() - 1;
 
-            sourceZone->TransferWorldObjectOutOfZone(pendingTransfer.m_Object->GetWorldObjectID());
+            assert(destinationObject.GetWorldPosition().IsInsideZone());
+            assert(destinationObject.GetWorldPosition().m_ZoneCoordinates == desinationZone->GetZoneCoordinates());
+            
+            sourceZone->TransferWorldObjectOutOfZone(sourceObject->GetWorldObjectID());
 
             m_Directory.OnWorldObjectTransferred(destinationObject.GetWorldObjectID(), destinationObject.GetRef());
 
@@ -267,8 +268,8 @@ void World::TransferEntitiesBetweenZones()
         }
         else
         {
-            sourceZone->DestroyWorldObject(pendingTransfer.m_Object->GetWorldObjectID());
-            m_Directory.UnregisterWorldObject(pendingTransfer.m_Object->GetWorldObjectID());
+            sourceZone->DestroyWorldObject(sourceObject->GetWorldObjectID());
+            m_Directory.UnregisterWorldObject(sourceObject->GetWorldObjectID());
         }
     }
 }
@@ -428,8 +429,7 @@ glm::ivec3 World::LocateWorldObject(WorldObjectID _objectID) const
 
 WorldObject& World::ConstructWorldObject(WorldZone& _zone, const std::string& _name)
 {
-    _zone.GetWorldObjects().emplace_back(this);
-    WorldObject& newObject = _zone.GetWorldObjects().back();
+    WorldObject& newObject = _zone.GetWorldObjects().emplace_back(this);
 
     // Create a unique reference for this WorldObject.
     newObject.GetRef().m_ZoneCoordinates = _zone.GetCoordinates();

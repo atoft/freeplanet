@@ -180,13 +180,6 @@ glm::mat4x4 WorldZone::GetTerrainModelTransform() const
     return glm::translate(glm::mat4(1.f), glm::vec3(-0.5f) * m_Dimensions);
 }
 
-glm::ivec3 WorldZone::ComputeRelativeCoordinates(glm::vec3 _zonePosition) const
-{
-    const glm::ivec3 relativeCoords = glm::ivec3(glm::round(_zonePosition / m_Dimensions) );
-
-    return relativeCoords;
-}
-
 bool WorldZone::ContainsPlayer() const
 {
     return m_OwnerWorld->GetPlayerHandler()->IsPlayerInZone(m_Coordinates);
