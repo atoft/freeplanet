@@ -31,10 +31,13 @@ struct Particle
 
     // An additional particle-space offset.
     glm::vec3 m_OffsetPosition = glm::vec3(0.f);
-    
-    // TODO lifetime, velocity, etc.
 
     glm::mat4 m_Rotation = glm::mat4(1.f);
+
+    glm::vec3 m_Velocity = glm::vec3(0.f);
+
+    Color m_Color = Color(1.f);
+    f32 m_TimePassed = 0.f;
 };
 
 enum class ParticleAnimation
@@ -52,13 +55,27 @@ struct ParticleEmitter
     AssetHandle<Texture> m_Texture;
     DynamicMeshID m_MeshID;
 
-    // TODO properties for emission rate, initial velocity, etc.
-
     ParticleAnimation m_Animation = ParticleAnimation::None;
     f32 m_AnimFrequency = 1.f;
     f32 m_AnimAmplitude = 0.5f;
-    f32 m_TimePassed = 0.f;
     f32 m_TimeModulus = 64.f;
+
+    // Emissions per second
+    f32 m_EmissionRate = 0.f;
+
+    u32 m_ParticlesPerEmission = 1;
+    f32 m_InitialSpeed = 1.f;
+    glm::vec3 m_Acceleration = glm::vec3(0.f);
+
+    // Duration a particle exists for after being emitted, seconds.
+    f32 m_ParticleLifetime = -1.f;
+    f32 m_FadeoutDuration = -1.f;
+
+    f32 m_EmitterLifetime = -1.f;
+    
+    // Runtime state
+    f32 m_TimePassed = 0.f;
+    f32 m_TimeSinceEmission = 0.f;
 };
 
 struct ParticleSystem
@@ -72,4 +89,7 @@ public:
     ParticleSystemComponent(World* _world, WorldObjectID _ownerID);
     
     ParticleSystem m_ParticleSystem;
+
+    // If true, destroy the owning WorldObject once there are no more particle emitters left.
+    bool m_ShouldDestroyOwnerOnFinish = false;
 };

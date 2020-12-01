@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+#include <src/tools/globals.h>
+
 // Helpers for the standard template library.
 class STL
 {
@@ -30,6 +32,26 @@ public:
         return true;
     }
 
+    // Remove all elements matching _predicate from _container (with resize) and return true if at least one was removed.
+    template<typename Container, typename Predicate>
+    static bool RemoveIf(Container& _container, Predicate _predicate)
+    {
+        if (_container.empty())
+        {
+            return false;
+        }
+
+        auto iterator = std::remove_if(_container.begin(), _container.end(), _predicate);
+
+        if (iterator == _container.end())
+        {
+            return false;
+        }
+
+        _container.erase(iterator);
+        return true;
+    }
+    
     template <typename EnumType>
     static EnumType FromString(std::string _valueString)
     {

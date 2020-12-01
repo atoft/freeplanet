@@ -3,8 +3,14 @@
 //
 
 #include "TerrainHandler.h"
+#include "src/assets/MeshAssets.h"
+#include "src/assets/ShaderAssets.h"
+#include "src/assets/TextureAssets.h"
+#include "src/world/SpawningHandler.h"
+#include "src/world/events/WorldEvent.h"
 
 #include <src/world/collision/CollisionHandler.h>
+#include <src/world/planet/PlanetGeneration.h>
 #include <src/world/World.h>
 #include <src/world/WorldZone.h>
 #include <src/tools/MathsHelpers.h>
@@ -31,43 +37,8 @@ void TerrainHandler::Update(TimeMS _dt)
             // Trigger the renderer to make a new DynamicMesh for this TerrainComponent.
             terrainComponent.m_DynamicMesh.RequestMeshUpdate(finishedUpdater->GetRawMesh());
 
-            for (const WorldEvent& event : finishedUpdater->GetAssociatedEvents())
-            {
-                if (event.m_Type == WorldEvent::Type::AddTerrain)
-                {
-                    AABB eventBounds;
-                    eventBounds.m_Dimensions = glm::vec3(*event.m_Radius);
-
-                    std::vector<WorldObjectID> overlaps = m_World->GetCollisionHandler()->DoShapecast(*event.m_TargetPosition, eventBounds);
-
-                    for (const WorldObjectID& overlapID : overlaps)
-                    {
-                        WorldObject* overlappedObject = m_World->GetWorldObject(overlapID);
-
-                        if (overlappedObject == nullptr)
-                        {
-                            continue;
-                        }
-
-                        const glm::vec3 objectLocalPosition = overlappedObject->GetPosition();
-                        const glm::vec3 eventPosition = event.m_TargetPosition->m_LocalPosition;
-
-                        const glm::vec3 eventToObject = objectLocalPosition - eventPosition;
-                        const f32 distanceFromEvent = glm::length(eventToObject);
-
-                        const f32 correctionDistance = *event.m_Radius - distanceFromEvent;
-
-                        constexpr f32 OVERLAPPED_OBJECT_RADIUS = 1.f;
-
-                        if (correctionDistance > 0.f)
-                        {
-                            const glm::vec3 correctionVector = (eventToObject / distanceFromEvent) * (correctionDistance + OVERLAPPED_OBJECT_RADIUS);
-                            overlappedObject->SetPosition(overlappedObject->GetPosition() + correctionVector);
-                        }
-                    }
-                }
-            }
-
+            HandleFinishedUpdaterFeedback(zone, finishedUpdater);
+ 
             m_TerrainMeshUpdaters.Clear(zone.GetCoordinates());
         }
 
@@ -89,6 +60,8 @@ void TerrainHandler::Update(TimeMS _dt)
                         terrainComponent.m_AssociatedEvents
                     };
 
+            terrainComponent.m_AssociatedEvents.clear();
+            
             const bool canUpdate = m_TerrainMeshUpdaters.RequestLoad(zone.GetCoordinates(), params);
 
             if (canUpdate)
@@ -144,7 +117,6 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
 
             if (GetTerrainRegionVolume(region) == 0)
             {
-                LogMessage("TerrainEvent doesn't affect zone " + glm::to_string(zone.GetCoordinates()));
                 continue;
             }
 
@@ -165,6 +137,79 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
     }
     default:
         break;
+    }
+}
+
+void TerrainHandler::HandleFinishedUpdaterFeedback(WorldZone& _zone, const TerrainMeshUpdater* _finishedUpdater)
+{
+   for (const WorldEvent& event : _finishedUpdater->GetAssociatedEvents())
+    {
+        if (event.m_Type == WorldEvent::Type::AddTerrain)
+        {
+            AABB eventBounds;
+            eventBounds.m_Dimensions = glm::vec3(*event.m_Radius);
+
+            std::vector<WorldObjectID> overlaps = m_World->GetCollisionHandler()->DoShapecast(*event.m_TargetPosition, eventBounds);
+
+            for (const WorldObjectID& overlapID : overlaps)
+            {
+                WorldObject* overlappedObject = m_World->GetWorldObject(overlapID);
+
+                if (overlappedObject == nullptr)
+                {
+                    continue;
+                }
+
+                const glm::vec3 objectLocalPosition = overlappedObject->GetPosition();
+                const glm::vec3 eventPosition = event.m_TargetPosition->m_LocalPosition;
+
+                const glm::vec3 eventToObject = objectLocalPosition - eventPosition;
+                const f32 distanceFromEvent = glm::length(eventToObject);
+
+                const f32 correctionDistance = *event.m_Radius - distanceFromEvent;
+
+                constexpr f32 OVERLAPPED_OBJECT_RADIUS = 1.f;
+
+                if (correctionDistance > 0.f)
+                {
+                    const glm::vec3 correctionVector = (eventToObject / distanceFromEvent) * (correctionDistance + OVERLAPPED_OBJECT_RADIUS);
+                    overlappedObject->SetPosition(overlappedObject->GetPosition() + correctionVector);
+                }
+            }
+        }
+        else if (event.m_Type == WorldEvent::Type::RemoveTerrain)
+        {
+            if (event.m_TargetPosition->m_ZoneCoordinates != _zone.GetCoordinates())
+            {
+                continue;
+            }
+            
+            WorldObject& worldObject = m_World->ConstructWorldObject(_zone, "TerrainRemovedParticles");
+            worldObject.SetInitialPosition(event.m_TargetPosition->m_LocalPosition);
+
+            const glm::mat3x3 rotationMatrix = MathsHelpers::GenerateRotationMatrix3x3FromUp(
+                PlanetGeneration::GetUpDirection(*m_World->GetPlanet(), *event.m_TargetPosition));
+
+            MathsHelpers::SetRotationPart(worldObject.GetZoneTransform(), rotationMatrix);
+
+            
+            ParticleSystemComponent& particleSystem =_zone.AddComponent<ParticleSystemComponent>(worldObject);
+            particleSystem.m_ShouldDestroyOwnerOnFinish = true;
+            
+            ParticleEmitter& emitter = particleSystem.m_ParticleSystem.m_Emitters.emplace_back();
+
+            // TODO Address this in mesh refactor.
+            emitter.m_MeshID = m_World->GetSpawningHandler()->m_ParticleSystemMesh.GetID();
+            emitter.m_Texture = AssetHandle<Texture>(TextureAsset_Billboard_DirtParticle);
+            emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaTest_NormalUp);
+
+            emitter.m_EmissionRate = 0.1f;
+            emitter.m_ParticlesPerEmission = 6;
+            emitter.m_InitialSpeed = 2.f;
+            emitter.m_Acceleration = m_World->GetGravityStrength() * glm::vec3(0.f, -1.f, 0.f);
+            emitter.m_ParticleLifetime = 1.f;
+            emitter.m_EmitterLifetime = 1.f;
+        }
     }
 }
 

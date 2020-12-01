@@ -16,10 +16,12 @@
  */
 
 #include "ParticleSystemHandler.h"
+#include "src/world/WorldObjectID.h"
 #include <glm/fwd.hpp>
 #include <glm/gtc/noise.hpp>
 
 #include <src/tools/globals.h>
+#include <src/tools/MathsHelpers.h>
 #include <src/world/particles/ParticleSystemComponent.h>
 #include <src/world/World.h>
 
@@ -28,22 +30,86 @@ ParticleSystemHandler::ParticleSystemHandler(World *_world)
 
 void ParticleSystemHandler::Update(TimeMS _delta)
 {
+    std::vector<WorldObjectID> particleObjectsToDestroy;
+    
     for (WorldZone& zone : m_World->GetActiveZones())
     {
         for (ParticleSystemComponent& particleComponent : zone.GetComponents<ParticleSystemComponent>())
         {
+            STL::RemoveIf(particleComponent.m_ParticleSystem.m_Emitters, [](const ParticleEmitter& _emitter)
+                                                                         {
+                                                                             return _emitter.m_EmitterLifetime > 0.f
+                                                                                 && _emitter.m_TimePassed > _emitter.m_EmitterLifetime;
+                                                                         });
+            
             for (ParticleEmitter& emitter : particleComponent.m_ParticleSystem.m_Emitters)
             {
                 UpdateEmitter(emitter, _delta);
             }
+
+            if (particleComponent.m_ShouldDestroyOwnerOnFinish && particleComponent.m_ParticleSystem.m_Emitters.empty())
+            {
+                particleObjectsToDestroy.push_back(particleComponent.GetOwner());
+            }
         }
+    }
+
+    for (WorldObjectID id : particleObjectsToDestroy)
+    {
+        m_World->DestroyWorldObject(id);
     }
 }
 
 void ParticleSystemHandler::UpdateEmitter(ParticleEmitter& _emitter, TimeMS _delta)
 {
+    const bool isFirstUpdate = _emitter.m_TimePassed == 0.f;
     _emitter.m_TimePassed = glm::mod(_emitter.m_TimePassed + (_delta / 1000.f), _emitter.m_TimeModulus);
+
+    // Remove particles
+    if (_emitter.m_ParticleLifetime > 0.f)
+    {
+      STL::RemoveIf(_emitter.m_Particles, [&_emitter](const Particle &_particle)
+                                          {
+                                              return _particle.m_TimePassed > _emitter.m_ParticleLifetime;
+                                          });
+    }
     
+    // Emit particles
+    if (_emitter.m_EmissionRate > 0.f)
+    {
+        if (isFirstUpdate || _emitter.m_TimeSinceEmission > 1.f / _emitter.m_EmissionRate)
+        {
+            for (u32 emittedIdx = 0; emittedIdx < _emitter.m_ParticlesPerEmission; ++emittedIdx)
+            {
+                Particle& particle = _emitter.m_Particles.emplace_back();
+                
+                const glm::vec3 emissionDirection = MathsHelpers::GenerateNormalFromPitchYaw(
+                    0.f,
+                    static_cast<f32>(emittedIdx) / static_cast<f32>(_emitter.m_ParticlesPerEmission) * glm::pi<f32>());
+
+                particle.m_Velocity = emissionDirection * _emitter.m_InitialSpeed;
+                particle.m_Rotation = MathsHelpers::GenerateRotationMatrixFromUp(emissionDirection);
+            }
+
+            _emitter.m_TimeSinceEmission = 0.f;
+        }
+        else
+        {
+            _emitter.m_TimeSinceEmission += _delta / 100.f;
+        }
+    }
+
+    // Tick particles
+    for (Particle& particle : _emitter.m_Particles)
+    {
+        particle.m_Velocity += _emitter.m_Acceleration * (_delta / 1000.f);
+
+        particle.m_RelativePosition += particle.m_Velocity * (_delta / 1000.f);
+
+        particle.m_TimePassed += _delta / 1000.f;
+    }
+
+    // Apply ParticleAnimation
     switch (_emitter.m_Animation)
     {
     case ParticleAnimation::None:
@@ -59,7 +125,6 @@ void ParticleSystemHandler::UpdateEmitter(ParticleEmitter& _emitter, TimeMS _del
 
             constexpr f32 noiseSampleScale = 0.25f;
 
-            // TODO Not quite right, causing discontinuity.
             particle.m_OffsetPosition = glm::perlin(
                 particle.m_RelativePosition * noiseSampleScale + _emitter.m_TimePassed * _emitter.m_AnimFrequency * noiseSampleDirection,
                 glm::vec3(_emitter.m_TimeModulus * _emitter.m_AnimFrequency)) * _emitter.m_AnimAmplitude * noiseOffsetDirection;

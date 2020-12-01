@@ -27,6 +27,8 @@ public:
     bool IsAllLoaded() const;
 
 private:
+    void HandleFinishedUpdaterFeedback(WorldZone& _zone, const TerrainMeshUpdater* _finishedUpdater);
+    
     World* m_World = nullptr;
 
     static constexpr u32 CONCURRENT_TERRAIN_UPDATERS_COUNT = 3;
