@@ -253,7 +253,7 @@ void World::TransferEntitiesBetweenZones()
             destinationObject.GetRef().m_LocalRef = destinationZone->GetWorldObjects().size() - 1;
 
             assert(destinationObject.GetWorldPosition().IsInsideZone());
-            assert(destinationObject.GetWorldPosition().m_ZoneCoordinates == desinationZone->GetZoneCoordinates());
+            assert(destinationObject.GetWorldPosition().m_ZoneCoordinates == destinationZone->GetCoordinates());
             
             sourceZone->TransferWorldObjectOutOfZone(sourceObject->GetWorldObjectID());
 
@@ -263,8 +263,6 @@ void World::TransferEntitiesBetweenZones()
             {
                 m_VistaHandler->OnLocalPlayerWorldZoneChanged(pendingTransfer.m_DestinationZone);
             }
-
-            assert(destinationZone->ComputeRelativeCoordinates(destinationObject.GetPosition()) == glm::ivec3(0));
         }
         else
         {

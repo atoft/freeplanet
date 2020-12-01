@@ -201,8 +201,9 @@ void TerrainHandler::HandleFinishedUpdaterFeedback(WorldZone& _zone, const Terra
             // TODO Address this in mesh refactor.
             emitter.m_MeshID = m_World->GetSpawningHandler()->m_ParticleSystemMesh.GetID();
             emitter.m_Texture = AssetHandle<Texture>(TextureAsset_Billboard_DirtParticle);
-            emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaTest_NormalUp);
-
+            emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaBlend_NormalUp);
+            emitter.m_NeedsDepthSort = true;
+            
             emitter.m_EmissionRate = 0.1f;
             emitter.m_ParticlesPerEmission = 6;
             emitter.m_InitialSpeed = 2.f;

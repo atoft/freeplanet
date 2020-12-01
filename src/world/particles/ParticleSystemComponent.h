@@ -72,6 +72,8 @@ struct ParticleEmitter
     f32 m_FadeoutDuration = -1.f;
 
     f32 m_EmitterLifetime = -1.f;
+
+    bool m_NeedsDepthSort = false;
     
     // Runtime state
     f32 m_TimePassed = 0.f;

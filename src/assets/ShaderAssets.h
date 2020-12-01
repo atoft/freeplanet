@@ -18,6 +18,7 @@ enum ShaderAsset
     ShaderAsset_Lit_Textured,
     ShaderAsset_Lit_AlphaTest_NormalUp,
     ShaderAsset_Lit_Inst_AlphaTest_NormalUp,
+    ShaderAsset_Lit_Inst_AlphaBlend_NormalUp,
     ShaderAsset_Skybox,
 
     ShaderAsset_Terrain_Base,

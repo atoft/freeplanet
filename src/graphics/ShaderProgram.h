@@ -40,7 +40,8 @@ public:
     void SetUniformInt(std::string name, int value);
 
     void SetUniformFloat3(std::string name, glm::vec3 vector);
-
+    void SetUniformFloat4(std::string _name, glm::vec4 _vector);
+    
     static bool ValidateShader(std::string _fileName);
 
 protected:

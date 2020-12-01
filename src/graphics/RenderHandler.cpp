@@ -153,31 +153,29 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 {
     ProfileCurrentFunction();
 
-    Renderable::Scene sceneTemplate;
+    Renderable::Scene sceneToRender;
 
-    GenerateSceneCamera(_world, _camera, sceneTemplate);
-    GenerateSceneGlobalLighting(_world, _camera, sceneTemplate);
+    GenerateSceneCamera(_world, _camera, sceneToRender);
+    GenerateSceneGlobalLighting(_world, _camera, sceneToRender);
     UpdateSharedDynamicMeshes(_world, _inOutFrame);
 
+    std::vector<Renderable::InstancedSceneObject> particleInstances;
+            
     for (const WorldZone& zone : _world->GetActiveZones())
     {
-        Renderable::Scene sceneToRender = sceneTemplate;
-
         sceneToRender.m_RenderMode = m_ShouldRenderWireframe ? Renderable::RenderMode::Wireframe
                                                              : Renderable::RenderMode::Normal;
 
         // Offset the view to account for zone.
-        // TODO re-evaluate whether to have a different scene for each zone. It doesn't seem to solve anything
-        // since they are reconstructed each frame anyway.
-        sceneToRender.m_ViewTransform *= zone.GetRelativeTransform(_camera->GetOwnerObject()->GetRef().m_ZoneCoordinates);
-
+        const glm::mat4 viewTransform = zone.GetRelativeTransform(_camera->GetOwnerObject()->GetRef().m_ZoneCoordinates);
+        
         for (const RenderComponent& component : zone.GetComponents<RenderComponent>())
         {
             const WorldObject* worldObject = component.GetOwnerObject();
             assert(worldObject != nullptr);
 
             Renderable::SceneObject sceneObject;
-            sceneObject.m_Transform = worldObject->GetZoneTransform();
+            sceneObject.m_Transform = viewTransform * worldObject->GetZoneTransform();
             sceneObject.m_Solid.m_Material.m_Shader = component.GetShader();
             sceneObject.m_Solid.m_Material.m_Textures.emplace_back("tex2D_0",  component.GetTexture());
             sceneObject.m_Solid.m_MeshType = component.GetMeshType();
@@ -208,18 +206,16 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
             const WorldObject* worldObject = component.GetOwnerObject();
             assert(worldObject != nullptr);
 
-            light.m_Origin = worldObject->GetPosition();
+            light.m_Origin = worldObject->GetPosition() + MathsHelpers::GetPosition(viewTransform);
 
             sceneToRender.m_PointLights.push_back(light);
         }
 
         if (m_ShouldRenderParticles)
         {
-            std::vector<Renderable::InstancedSceneObject> particleInstances;
-        
             for (const ParticleSystemComponent& component : zone.GetComponents<ParticleSystemComponent>())
             {
-                glm::mat4 objectTransform = component.GetOwnerObject()->GetZoneTransform();
+                glm::mat4 objectTransform = viewTransform * component.GetOwnerObject()->GetZoneTransform();
                 
                 for (const ParticleEmitter& emitter : component.m_ParticleSystem.m_Emitters)
                 {
@@ -252,7 +248,9 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                     {
                         instance = &(*it);
                     }
-            
+
+                    instance->m_Solid.m_NeedsDepthSort = emitter.m_NeedsDepthSort;
+                    
                     for (const Particle& particle : emitter.m_Particles)
                     {
                         const glm::mat4 translation = glm::translate(objectTransform, emitter.m_RelativePosition + particle.m_RelativePosition + particle.m_OffsetPosition);
@@ -261,35 +259,52 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                     }
                 }
             }
-
-            // TODO sort the instances from back to front, unless they are set to use AlphaTest.
-
-            STL::Append(sceneToRender.m_Instances, particleInstances);    
         }
         
-        UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, zone.GetTerrainModelTransform(),
+        UpdateDynamicMesh(zone.GetTerrainComponent().m_DynamicMesh, viewTransform * zone.GetTerrainModelTransform(),
                           m_HACKTerrainShader, sceneToRender.m_SceneObjects, _inOutFrame, 0);
 
         if (zone.ContainsPlayer())
         {
             m_DebugZoneRawMeshForDebugDraw = zone.GetTerrainComponent().m_DynamicMesh.m_RawMesh;
         }
-
-        _inOutFrame.m_PendingScenes.push_back(sceneToRender);
     }
 
     if (m_ShouldRenderVista)
     {
-        Renderable::Scene sceneToRender = sceneTemplate;
-
         sceneToRender.m_RenderMode = m_ShouldRenderWireframe ? Renderable::RenderMode::Wireframe
                                                              : Renderable::RenderMode::Vista;
 
         UpdateDynamicMesh(_world->GetVistaHandler()->m_DynamicMesh,
                           _world->GetVistaHandler()->GetTerrainModelTransform(), m_HACKTerrainShader,
                           sceneToRender.m_SceneObjects, _inOutFrame, m_MaxTerrainLOD);
-        _inOutFrame.m_PendingScenes.push_back(sceneToRender);
     }
+
+    {
+        ProfileCurrentScope("Depth sort");
+        
+        const glm::vec3 cameraPosition = _camera->GetOwnerObject()->GetPosition();
+        const glm::vec3 cameraDirection = _camera->GetLookDirection();
+        for (Renderable::InstancedSceneObject& instance : particleInstances)
+        {
+            if (instance.m_Solid.m_NeedsDepthSort)
+            {                
+                std::sort(instance.m_Transforms.begin(), instance.m_Transforms.end(), [&cameraPosition, &cameraDirection](const glm::mat4& _lhs, const glm::mat4& _rhs)
+                                                                                      {
+                                                                                          // @Performance Should calculate the values once only and cache.
+                                                                                          const f32 distA = glm::dot(MathsHelpers::GetPosition(_lhs) - cameraPosition, cameraDirection);
+                                                                                          const f32 distB = glm::dot(MathsHelpers::GetPosition(_rhs) - cameraPosition, cameraDirection);
+                                                                                          return distA > distB;
+                                                                                      });
+            }
+        }
+        
+        // TODO sort the instances themselves.
+     
+        STL::Append(sceneToRender.m_Instances, particleInstances);    
+    }
+    
+    _inOutFrame.m_PendingScenes.push_back(sceneToRender);
 }
 
 void RenderHandler::UpdateSharedDynamicMeshes(const World* _world, Renderable::Frame& _inOutFrame)

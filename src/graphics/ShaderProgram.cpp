@@ -213,6 +213,15 @@ void ShaderProgram::SetUniformFloat3(std::string name, glm::vec3 vector)
 
 }
 
+void ShaderProgram::SetUniformFloat4(std::string _name, glm::vec4 _vector)
+{
+    Use();
+    GLint uniform = glGetUniformLocation(m_ShaderProgramHandle, _name.c_str());
+    glUniform4f(uniform, _vector.x, _vector.y, _vector.z, _vector.w);
+    GLHelpers::ReportError("Setting uniform float3 \'" + _name + "\'");
+
+}
+
 void ShaderProgram::SetUniformMat4(std::string name, glm::mat4 matrix)
 {
     Use();

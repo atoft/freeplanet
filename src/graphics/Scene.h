@@ -95,7 +95,7 @@ namespace Renderable
         MeshType m_MeshType = MeshType::Normal;
 
         Color m_BaseColor = Color(0.f, 0.f, 0.f, 1.f);
-
+        bool m_NeedsDepthSort = false;
     };
     
     struct SceneObject

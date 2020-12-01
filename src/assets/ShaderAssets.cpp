@@ -22,6 +22,8 @@ std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
             return "Lit_AlphaTest_NormalUp";
         case ShaderAsset_Lit_Inst_AlphaTest_NormalUp:
             return "Lit_Inst_AlphaTest_NormalUp";
+        case ShaderAsset_Lit_Inst_AlphaBlend_NormalUp:
+            return "Lit_Inst_AlphaBlend_NormalUp";
         case ShaderAsset_Skybox:
             return "Skybox";
         case ShaderAsset_Terrain_Base:
@@ -30,5 +32,5 @@ std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
         default:
             return "INVALID";
     }
-    static_assert(static_cast<ShaderAssetID>(ShaderAsset_Count) == 9);
+    static_assert(static_cast<ShaderAssetID>(ShaderAsset_Count) == 10);
 }

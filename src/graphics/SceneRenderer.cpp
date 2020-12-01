@@ -497,6 +497,8 @@ void SceneRenderer::SetMaterialShaderParameters(ShaderProgram* _shaderProgram, c
     {
         _shaderProgram->SetUniformInt(uniform.first, uniform.second);
     }
+
+    _shaderProgram->SetUniformFloat4("frplBaseColor", _solid.m_BaseColor);
 }
 
 void SceneRenderer::PostRender()
