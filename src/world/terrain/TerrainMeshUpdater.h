@@ -21,6 +21,8 @@ struct TerrainRegion
 {
     glm::ivec3 m_Min;
     glm::ivec3 m_Max;
+
+    TerrainRegion Union(const TerrainRegion& _other) const;
 };
 
 struct TerrainMeshUpdateParams

@@ -59,14 +59,13 @@ void TerrainHandler::Update(TimeMS _dt)
                         false,
                         terrainComponent.m_AssociatedEvents
                     };
-
-            terrainComponent.m_AssociatedEvents.clear();
             
             const bool canUpdate = m_TerrainMeshUpdaters.RequestLoad(zone.GetCoordinates(), params);
 
             if (canUpdate)
             {
                 terrainComponent.m_DirtyRegion = std::nullopt;
+                terrainComponent.m_AssociatedEvents.clear();
             }
         }
     }
@@ -131,7 +130,16 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
 
             LogMessage("Updated chunks in range " + glm::to_string(minRegion) + " - " + glm::to_string(maxRegion));
 
-            terrainComponent.m_DirtyRegion = region;    // TODO is this entirely valid if another event comes before the terrain update returns?
+            if (terrainComponent.m_DirtyRegion != std::nullopt)
+            {
+                // @Performance Could support a list of regions and figure out the min chunks to update to cover them.
+                terrainComponent.m_DirtyRegion = terrainComponent.m_DirtyRegion->Union(region);
+            }
+            else
+            {
+                terrainComponent.m_DirtyRegion = region;
+            }
+            
             terrainComponent.m_AssociatedEvents.push_back(_event);
         }
     }
@@ -142,7 +150,7 @@ void TerrainHandler::HandleWorldEvent(WorldEvent _event)
 
 void TerrainHandler::HandleFinishedUpdaterFeedback(WorldZone& _zone, const TerrainMeshUpdater* _finishedUpdater)
 {
-   for (const WorldEvent& event : _finishedUpdater->GetAssociatedEvents())
+    for (const WorldEvent& event : _finishedUpdater->GetAssociatedEvents())
     {
         if (event.m_Type == WorldEvent::Type::AddTerrain)
         {

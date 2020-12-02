@@ -11,6 +11,14 @@
 #include <src/world/planet/TerrainGeneration.h>
 #include <src/world/WorldPosition.h>
 
+TerrainRegion TerrainRegion::Union(const TerrainRegion& _other) const
+{
+    TerrainRegion result;
+    result.m_Min = glm::min(this->m_Min, _other.m_Min);
+    result.m_Max = glm::max(this->m_Max, _other.m_Max);
+    return result;
+}
+
 TerrainMeshUpdater::TerrainMeshUpdater(TerrainMeshUpdateParams _params)
 {
     m_Chunks = _params.m_ExistingChunks;
