@@ -63,6 +63,7 @@ const WorldObject* World::FindWorldObject(const WorldObjectRef& _objectRef) cons
             return zone.GetWorldObject(_objectRef.m_LocalRef);
         }
     }
+    LogError("A WorldObject " + glm::to_string(_objectRef.m_ZoneCoordinates) + ", " + std::to_string(_objectRef.m_LocalRef) + " couldn't be found.");
     return nullptr;
 }
 
@@ -184,7 +185,6 @@ void World::TransferEntitiesBetweenZones()
     {
         for (WorldObject& worldObject : zone.GetWorldObjects())
         {
-            //const glm::ivec3 relativeCoords = zone.ComputeRelativeCoordinates(worldObject.GetPosition());
             const WorldPosition worldPosition = worldObject.GetWorldPosition();
             
             if (!worldPosition.IsInsideZone())
@@ -203,6 +203,8 @@ void World::TransferEntitiesBetweenZones()
                 worldObjectsToTransfer.push_back(zoneTransfer);
 
                 LogMessage(std::to_string(i++) + " The object " + worldObject.GetName()
+                           + " ID"
+                           + std::to_string(worldObject.GetWorldObjectID())
                            + " is out of bounds. Moving from " + glm::to_string(zone.GetCoordinates()) + " to "
                            + glm::to_string(destinationCoords));
 
@@ -257,6 +259,9 @@ void World::TransferEntitiesBetweenZones()
             
             sourceZone->TransferWorldObjectOutOfZone(sourceObject->GetWorldObjectID());
 
+            // No longer safe to access.
+            sourceObject = nullptr;
+            
             m_Directory.OnWorldObjectTransferred(destinationObject.GetWorldObjectID(), destinationObject.GetRef());
 
             if (m_PlayerHandler->IsControlledByLocalPlayer(destinationObject.GetWorldObjectID()))
@@ -266,8 +271,12 @@ void World::TransferEntitiesBetweenZones()
         }
         else
         {
-            sourceZone->DestroyWorldObject(sourceObject->GetWorldObjectID());
-            m_Directory.UnregisterWorldObject(sourceObject->GetWorldObjectID());
+            sourceZone->DestroyWorldObject(pendingTransfer.m_ObjectID);
+
+            // No longer safe to access.
+            sourceObject = nullptr;
+            
+            m_Directory.UnregisterWorldObject(pendingTransfer.m_ObjectID);
         }
     }
 }
@@ -409,6 +418,7 @@ const WorldObject* World::GetWorldObject(WorldObjectID _objectID) const
     const WorldObjectRef objectRef = m_Directory.GetWorldObjectLocation(_objectID);
     if (!objectRef.IsValid())
     {
+        LogError("A worldObject ID" + std::to_string(_objectID) + " couldn't be found in the directory.");
         return nullptr;
     }
 

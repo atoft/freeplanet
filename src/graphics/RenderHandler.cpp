@@ -309,6 +309,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
 void RenderHandler::UpdateSharedDynamicMeshes(const World* _world, Renderable::Frame& _inOutFrame)
 {
+    ProfileCurrentFunction();
+    
     const SpawningHandler* spawningHandler = _world->GetSpawningHandler();
 
     if (spawningHandler != nullptr)
@@ -344,6 +346,8 @@ void RenderHandler::UpdateDynamicMesh(DynamicMeshHandle& _handle, const glm::mat
                                       Renderable::Frame& _inOutFrame,
                                       u32 _terrainLOD)
 {
+    ProfileCurrentFunction();
+    
     Renderable::SceneObject sceneObject;
     sceneObject.m_Transform = _transform;
     sceneObject.m_Solid.m_Material.m_Shader = _shader; // TODO Somewhere to source this for DynamicMeshes
