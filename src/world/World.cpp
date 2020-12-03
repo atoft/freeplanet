@@ -314,20 +314,27 @@ void World::UpdateActiveZones()
             }
         }
 
-        m_ActiveZones.erase(std::remove_if(m_ActiveZones.begin(), m_ActiveZones.end(),
-                                           [zonesToRemove](WorldZone &zone)
-                                           {
-                                               const bool shouldRemove = std::find(zonesToRemove.begin(),
-                                                                                   zonesToRemove.end(),
-                                                                                   zone.GetCoordinates()) != zonesToRemove.end();
+        // TODO replace this in refactor of WorldZones.
+        for (WorldZone& zone : m_ActiveZones)
+        {
+            const bool shouldRemove = std::find(zonesToRemove.begin(),
+                                                zonesToRemove.end(),
+                                                zone.GetCoordinates()) != zonesToRemove.end();
 
-                                               if (shouldRemove)
-                                               {
-                                                   LogMessage("Removing " + glm::to_string(zone.GetCoordinates()));
-                                                   zone.OnRemovedFromWorld();
-                                               }
-                                               return shouldRemove;
-                                           }), m_ActiveZones.end());
+            if (shouldRemove)
+            {
+                LogMessage("Removing " + glm::to_string(zone.GetCoordinates()));
+                zone.OnRemovedFromWorld();                
+            }
+        }
+
+        STL::RemoveIf(m_ActiveZones, [&zonesToRemove](const WorldZone& zone)
+                                     {
+                                         const bool shouldRemove = std::find(zonesToRemove.begin(),
+                                                                             zonesToRemove.end(),
+                                                                             zone.GetCoordinates()) != zonesToRemove.end();
+                                         return shouldRemove;
+                                     });
 
         // Add zones which are close to any players.
         for (const WorldObjectID& playerControlledObjectID : m_PlayerHandler->GetLocalPlayers())
