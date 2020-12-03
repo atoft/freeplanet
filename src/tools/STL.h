@@ -28,7 +28,7 @@ public:
             return false;
         }
 
-        _container.erase(iterator);
+        _container.erase(iterator, _container.end());
         return true;
     }
 
@@ -48,7 +48,7 @@ public:
             return false;
         }
 
-        _container.erase(iterator);
+        _container.erase(iterator, _container.end());
         return true;
     }
     
