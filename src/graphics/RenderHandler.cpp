@@ -157,7 +157,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
     UpdateSharedDynamicMeshes(_world, _inOutFrame);
 
     std::vector<Renderable::InstancedSceneObject> particleInstances;
-            
+    std::vector<Renderable::InstancedSceneObject> meshInstances;
+    
     for (const WorldZone& zone : _world->GetActiveZones())
     {
         sceneToRender.m_RenderMode = m_ShouldRenderWireframe ? Renderable::RenderMode::Wireframe
@@ -168,30 +169,73 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
         
         for (const RenderComponent& component : zone.GetComponents<RenderComponent>())
         {
-            const WorldObject* worldObject = component.GetOwnerObject();
-            assert(worldObject != nullptr);
-
-            Renderable::SceneObject sceneObject;
-            sceneObject.m_Transform = viewTransform * worldObject->GetZoneTransform();
-            sceneObject.m_Solid.m_Material.m_Shader = component.GetShader();
-            sceneObject.m_Solid.m_Material.m_Textures.emplace_back("tex2D_0",  component.GetTexture());
-            sceneObject.m_Solid.m_MeshType = component.GetMeshType();
-
-            const StaticMesh* mesh = component.GetMesh().GetAsset();
-            if (mesh != nullptr)
+            if (component.m_CanInstance)
             {
-                sceneObject.m_Solid.m_Mesh = mesh->GetMesh();
-            }
-            else if (component.m_DynamicID != DYNAMICMESHID_INVALID)
-            {
-                sceneObject.m_Solid.m_MeshID = component.m_DynamicID;
+                auto it = std::find_if(meshInstances.begin(), meshInstances.end(), [&component](const Renderable::InstancedSceneObject& instance)
+                                                                                 {
+                                                                                     // TODO We should have a smarter way to do this.
+                                                                                     return component.GetShader() == instance.m_Solid.m_Material.m_Shader
+                                                                                         && component.GetTexture() == instance.m_Solid.m_Material.m_Textures[0].second
+                                                                                         && component.m_DynamicID == instance.m_Solid.m_MeshID;
+                                                                                 });
+                Renderable::InstancedSceneObject* instance = nullptr;
+                
+                if (it == meshInstances.end())
+                {
+                    instance = &meshInstances.emplace_back();
+
+                    if (component.m_DynamicID != DYNAMICMESHID_INVALID)
+                    {
+                        instance->m_Solid.m_MeshID = component.m_DynamicID;
+                    }
+                    else
+                    {
+                        LogError("DynamicMesh wasn't loaded for instanced RenderComponent.");
+                    }
+                                
+                    instance->m_Solid.m_Material.m_Shader = component.GetShader();
+                    instance->m_Solid.m_Material.m_Textures.emplace_back("tex2D_0", component.GetTexture());
+                    instance->m_Solid.m_MeshType = component.GetMeshType();
+                }
+                else
+                {
+                    instance = &(*it);
+                }
+
+                instance->m_Solid.m_NeedsDepthSort = false;
+
+                const WorldObject* worldObject = component.GetOwnerObject();
+                assert(worldObject != nullptr);
+                
+                instance->m_Transforms.push_back(viewTransform * worldObject->GetZoneTransform());
             }
             else
             {
-                LogError("StaticMesh wasn't loaded, and no dynamic ID was specified.");
+                const WorldObject* worldObject = component.GetOwnerObject();
+                assert(worldObject != nullptr);
+     
+                Renderable::SceneObject sceneObject;
+                sceneObject.m_Transform = viewTransform * worldObject->GetZoneTransform();
+                sceneObject.m_Solid.m_Material.m_Shader = component.GetShader();
+                sceneObject.m_Solid.m_Material.m_Textures.emplace_back("tex2D_0",  component.GetTexture());
+                sceneObject.m_Solid.m_MeshType = component.GetMeshType();
+     
+                const StaticMesh* mesh = component.GetMesh().GetAsset();
+                if (mesh != nullptr)
+                {
+                    sceneObject.m_Solid.m_Mesh = mesh->GetMesh();
+                }
+                else if (component.m_DynamicID != DYNAMICMESHID_INVALID)
+                {
+                    sceneObject.m_Solid.m_MeshID = component.m_DynamicID;
+                }
+                else
+                {
+                    LogError("StaticMesh wasn't loaded, and no dynamic ID was specified.");
+                }
+     
+                sceneToRender.m_SceneObjects.push_back(sceneObject);
             }
-
-            sceneToRender.m_SceneObjects.push_back(sceneObject);
         }
 
         for (const LightComponent& component : zone.GetComponents<LightComponent>())
@@ -282,6 +326,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                           sceneToRender.m_SceneObjects, _inOutFrame, m_MaxTerrainLOD);
     }
 
+    STL::Append(sceneToRender.m_Instances, meshInstances);
+    
     {
         ProfileCurrentScope("Depth sort");
         

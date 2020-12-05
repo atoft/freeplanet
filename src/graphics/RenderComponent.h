@@ -28,6 +28,8 @@ public:
 
     // TODO @Memory Probably a separate component for dynamic meshes.
     mutable DynamicMeshID m_DynamicID = DYNAMICMESHID_INVALID;
+
+    bool m_CanInstance = false;
     
 protected:
     AssetHandle<StaticMesh> m_Mesh;

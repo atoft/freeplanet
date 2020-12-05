@@ -143,7 +143,7 @@ void SpawningHandler::Update()
 
                     const u32 meshIdx = spawnedCount % m_SpawnedPlantMeshes.size();
                     
-                    zone.AddComponent<RenderComponent>
+                    RenderComponent& renderComponent = zone.AddComponent<RenderComponent>
                             (worldObject,
                              AssetHandle<StaticMesh>(ASSETID_INVALID),
                              FloraGenerationParams().m_BranchShader,
@@ -151,6 +151,8 @@ void SpawningHandler::Update()
                              MeshType::Normal,
                              m_SpawnedPlantMeshes[meshIdx].GetID());
 
+                    renderComponent.m_CanInstance = true;
+                    
                     ParticleSystemComponent& particleSystem = zone.AddComponent<ParticleSystemComponent>(worldObject);
                     particleSystem.m_ParticleSystem = m_SpawnedParticleSystems[meshIdx];
                     particleSystem.m_ParticleSystem.m_Emitters[0].m_MeshID = m_ParticleSystemMesh.GetID();
@@ -173,12 +175,15 @@ void SpawningHandler::Update()
 
                     MathsHelpers::SetRotationPart(worldObject.GetZoneTransform(), rotationMatrix);
 
-                    zone.AddComponent<RenderComponent>
+                    RenderComponent& renderComponent = zone.AddComponent<RenderComponent>
                             (worldObject,
-                             AssetHandle<StaticMesh>(MeshAsset_UnitQuad),
-                             AssetHandle<ShaderProgram>(ShaderAsset_Lit_AlphaTest_NormalUp),
+                             AssetHandle<StaticMesh>(ASSETID_INVALID),
+                             AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaTest_NormalUp),
                              AssetHandle<Texture>(TextureAsset_Billboard_Grass),
-                             MeshType::OrientedBillboard);
+                             MeshType::OrientedBillboard,
+                             m_ParticleSystemMesh.GetID());
+
+                    renderComponent.m_CanInstance = true;
                 }
 
                 ++spawnedCount;

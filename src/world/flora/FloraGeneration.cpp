@@ -177,7 +177,8 @@ RawMesh FloraGeneration::ConvertToRawMesh(const PlantInstance& _plantInstance, c
             result.Append(branch);
         }
     }
-    
+
+    result.m_SupportInstancing = true;
     return result;
 }
 

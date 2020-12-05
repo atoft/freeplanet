@@ -48,7 +48,7 @@ struct FloraGenerationParams
 
     // TODO as the final mesh will be made out of multiple meshes with different texturing, need to send a texture index for each vert.
     TextureAssetID m_BranchTexture = TextureAsset_Branch_01_01;
-    ShaderAssetID m_BranchShader = ShaderAsset_Lit_Textured;
+    ShaderAssetID m_BranchShader = ShaderAsset_Lit_Inst_Textured;
 };
 
 constexpr u32 MaxPossibleFloraBranchingFactor = 6;

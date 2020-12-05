@@ -18,6 +18,8 @@ std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
             return "Unlit_Untextured";
         case ShaderAsset_Lit_Textured:
             return "Lit_Textured";
+        case ShaderAsset_Lit_Inst_Textured:
+            return "Lit_Inst_Textured";
         case ShaderAsset_Lit_AlphaTest_NormalUp:
             return "Lit_AlphaTest_NormalUp";
         case ShaderAsset_Lit_Inst_AlphaTest_NormalUp:
@@ -32,5 +34,5 @@ std::string Assets::GetShaderAssetName(ShaderAssetID _assetID)
         default:
             return "INVALID";
     }
-    static_assert(static_cast<ShaderAssetID>(ShaderAsset_Count) == 10);
+    static_assert(static_cast<ShaderAssetID>(ShaderAsset_Count) == 11);
 }
