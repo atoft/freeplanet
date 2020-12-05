@@ -33,15 +33,12 @@ RenderHandler::RenderHandler(std::shared_ptr<sf::RenderWindow> _window, Graphics
     m_HACKTerrainVolumeTexture0 = AssetHandle<Texture>(TextureAsset_Volume_Perlin128);
     m_HACKTerrainVolumeTexture1 = AssetHandle<Texture>(TextureAsset_Volume_Grass128);
 
-    // We hold a Handle to the default shader to keep it loaded, we use it to
-    // initialise meshes in the Render thread
-    m_DefaultShader = AssetHandle<ShaderProgram>(ShaderAsset_Default);
-
     //HACK
     m_HACKTerrainShader = AssetHandle<ShaderProgram>(ShaderAsset_Terrain_Base);
 
     m_RenderThread = std::thread([this, _window]()
                                  { m_SceneRenderer.Run(_window); });
+
 
     m_WaitingToQuit = false;
 
@@ -256,6 +253,11 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                         const glm::mat4 translation = glm::translate(objectTransform, emitter.m_RelativePosition + particle.m_RelativePosition + particle.m_OffsetPosition);
             
                         instance->m_Transforms.push_back(translation * particle.m_Rotation);
+
+                        if (emitter.m_UseParticleColor)
+                        {
+                            instance->m_Colors.push_back(particle.m_Color);
+                        }
                     }
                 }
             }

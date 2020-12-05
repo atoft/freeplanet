@@ -33,13 +33,14 @@ void ShaderProgram::AcquireResources(ShaderAssetID _assetID)
     GLHelpers::ReportError("glAttachShader");
 
     // TODO store the attrib locations so that we don't have to use getAttribLocation.
-    glBindAttribLocation(m_ShaderProgramHandle, 0, "frplPosition");
-    glBindAttribLocation(m_ShaderProgramHandle, 1, "frplNormal");
-    glBindAttribLocation(m_ShaderProgramHandle, 2, "frplTexcoord");
-    glBindAttribLocation(m_ShaderProgramHandle, 3, "frplColor");
-    glBindAttribLocation(m_ShaderProgramHandle, 4, "frplTerrainSubstance");
-    glBindAttribLocation(m_ShaderProgramHandle, 5, "frplInstanceTransform");
-    glBindAttribLocation(m_ShaderProgramHandle, 9, "frplInstanceNormalTransform");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplPosition, "frplPosition");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplNormal, "frplNormal");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplTexcoord, "frplTexcoord");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplColor, "frplColor");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplTerrainSubstance, "frplTerrainSubstance");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplInstanceTransform, "frplInstanceTransform");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplInstanceNormalTransform, "frplInstanceNormalTransform");
+    glBindAttribLocation(m_ShaderProgramHandle, AttribLocation::frplInstanceColor, "frplInstanceColor");
     GLHelpers::ReportError("glBindAttribLocation");
 
     glBindFragDataLocation(m_ShaderProgramHandle, 0, "outColor");

@@ -211,12 +211,14 @@ void TerrainHandler::HandleFinishedUpdaterFeedback(WorldZone& _zone, const Terra
             emitter.m_Texture = AssetHandle<Texture>(TextureAsset_Billboard_DirtParticle);
             emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaBlend_NormalUp);
             emitter.m_NeedsDepthSort = true;
+            emitter.m_UseParticleColor = true;
             
             emitter.m_EmissionRate = 0.1f;
             emitter.m_ParticlesPerEmission = 6;
             emitter.m_InitialSpeed = 2.f;
             emitter.m_Acceleration = m_World->GetGravityStrength() * glm::vec3(0.f, -1.f, 0.f);
-            emitter.m_ParticleLifetime = 1.f;
+            emitter.m_ParticleLifetime = 0.6f;
+            emitter.m_FadeoutDuration = 0.3f;
             emitter.m_EmitterLifetime = 1.f;
         }
     }

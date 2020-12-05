@@ -93,9 +93,7 @@ void GLHelpers::LoadToGPU(const GLfloat* _vertices, u32 _numberOfVertices, const
 
     _outMesh.m_NumberOfElements = _numberOfElements;
 
-    ShaderProgram* defaultShader = AssetHandle<ShaderProgram>(ShaderAsset_Default).GetAsset();
-    assert(defaultShader != nullptr);
-    SetupForShader(*defaultShader, _vertexDataMask, _outMesh);
+    SetupForShader(_vertexDataMask, _outMesh);
 
     // Unbind this VAO
     glBindVertexArray(0);
@@ -121,7 +119,7 @@ u32 GetDimensions(GLHelpers::VertexDataBitfield _vertexData)
     }
 }
 
-void GLHelpers::SetupForShader(const ShaderProgram& _shader, VertexDataBitfield _vertexDataMask, Renderable::Mesh& _inOutMesh)
+void GLHelpers::SetupForShader(VertexDataBitfield _vertexDataMask, Renderable::Mesh& _inOutMesh)
 {
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
@@ -161,88 +159,97 @@ void GLHelpers::SetupForShader(const ShaderProgram& _shader, VertexDataBitfield 
 
     if (_vertexDataMask & VertexData_Position)
     {
-        const GLint attrib = BindVertexAttribToVertexData(_shader, "frplPosition", GetDimensions(VertexData_Position), dimensions, offsetIntoVertexData);
+        const AttribLocation attrib = AttribLocation::frplPosition;
+        BindVertexAttribToVertexData(attrib, GetDimensions(VertexData_Position), dimensions, offsetIntoVertexData);
         _inOutMesh.m_VertexAttribs.push_back(attrib);
     }
 
     if (_vertexDataMask & VertexData_Normal)
     {
-        const GLint attrib = BindVertexAttribToVertexData(_shader, "frplNormal", GetDimensions(VertexData_Normal), dimensions, offsetIntoVertexData);
+        const AttribLocation attrib = AttribLocation::frplNormal;
+        BindVertexAttribToVertexData(attrib, GetDimensions(VertexData_Normal), dimensions, offsetIntoVertexData);
         _inOutMesh.m_VertexAttribs.push_back(attrib);
     }
 
     if (_vertexDataMask & VertexData_TexCoords)
     {
-        const GLint attrib = BindVertexAttribToVertexData(_shader, "frplTexcoord", GetDimensions(VertexData_TexCoords), dimensions, offsetIntoVertexData);
+        const AttribLocation attrib = AttribLocation::frplTexcoord;
+        BindVertexAttribToVertexData(attrib, GetDimensions(VertexData_TexCoords), dimensions, offsetIntoVertexData);
         _inOutMesh.m_VertexAttribs.push_back(attrib);
     }
 
     if (_vertexDataMask & VertexData_Color)
     {
-        const GLint attrib = BindVertexAttribToVertexData(_shader, "frplColor", GetDimensions(VertexData_Color), dimensions, offsetIntoVertexData);
+        const AttribLocation attrib = AttribLocation::frplColor;
+        BindVertexAttribToVertexData(attrib, GetDimensions(VertexData_Color), dimensions, offsetIntoVertexData);
         _inOutMesh.m_VertexAttribs.push_back(attrib);
     }
 
     if (_vertexDataMask & VertexData_TerrainSubstance)
     {
-        const GLint attrib = BindVertexAttribToVertexData(_shader, "frplTerrainSubstance", GetDimensions(VertexData_TerrainSubstance), dimensions, offsetIntoVertexData);
+        const AttribLocation attrib = AttribLocation::frplTerrainSubstance;
+        BindVertexAttribToVertexData(attrib, GetDimensions(VertexData_TerrainSubstance), dimensions, offsetIntoVertexData);
         _inOutMesh.m_VertexAttribs.push_back(attrib);
     }
 
     if (_vertexDataMask & VertexData_Inst_Transform)
     {
         {
-            GLint attribLocation = glGetAttribLocation(_shader.GetProgramHandle(), "frplInstanceTransform");
-            GLHelpers::ReportError("glGetAttribLocation frplInstanceTransform");
-            glBindBuffer(GL_ARRAY_BUFFER, attribLocation);
-     
+            // Create a buffer to write instance data to during the render loop.
+            GLuint instTransformHandle;
+            glGenBuffers(1, &instTransformHandle);
+            glBindBuffer(GL_ARRAY_BUFFER, instTransformHandle);
+
             constexpr u32 MATRIX_SIZE = 4;
             for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
             {
-                glEnableVertexAttribArray(attribLocation + attribIdx);
-                GLHelpers::ReportError("glEnableVertexAttribArray instance");
-                glVertexAttribPointer(attribLocation + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                glVertexAttribPointer(AttribLocation::frplInstanceTransform + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
                                         (const GLvoid*)(sizeof(GLfloat) * attribIdx * 4));
-                GLHelpers::ReportError("glGetAttribPointer instance");
-                glVertexAttribDivisor(attribLocation + attribIdx, 1);
-                GLHelpers::ReportError("glGetAttribDivisor instance");
             }
-     
-            _inOutMesh.m_VertexAttribs.push_back(attribLocation);
+
+            _inOutMesh.m_InstanceTransformsHandle = instTransformHandle;
         }
 
         // @Performance Allow instances without normal transforms for cheaper particles.
         {
-            GLint attribLocation = 9;//glGetAttribLocation(_shader.GetProgramHandle(), "frplInstanceNormalTransform");
-            GLHelpers::ReportError("glGetAttribLocation frplInstanceNormalTransform");
-            glBindBuffer(GL_ARRAY_BUFFER, attribLocation);
-     
+            // Create a buffer to write instance data to during the render loop.
+            GLuint instNormalTransformHandle;
+            glGenBuffers(1, &instNormalTransformHandle);
+            glBindBuffer(GL_ARRAY_BUFFER, instNormalTransformHandle);
+
             constexpr u32 MATRIX_SIZE = 4;
             for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
             {
-                glEnableVertexAttribArray(attribLocation + attribIdx);
-                GLHelpers::ReportError("glEnableVertexAttribArray instance normal");
-                glVertexAttribPointer(attribLocation + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
-                                        (const GLvoid*)(sizeof(GLfloat) * attribIdx * 4));
+                glVertexAttribPointer(AttribLocation::frplInstanceNormalTransform + attribIdx, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                                      (const GLvoid*)(sizeof(GLfloat) * attribIdx * 4));
                 GLHelpers::ReportError("glGetAttribPointer instance normal");
-                glVertexAttribDivisor(attribLocation + attribIdx, 1);
-                GLHelpers::ReportError("glGetAttribDivisor instance normal");
-            }
-     
-            _inOutMesh.m_VertexAttribs.push_back(attribLocation);
-        }
 
+            }
+
+            _inOutMesh.m_InstanceNormalTransformsHandle = instNormalTransformHandle;
+        }
+    }
+
+    if (_vertexDataMask & VertexData_Inst_Color)
+    {
+        // Create a buffer to write instance data to during the render loop.
+        GLuint instColorsHandle;
+        glGenBuffers(1, &instColorsHandle);
+        glBindBuffer(GL_ARRAY_BUFFER, instColorsHandle);
+
+        glVertexAttribPointer(AttribLocation::frplInstanceColor, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), 0);
+        GLHelpers::ReportError("glGetAttribPointer instance color");
+
+        _inOutMesh.m_InstanceColorsHandle = instColorsHandle;
     }
 }
 
-GLint GLHelpers::BindVertexAttribToVertexData(const ShaderProgram& _shader, const char* _name, u32 _numberOfDimensions, u32 _totalVertexDimensions, u32& _inOutOffsetIntoVertex)
+void GLHelpers::BindVertexAttribToVertexData(AttribLocation _attrib, u32 _numberOfDimensions, u32 _totalVertexDimensions, u32& _inOutOffsetIntoVertex)
 {
-    GLint attribLocation = glGetAttribLocation(_shader.GetProgramHandle(), _name);
-    GLHelpers::ReportError("glGetAttribLocation");
-    if (attribLocation >= 0)
+    if (_attrib >= 0)
     {
         glVertexAttribPointer(
-                attribLocation,
+                _attrib,
                 _numberOfDimensions,
                 GL_FLOAT,
                 GL_FALSE,
@@ -252,8 +259,6 @@ GLint GLHelpers::BindVertexAttribToVertexData(const ShaderProgram& _shader, cons
     }
 
     _inOutOffsetIntoVertex += _numberOfDimensions;
-
-    return attribLocation;
 }
 
 void GLHelpers::ReleaseFromGPU(Renderable::Mesh& _inOutMesh)

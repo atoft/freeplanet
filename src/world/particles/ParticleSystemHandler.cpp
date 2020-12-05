@@ -107,6 +107,13 @@ void ParticleSystemHandler::UpdateEmitter(ParticleEmitter& _emitter, TimeMS _del
         particle.m_RelativePosition += particle.m_Velocity * (_delta / 1000.f);
 
         particle.m_TimePassed += _delta / 1000.f;
+
+        if (_emitter.m_FadeoutDuration > 0.f)
+        {
+            const f32 fadeProgress = glm::clamp((particle.m_TimePassed - (_emitter.m_ParticleLifetime - _emitter.m_FadeoutDuration)) / _emitter.m_FadeoutDuration, 0.f, 1.f);
+            const f32 alpha = 1.f - fadeProgress;
+            particle.m_Color.a = alpha;
+        }
     }
 
     // Apply ParticleAnimation

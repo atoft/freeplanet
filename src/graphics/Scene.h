@@ -72,6 +72,10 @@ namespace Renderable
 
         std::vector<GLint> m_VertexAttribs;
 
+        GLuint m_InstanceTransformsHandle;
+        GLuint m_InstanceNormalTransformsHandle;
+        GLuint m_InstanceColorsHandle;
+        
         u32 m_NumberOfElements = 0;
     };
 
@@ -109,6 +113,7 @@ namespace Renderable
     {
         Solid m_Solid;
         std::vector<glm::mat4> m_Transforms;
+        std::vector<Color> m_Colors;
     };
     
     struct Scene

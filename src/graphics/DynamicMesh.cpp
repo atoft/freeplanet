@@ -76,6 +76,9 @@ void DynamicMesh::LoadToGPU(const RawMesh& _mesh)
     if (_mesh.m_SupportInstancing)
     {
         vertexDataMask = vertexDataMask | GLHelpers::VertexData_Inst_Transform;
+
+        // TODO @Performance Need to have separate quad meshes based on whether this is used.
+        vertexDataMask = vertexDataMask | GLHelpers::VertexData_Inst_Color;
     }
 
     GLHelpers::LoadToGPU(vertices.data(), numberOfVertices, elements.data(), numberOfElements, vertexDataMask, m_Mesh);

@@ -12,6 +12,19 @@
 #include <src/tools/globals.h>
 #include <src/assets/ShaderAssets.h>
 
+enum AttribLocation
+{
+    frplPosition = 0,
+    frplNormal = 1,
+    frplTexcoord = 2,
+    frplColor = 3,
+    frplTerrainSubstance = 4,
+    
+    frplInstanceTransform = 5,
+    frplInstanceNormalTransform = 9,
+    frplInstanceColor = 13
+};
+
 class ShaderProgram
 {
     enum class ShaderType

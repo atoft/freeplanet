@@ -74,7 +74,6 @@ private:
     AssetHandle<StaticMesh> m_Quad;
     AssetHandle<StaticMesh> m_Arrow;
 
-    AssetHandle<ShaderProgram> m_DefaultShader;
     AssetHandle<ShaderProgram> m_HACKTerrainShader;
 
     AssetHandle<Texture> m_HACKTerrainVolumeTexture0;

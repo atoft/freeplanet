@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "src/graphics/ShaderProgram.h"
 #include <GL/glew.h>
 #include <SFML/OpenGL.hpp>
 
@@ -24,16 +25,17 @@ public:
 
     enum VertexDataBitfield : u8
     {
-        VertexData_None             = 0b000000u,
+        VertexData_None             = 0b00000000u,
 
-        VertexData_Position         = 0b000001u,
-        VertexData_Normal           = 0b000010u,
-        VertexData_TexCoords        = 0b000100u,
-        VertexData_Color            = 0b001000u,
-        VertexData_TerrainSubstance = 0b010000u,
-        VertexData_Inst_Transform   = 0b100000u,
+        VertexData_Position         = 1 << 0,
+        VertexData_Normal           = 1 << 1,
+        VertexData_TexCoords        = 1 << 2,
+        VertexData_Color            = 1 << 3,
+        VertexData_TerrainSubstance = 1 << 4,
+        VertexData_Inst_Transform   = 1 << 5,
+        VertexData_Inst_Color       = 1 << 6,
 
-        VertexData_All              = VertexData_Position | VertexData_Normal | VertexData_TexCoords | VertexData_Color | VertexData_TerrainSubstance | VertexData_Inst_Transform
+        VertexData_All              = VertexData_Position | VertexData_Normal | VertexData_TexCoords | VertexData_Color | VertexData_TerrainSubstance | VertexData_Inst_Transform | VertexData_Inst_Color
     };
 
     static void LoadToGPU(const GLfloat* _vertices, u32 _numberOfVertices, const GLuint* _elements, u32 _numberOfElements, VertexDataBitfield _vertexDataMask, Renderable::Mesh& _outMesh);
@@ -41,8 +43,8 @@ public:
 
 private:
     static std::string ConvertGLString(const GLubyte* _glstring);
-    static void SetupForShader(const ShaderProgram& _shader, VertexDataBitfield _vertexDataMask, Renderable::Mesh& _inOutMesh);
-    static GLint BindVertexAttribToVertexData(const ShaderProgram& _shader, const char* _name, u32 _numberOfDimensions, u32 _totalVertexDimensions, u32& _inOutOffsetIntoVertex);
+    static void SetupForShader(VertexDataBitfield _vertexDataMask, Renderable::Mesh& _inOutMesh);
+    static void BindVertexAttribToVertexData(AttribLocation _attrib, u32 _numberOfDimensions, u32 _totalVertexDimensions, u32& _inOutOffsetIntoVertex);
 };
 
 inline GLHelpers::VertexDataBitfield operator&(GLHelpers::VertexDataBitfield _left, GLHelpers::VertexDataBitfield _right)

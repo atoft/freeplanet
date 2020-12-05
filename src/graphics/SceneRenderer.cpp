@@ -188,6 +188,7 @@ void SceneRenderer::PrepareRender()
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
 
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
@@ -265,33 +266,63 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         
         std::vector<glm::mat4> instanceTransforms;
         std::vector<glm::mat4> instanceNormalTransforms;
-        
+
         for (const glm::mat4& transform : instancedSceneObject.m_Transforms)
         {
             instanceTransforms.push_back(ComputeTransform(_scene, instancedSceneObject.m_Solid, transform));
             instanceNormalTransforms.push_back(MathsHelpers::GetRotationMatrix(transform));
         }
 
-        const GLint instanceTransformLocation = glGetAttribLocation(shaderProgram->GetProgramHandle(), "frplInstanceTransform");
-
-        if (instanceTransformLocation < 0)
         {
-            LogError("Couldn't get location for instance transforms");
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->m_InstanceTransformsHandle);
+            GLHelpers::ReportError("glBindBuffer m_InstanceTransformsHandle");
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceTransforms.size(), instanceTransforms.data(), GL_DYNAMIC_DRAW);
+            GLHelpers::ReportError("glBufferData m_InstanceTransformsHandle");
+
+            constexpr u32 MATRIX_SIZE = 4;
+            for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
+            {
+                glEnableVertexAttribArray(AttribLocation::frplInstanceTransform + attribIdx);
+                GLHelpers::ReportError("glEnableVertexAttribArray instance");
+
+                glVertexAttribDivisor(AttribLocation::frplInstanceTransform + attribIdx, 1);
+                GLHelpers::ReportError("glGetAttribDivisor instance");
+            }
+       }
+
+        // @Performance Allow instances without normal transforms for cheaper particles.
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->m_InstanceNormalTransformsHandle);
+            GLHelpers::ReportError("glBindBuffer m_InstanceNormalTransformsHandle");
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceNormalTransforms.size(), instanceNormalTransforms.data(), GL_DYNAMIC_DRAW);
+            GLHelpers::ReportError("glBufferData m_InstanceNormalTransformsHandle");
+
+            constexpr u32 MATRIX_SIZE = 4;
+            for (u32 attribIdx = 0; attribIdx < MATRIX_SIZE ; ++attribIdx)
+            {
+                glEnableVertexAttribArray(AttribLocation::frplInstanceNormalTransform + attribIdx);
+                GLHelpers::ReportError("glEnableVertexAttribArray instance normal");
+
+                glVertexAttribDivisor(AttribLocation::frplInstanceNormalTransform + attribIdx, 1);
+                GLHelpers::ReportError("glGetAttribDivisor instance normal");
+            }
         }
         
-        glBindBuffer(GL_ARRAY_BUFFER, instanceTransformLocation);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceTransforms.size(), instanceTransforms.data(), GL_DYNAMIC_DRAW);
-
-        const GLint instanceNormalTransformLocation = glGetAttribLocation(shaderProgram->GetProgramHandle(), "frplInstanceNormalTransform");
-
-        if (instanceNormalTransformLocation < 0)
+        if (!instancedSceneObject.m_Colors.empty())
         {
-            LogError("Couldn't get location for instance normal transforms");
-        }
-        
-        glBindBuffer(GL_ARRAY_BUFFER, instanceNormalTransformLocation);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceNormalTransforms.size(), instanceNormalTransforms.data(), GL_DYNAMIC_DRAW);
+            if (instancedSceneObject.m_Colors.size() != instanceTransforms.size())
+            {
+                LogError("Mismatched array lengths in instanced scene object.");
+            }
+            glBindBuffer(GL_ARRAY_BUFFER, mesh->m_InstanceColorsHandle);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(Color) * instancedSceneObject.m_Colors.size(), instancedSceneObject.m_Colors.data(), GL_DYNAMIC_DRAW);
 
+            glEnableVertexAttribArray(AttribLocation::frplInstanceColor);
+            GLHelpers::ReportError("glEnableVertexAttribArray instance color");
+
+            glVertexAttribDivisor(AttribLocation::frplInstanceColor, 1);
+            GLHelpers::ReportError("glGetAttribDivisor instance color");
+        }
         
         SetSceneShaderParameters(_scene, shaderProgram, _window);
         SetMaterialShaderParameters(shaderProgram, instancedSceneObject.m_Solid);
@@ -299,7 +330,9 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
 
         glDrawElementsInstanced(GL_TRIANGLES, mesh->m_NumberOfElements, GL_UNSIGNED_INT, nullptr, instanceTransforms.size());
         GLHelpers::ReportError("glDrawElementsInstanced");
-    
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
         UnbindTextures(shaderProgram, instancedSceneObject.m_Solid);
 
         UnbindMesh(mesh);
