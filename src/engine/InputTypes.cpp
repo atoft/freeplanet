@@ -44,6 +44,8 @@ std::string ToString(InputType _inputType)
         return "InventorySlot3";
     case InputType::InventorySlot4:
         return "InventorySlot4";
+    case InputType::InventorySlot5:
+        return "InventorySlot5";
     case InputType::LevitateUp:
         return "LevitateUp";
     case InputType::LevitateDown:
@@ -72,7 +74,7 @@ std::string ToString(InputType _inputType)
         break;
     }
     return "";
-    static_assert(static_cast<u32>(InputType::Count) == 29);
+    static_assert(static_cast<u32>(InputType::Count) == 30);
 }
 
 std::string ToString(InputContext _inputContext)

@@ -20,6 +20,7 @@
 #include <glm/fwd.hpp>
 #include <glm/gtc/noise.hpp>
 
+#include <random>
 #include <src/tools/globals.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/world/particles/ParticleSystemComponent.h>
@@ -39,7 +40,8 @@ void ParticleSystemHandler::Update(TimeMS _delta)
             STL::RemoveIf(particleComponent.m_ParticleSystem.m_Emitters, [](const ParticleEmitter& _emitter)
                                                                          {
                                                                              return _emitter.m_EmitterLifetime > 0.f
-                                                                                 && _emitter.m_TimePassed > _emitter.m_EmitterLifetime;
+                                                                                 && _emitter.m_TimePassed > _emitter.m_EmitterLifetime
+                                                                                 && _emitter.m_Particles.empty();
                                                                          });
             
             for (ParticleEmitter& emitter : particleComponent.m_ParticleSystem.m_Emitters)
@@ -68,34 +70,39 @@ void ParticleSystemHandler::UpdateEmitter(ParticleEmitter& _emitter, TimeMS _del
     // Remove particles
     if (_emitter.m_ParticleLifetime > 0.f)
     {
-      STL::RemoveIf(_emitter.m_Particles, [&_emitter](const Particle &_particle)
+        STL::RemoveIf(_emitter.m_Particles, [&_emitter](const Particle &_particle)
                                           {
                                               return _particle.m_TimePassed > _emitter.m_ParticleLifetime;
                                           });
     }
     
     // Emit particles
-    if (_emitter.m_EmissionRate > 0.f)
+    if (_emitter.m_EmissionRate > 0.f && (_emitter.m_EmitterLifetime < 0.f || _emitter.m_TimePassed < _emitter.m_EmitterLifetime))
     {
         if (isFirstUpdate || _emitter.m_TimeSinceEmission > 1.f / _emitter.m_EmissionRate)
         {
+            std::uniform_real_distribution<f32> dist;
+            const f32 offset = dist(m_RandomGenerator);
+            
             for (u32 emittedIdx = 0; emittedIdx < _emitter.m_ParticlesPerEmission; ++emittedIdx)
             {
                 Particle& particle = _emitter.m_Particles.emplace_back();
                 
                 const glm::vec3 emissionDirection = MathsHelpers::GenerateNormalFromPitchYaw(
                     0.f,
-                    static_cast<f32>(emittedIdx) / static_cast<f32>(_emitter.m_ParticlesPerEmission) * glm::pi<f32>());
+                    offset * glm::pi<f32>() * 0.5f + static_cast<f32>(emittedIdx) / static_cast<f32>(_emitter.m_ParticlesPerEmission) * 2.f * glm::pi<f32>());
 
                 particle.m_Velocity = emissionDirection * _emitter.m_InitialSpeed;
                 particle.m_Rotation = MathsHelpers::GenerateRotationMatrixFromUp(emissionDirection);
+                particle.m_TimePassed = 0.f;
+                particle.m_Color = _emitter.m_BaseColor;
             }
 
             _emitter.m_TimeSinceEmission = 0.f;
         }
         else
         {
-            _emitter.m_TimeSinceEmission += _delta / 100.f;
+            _emitter.m_TimeSinceEmission += _delta / 1000.f;
         }
     }
 
@@ -112,6 +119,7 @@ void ParticleSystemHandler::UpdateEmitter(ParticleEmitter& _emitter, TimeMS _del
         {
             const f32 fadeProgress = glm::clamp((particle.m_TimePassed - (_emitter.m_ParticleLifetime - _emitter.m_FadeoutDuration)) / _emitter.m_FadeoutDuration, 0.f, 1.f);
             const f32 alpha = 1.f - fadeProgress;
+
             particle.m_Color.a = alpha;
         }
     }

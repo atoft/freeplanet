@@ -264,7 +264,8 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                                                                                  {
                                                                                      // TODO We should have a smarter way to do this.
                                                                                      return emitter.m_Shader == instance.m_Solid.m_Material.m_Shader
-                                                                                         && emitter.m_Texture == instance.m_Solid.m_Material.m_Textures[0].second;
+                                                                                         && emitter.m_Texture == instance.m_Solid.m_Material.m_Textures[0].second
+                                                                                         && emitter.m_Blending == instance.m_Solid.m_Blending;
                                                                                  });
                     Renderable::InstancedSceneObject* instance = nullptr;
                     
@@ -284,6 +285,12 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                         instance->m_Solid.m_Material.m_Shader = emitter.m_Shader;
                         instance->m_Solid.m_Material.m_Textures.emplace_back("tex2D_0", emitter.m_Texture);
                         instance->m_Solid.m_MeshType = MeshType::Billboard;
+                        instance->m_Solid.m_Blending = emitter.m_Blending;
+
+                        if (emitter.m_NeedsDepthSort)
+                        {
+                            instance->m_SortOrigin = MathsHelpers::GetPosition(component.GetOwnerObject()->GetZoneTransform()) + emitter.m_RelativePosition;
+                        }
                     }
                     else
                     {
@@ -295,12 +302,22 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
                     for (const Particle& particle : emitter.m_Particles)
                     {
                         const glm::mat4 translation = glm::translate(objectTransform, emitter.m_RelativePosition + particle.m_RelativePosition + particle.m_OffsetPosition);
-            
-                        instance->m_Transforms.push_back(translation * particle.m_Rotation);
 
-                        if (emitter.m_UseParticleColor)
+                        if (emitter.m_NeedsDepthSort)
                         {
-                            instance->m_Colors.push_back(particle.m_Color);
+                            Renderable::SceneObjectInstanceData data;
+                            data.m_Transform = translation * particle.m_Rotation;
+                            data.m_Color = particle.m_Color;
+                            instance->m_InstanceDataForSorting.push_back(data);
+                        }
+                        else
+                        {
+                            instance->m_Transforms.push_back(translation * particle.m_Rotation);
+                            
+                            if (emitter.m_UseParticleColor)
+                            {
+                                instance->m_Colors.push_back(particle.m_Color);
+                            }
                         }
                     }
                 }
@@ -337,18 +354,52 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
         {
             if (instance.m_Solid.m_NeedsDepthSort)
             {                
-                std::sort(instance.m_Transforms.begin(), instance.m_Transforms.end(), [&cameraPosition, &cameraDirection](const glm::mat4& _lhs, const glm::mat4& _rhs)
-                                                                                      {
-                                                                                          // @Performance Should calculate the values once only and cache.
-                                                                                          const f32 distA = glm::dot(MathsHelpers::GetPosition(_lhs) - cameraPosition, cameraDirection);
-                                                                                          const f32 distB = glm::dot(MathsHelpers::GetPosition(_rhs) - cameraPosition, cameraDirection);
-                                                                                          return distA > distB;
-                                                                                      });
+                std::sort(instance.m_InstanceDataForSorting.begin(),
+                          instance.m_InstanceDataForSorting.end(),
+                          [&cameraPosition, &cameraDirection](const Renderable::SceneObjectInstanceData& _lhs, const Renderable::SceneObjectInstanceData& _rhs)
+                                                             {
+                                                                 // @Performance Should calculate the values once only and cache.
+                                                                 const f32 distA = glm::dot(MathsHelpers::GetPosition(_lhs.m_Transform) - cameraPosition, cameraDirection);
+                                                                 const f32 distB = glm::dot(MathsHelpers::GetPosition(_rhs.m_Transform) - cameraPosition, cameraDirection);
+                                                                 return distA > distB;
+                                                             });
+
+                // Convert back into separate arrays for drawing.
+                for (const Renderable::SceneObjectInstanceData& data : instance.m_InstanceDataForSorting)
+                {
+                    instance.m_Transforms.push_back(data.m_Transform);
+                    instance.m_Colors.push_back(data.m_Color);
+                }
+
+                // Avoid copying this redundant data.
+                instance.m_InstanceDataForSorting.clear();
             }
         }
         
-        // TODO sort the instances themselves.
-     
+        std::sort(particleInstances.begin(), particleInstances.end(),
+                  [&cameraPosition, &cameraDirection](const Renderable::InstancedSceneObject& _lhs, const Renderable::InstancedSceneObject& _rhs)
+                                                             {
+                                                                 if (!_lhs.m_SortOrigin.has_value() && !_rhs.m_SortOrigin.has_value())
+                                                                 {
+                                                                     return false;
+                                                                 }
+
+                                                                 if (_lhs.m_SortOrigin.has_value() && !_rhs.m_SortOrigin.has_value())
+                                                                 {
+                                                                     return false;
+                                                                 }
+
+                                                                 if (!_lhs.m_SortOrigin.has_value() && _rhs.m_SortOrigin.has_value())
+                                                                 {
+                                                                     return true;
+                                                                 }                                                                 
+                                                                 // @Performance Should calculate the values once only and cache.
+                                                                 const f32 distA = glm::dot(*_lhs.m_SortOrigin - cameraPosition, cameraDirection);
+                                                                 const f32 distB = glm::dot(*_rhs.m_SortOrigin - cameraPosition, cameraDirection);
+                                                                 return distA > distB;
+                                                             });
+                  
+        
         STL::Append(sceneToRender.m_Instances, particleInstances);    
     }
     

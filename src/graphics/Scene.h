@@ -36,6 +36,13 @@ namespace Renderable
         Count
     };
 
+    enum class AlphaBlending
+    {
+        Opaque,
+        Blend,
+        Additive
+    };
+
     struct DirectionalLight
     {
         glm::vec3 m_Direction;
@@ -97,6 +104,7 @@ namespace Renderable
         Mesh m_Mesh;
         u32 m_MeshID = 0;
         MeshType m_MeshType = MeshType::Normal;
+        AlphaBlending m_Blending = AlphaBlending::Opaque;
 
         Color m_BaseColor = Color(0.f, 0.f, 0.f, 1.f);
         bool m_NeedsDepthSort = false;
@@ -108,12 +116,21 @@ namespace Renderable
         glm::mat4 m_Transform;
     };
 
+    struct SceneObjectInstanceData
+    {
+        glm::mat4 m_Transform;
+        Color m_Color;
+    };
 
     struct InstancedSceneObject
     {
         Solid m_Solid;
         std::vector<glm::mat4> m_Transforms;
         std::vector<Color> m_Colors;
+        std::optional<glm::vec3> m_SortOrigin;
+        
+        // TODO Not great to have this here.
+        std::vector<SceneObjectInstanceData> m_InstanceDataForSorting;
     };
     
     struct Scene

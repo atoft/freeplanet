@@ -32,7 +32,7 @@ enum class InputType
     InventorySlot2,
     InventorySlot3,
     InventorySlot4,
-
+    InventorySlot5,
 
     LevitateUp,
     LevitateDown,

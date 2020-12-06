@@ -22,14 +22,16 @@
 #include <src/engine/AssetHandle.h>
 #include <src/world/terrain/TerrainSubstance.h>
 #include <src/tools/globals.h>
+#include <src/tools/PropRecipe.h>
 
 class UITexture;
 
 struct InventorySlot
 {
-    TerrainSubstanceType m_Substance;
+    std::optional<TerrainSubstanceType> m_Substance;
     u32 m_Count = 100;
     AssetHandle<UITexture> m_Icon;
+    std::optional<PropRecipe> m_Prop;
 };
 
 struct Inventory

@@ -33,7 +33,7 @@ public:
 
 private:
     static void Init();
-    static void PrepareRender();
+    void PrepareRender();
     static void PrepareWireframeRender();
     static void ClearScreen();
     static void PostRender();
@@ -50,6 +50,7 @@ private:
     void SetupTextures(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const;
     void UnbindTextures(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const;
     void SetMaterialShaderParameters(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const;
+    void UpdateBlending(Renderable::AlphaBlending _blending);
     
 private:
     bool m_IsFirstFrame = true;
@@ -61,6 +62,7 @@ private:
     AssetLoader<Texture> m_TextureLoader;
     AssetLoader<StaticMesh> m_MeshLoader;
     AssetLoader<UITexture> m_UITextureLoader;
+    Renderable::AlphaBlending m_CurrentBlending = Renderable::AlphaBlending::Opaque;
 
     std::mutex m_RenderMutex;
     std::condition_variable m_StartRenderCV;

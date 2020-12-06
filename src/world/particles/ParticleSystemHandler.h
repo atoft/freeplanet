@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <random>
 #include <src/tools/globals.h>
 
 class World;
@@ -34,4 +35,5 @@ private:
     
 private:
     World* m_World = nullptr;
+    std::mt19937 m_RandomGenerator;
 };

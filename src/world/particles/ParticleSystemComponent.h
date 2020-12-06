@@ -20,6 +20,7 @@
 #include "src/assets/MeshAssets.h"
 #include "src/assets/ShaderAssets.h"
 #include "src/assets/TextureAssets.h"
+#include "src/graphics/Scene.h"
 #include "src/graphics/ShaderProgram.h"
 #include "src/graphics/StaticMesh.h"
 #include "src/graphics/Texture.h"
@@ -73,7 +74,10 @@ struct ParticleEmitter
 
     f32 m_EmitterLifetime = -1.f;
 
+    Renderable::AlphaBlending m_Blending = Renderable::AlphaBlending::Opaque;
     bool m_NeedsDepthSort = false;
+
+    Color m_BaseColor = Color(1.f);
     bool m_UseParticleColor = false;
     
     // Runtime state

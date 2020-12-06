@@ -6,6 +6,7 @@
 #include "src/assets/MeshAssets.h"
 #include "src/assets/ShaderAssets.h"
 #include "src/assets/TextureAssets.h"
+#include "src/graphics/Scene.h"
 #include "src/world/SpawningHandler.h"
 #include "src/world/events/WorldEvent.h"
 
@@ -212,6 +213,7 @@ void TerrainHandler::HandleFinishedUpdaterFeedback(WorldZone& _zone, const Terra
             emitter.m_Shader = AssetHandle<ShaderProgram>(ShaderAsset_Lit_Inst_AlphaBlend_NormalUp);
             emitter.m_NeedsDepthSort = true;
             emitter.m_UseParticleColor = true;
+            emitter.m_Blending = Renderable::AlphaBlending::Blend;
             
             emitter.m_EmissionRate = 0.1f;
             emitter.m_ParticlesPerEmission = 6;

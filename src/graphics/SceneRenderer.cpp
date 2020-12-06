@@ -189,7 +189,8 @@ void SceneRenderer::PrepareRender()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-
+    UpdateBlending(Renderable::AlphaBlending::Opaque);
+    
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
 }
@@ -240,6 +241,7 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         SetSceneShaderParameters(_scene, shaderProgram, _window);
         SetMaterialShaderParameters(shaderProgram, sceneObject.m_Solid);
         SetupTextures(shaderProgram, sceneObject.m_Solid);
+        UpdateBlending(sceneObject.m_Solid.m_Blending);
         
         glDrawElements(GL_TRIANGLES, mesh->m_NumberOfElements, GL_UNSIGNED_INT, nullptr);
 
@@ -327,7 +329,8 @@ void SceneRenderer::Render(Renderable::Scene& _scene, std::shared_ptr<sf::Render
         SetSceneShaderParameters(_scene, shaderProgram, _window);
         SetMaterialShaderParameters(shaderProgram, instancedSceneObject.m_Solid);
         SetupTextures(shaderProgram, instancedSceneObject.m_Solid);
-
+        UpdateBlending(instancedSceneObject.m_Solid.m_Blending);
+        
         glDrawElementsInstanced(GL_TRIANGLES, mesh->m_NumberOfElements, GL_UNSIGNED_INT, nullptr, instanceTransforms.size());
         GLHelpers::ReportError("glDrawElementsInstanced");
 
@@ -511,6 +514,35 @@ void SceneRenderer::SetupTextures(ShaderProgram* _shaderProgram, const Renderabl
      }
 }
 
+void SceneRenderer::UpdateBlending(Renderable::AlphaBlending _blending)
+{
+    if (_blending != m_CurrentBlending)
+    {
+        switch (_blending)
+        {
+        case Renderable::AlphaBlending::Opaque:
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(GL_TRUE);
+            break;
+        }
+        case Renderable::AlphaBlending::Blend:
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(GL_FALSE);
+            break;
+        }
+        case Renderable::AlphaBlending::Additive:
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            glDepthMask(GL_FALSE);
+            break;
+        }
+        }
+        m_CurrentBlending = _blending;
+    }
+}
+
 void SceneRenderer::UnbindTextures(ShaderProgram* _shaderProgram, const Renderable::Solid& _solid) const
 {
     for (s32 texIdx = _solid.m_Material.m_Textures.size() - 1; texIdx >= 0; --texIdx)
@@ -539,6 +571,7 @@ void SceneRenderer::PostRender()
     assert(ThreadUtils::tl_ThreadType == ThreadType::Render);
 
     // Cleanup the OpenGL state to allow for SFML rendering
+    glDepthMask(GL_TRUE);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

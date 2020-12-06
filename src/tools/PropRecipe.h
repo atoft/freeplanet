@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "src/world/particles/ParticleSystemComponent.h"
 #include <glm/glm.hpp>
 
 #include <src/assets/MeshAssets.h>
@@ -23,4 +24,5 @@ struct PropRecipe
     MeshAssetID m_MeshID = MeshAsset_Invalid;
     ShaderAssetID m_ShaderID = ShaderAsset_Invalid;
     TextureAssetID m_TextureID = TextureAsset_Invalid;
+    std::optional<ParticleSystem> m_ParticleSystem;
 };

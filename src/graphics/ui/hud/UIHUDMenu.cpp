@@ -52,9 +52,9 @@ void UIHUDMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _wor
     {
         const bool isSelected = slotIdx == inventory.m_SelectedIndex;
 
-        if (isSelected)
+        if (isSelected && slot.m_Substance.has_value())
         {
-            _display.DrawString(glm::vec2(currentX, SELECTED_WIDTH + MARGIN_WDITH), ToString(slot.m_Substance), 24.f, drawColor);
+            _display.DrawString(glm::vec2(currentX, SELECTED_WIDTH + MARGIN_WDITH), ToString(*slot.m_Substance), 24.f, drawColor);
         }
 
         _display.DrawSprite(glm::vec2(currentX, 20.f), glm::vec2(isSelected ? SELECTED_WIDTH : UNSELECTED_WIDTH), slot.m_Icon, drawColor);
@@ -70,7 +70,8 @@ void UIHUDMenu::OnButtonReleased(InputType _type, UIActions& _actions)
     if (_type == InputType::InventorySlot1
      || _type == InputType::InventorySlot2
      || _type == InputType::InventorySlot3
-     || _type == InputType::InventorySlot4)
+     || _type == InputType::InventorySlot4
+     || _type == InputType::InventorySlot5)
     {
         m_TimeSinceChange = 0.f;
     }
