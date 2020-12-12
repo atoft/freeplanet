@@ -26,8 +26,10 @@ std::string Assets::GetMeshAssetName(MeshAssetID _assetID)
             return "branches/Branch_01";
         case MeshAsset_Branch_Narrow_01:
             return "branches/Branch_Narrow_01";
+        case MeshAsset_Campfire:
+            return "Campfire";
         default:
             return "INVALID";
     }
-    static_assert(MeshAsset_Count == 9);
+    static_assert(MeshAsset_Count == 10);
 }

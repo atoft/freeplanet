@@ -16,6 +16,8 @@ enum TextureAsset
     
     TextureAsset_Tree,
     TextureAsset_Branch_01_01,
+    TextureAsset_Campfire,
+
     
     TextureAsset_Billboard_Grass,
     TextureAsset_Billboard_Leaves,

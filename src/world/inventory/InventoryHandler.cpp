@@ -38,9 +38,9 @@ void InventoryHandler::RegisterLocalPlayer(u32 _playerIndex)
     constexpr f32 spawnedLifetime = 20.f;
     
     PropRecipe campfireRecipe;
-    campfireRecipe.m_MeshID = MeshAsset_UnitCube;
+    campfireRecipe.m_MeshID = MeshAsset_Campfire;
     campfireRecipe.m_ShaderID = ShaderAsset_Lit_Textured;
-    campfireRecipe.m_TextureID = TextureAsset_Dev_512;
+    campfireRecipe.m_TextureID = TextureAsset_Campfire;
     campfireRecipe.m_ParticleSystem = ParticleSystem();
 
     ParticleEmitter& fireEmitter = campfireRecipe.m_ParticleSystem->m_Emitters.emplace_back();

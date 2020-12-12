@@ -18,7 +18,9 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
     case TextureAsset_Tree:
         return "Tree.jpg";
     case TextureAsset_Branch_01_01:
-        return "branches/Branch_01_01.png";
+        return "models/branches/Branch_01_01.png";
+    case TextureAsset_Campfire:
+        return "models/Campfire.png";
         
     case TextureAsset_Billboard_Grass:
         return "Billboard_Grass.png";
@@ -49,7 +51,7 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 16);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 17);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -69,6 +71,8 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
         case TextureAsset_Tree:
             [[fallthrough]];
         case TextureAsset_Branch_01_01:
+            [[fallthrough]];
+        case TextureAsset_Campfire:
             [[fallthrough]];
         case TextureAsset_Billboard_Grass:
             [[fallthrough]];
@@ -94,5 +98,5 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 16);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 17);
 }
