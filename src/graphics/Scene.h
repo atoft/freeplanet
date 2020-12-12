@@ -7,6 +7,7 @@
 
 #include <glm/detail/type_mat4x4.hpp>
 #include <array>
+#include <optional>
 #include <vector>
 #include <variant>
 #include <SFML/Graphics/RectangleShape.hpp>
