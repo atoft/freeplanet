@@ -21,6 +21,8 @@
 class WorldObject;
 class WorldZone;
 class FreelookCameraComponent;
+class BipedHandler;
+class CameraHandler;
 class CollisionHandler;
 class SpawningHandler;
 class TerrainHandler;
@@ -124,6 +126,8 @@ private:
 
     WorldObjectDirectory m_Directory;
 
+    std::shared_ptr<BipedHandler> m_BipedHandler;
+    std::shared_ptr<CameraHandler> m_CameraHandler;
     std::shared_ptr<CollisionHandler> m_CollisionHandler;
     std::shared_ptr<PlayerHandler> m_PlayerHandler;
     std::shared_ptr<SpawningHandler> m_SpawningHandler;

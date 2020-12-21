@@ -40,8 +40,6 @@ public:
     glm::mat4x4 GetRelativeTransform(glm::ivec3 _relativeZone) const;
     glm::mat4x4 GetTerrainModelTransform() const;
 
-    void OnButtonInput(InputType _inputType);
-    void OnMouseInput(f32 _mouseX, f32 _mouseY);
     void OnRemovedFromWorld();
 
     template<typename T>

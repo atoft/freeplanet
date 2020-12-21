@@ -6,7 +6,8 @@
 
 #include <memory>
 
-#include <src/world/FreelookCameraComponent.h>
+#include <src/world/BipedHandler.h>
+#include <src/world/CameraHandler.h>
 #include <src/world/SpawningHandler.h>
 #include <src/world/collision/CollisionHandler.h>
 #include <src/world/inventory/InventoryHandler.h>
@@ -22,14 +23,16 @@ World::World(std::string _worldName, std::optional<Planet> _planet)
 {
     m_Name = _worldName;
 
-    m_PlayerHandler = std::make_unique<PlayerHandler>(this);
-    m_CollisionHandler = std::make_unique<CollisionHandler>(this);
-    m_SpawningHandler = std::make_unique<SpawningHandler>(this);
-    m_TerrainHandler = std::make_unique<TerrainHandler>(this);
-    m_VistaHandler = std::make_unique<VistaHandler>(this);
-    m_InventoryHandler = std::make_unique<InventoryHandler>(this);
-    m_ParticleSystemHandler = std::make_unique<ParticleSystemHandler>(this);
-
+    m_BipedHandler = std::make_shared<BipedHandler>(this);
+    m_PlayerHandler = std::make_shared<PlayerHandler>(this);
+    m_CollisionHandler = std::make_shared<CollisionHandler>(this);
+    m_SpawningHandler = std::make_shared<SpawningHandler>(this);
+    m_TerrainHandler = std::make_shared<TerrainHandler>(this);
+    m_VistaHandler = std::make_shared<VistaHandler>(this);
+    m_InventoryHandler = std::make_shared<InventoryHandler>(this);
+    m_ParticleSystemHandler = std::make_shared<ParticleSystemHandler>(this);
+    m_CameraHandler = std::make_shared<CameraHandler>(this);
+    
     m_Planet = _planet;
 
     constexpr u32 INITIAL_RESERVED_ZONES = 27;
@@ -145,12 +148,14 @@ void World::Update(TimeMS _delta)
         zone.Update(deltaWithTimeScale);
     }
 
+    m_BipedHandler->Update(deltaWithTimeScale);
     m_PlayerHandler->Update();
     m_CollisionHandler->Update(deltaWithTimeScale);
     m_SpawningHandler->Update();
     m_TerrainHandler->Update(deltaWithTimeScale);
     m_VistaHandler->Update(deltaWithTimeScale);
     m_ParticleSystemHandler->Update(deltaWithTimeScale);
+    m_CameraHandler->Update(deltaWithTimeScale);
 
     m_EnvironmentState.Update(deltaWithTimeScale);
 
@@ -404,20 +409,37 @@ std::string World::GetName()
 
 void World::OnButtonInput(InputType _inputType)
 {
-    for (WorldZone& zone : m_ActiveZones)
+    constexpr u32 localPlayerIdx = 0;
+
+    const WorldObjectID controlledId = GetPlayerHandler()->GetControlledWorldObjectID(localPlayerIdx);
+
+    WorldObject* controlledWorldObject = nullptr;
+    
+    if (controlledId != WORLDOBJECTID_INVALID)
     {
-        zone.OnButtonInput(_inputType);
+        controlledWorldObject = GetWorldObject(controlledId);
+        assert(object != nullptr);
     }
 
-    m_InventoryHandler->OnButtonInput(_inputType);
+    m_BipedHandler->OnButtonInput(localPlayerIdx, controlledWorldObject,_inputType);
+    m_InventoryHandler->OnButtonInput(localPlayerIdx, controlledWorldObject, _inputType);
 }
 
 void World::OnMouseInput(f32 _mouseX, f32 _mouseY)
 {
-    for (WorldZone& zone : m_ActiveZones)
+    constexpr u32 localPlayerIdx = 0;
+    
+    const WorldObjectID controlledId = GetPlayerHandler()->GetControlledWorldObjectID(localPlayerIdx);
+
+    WorldObject* controlledWorldObject = nullptr;
+    
+    if (controlledId != WORLDOBJECTID_INVALID)
     {
-        zone.OnMouseInput(_mouseX, _mouseY);
+        controlledWorldObject = GetWorldObject(controlledId);
+        assert(object != nullptr);
     }
+
+    m_CameraHandler->OnMouseInput(localPlayerIdx, controlledWorldObject, _mouseX, _mouseY);
 }
 
 const WorldObject* World::GetWorldObject(WorldObjectID _objectID) const

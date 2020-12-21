@@ -15,46 +15,9 @@ FreelookCameraComponent::FreelookCameraComponent(World *ownerWorld, WorldObjectI
     m_WorldObjectID = _ownerID;
 }
 
-void FreelookCameraComponent::OnRemovedFromWorld()
-{
-}
-
-void FreelookCameraComponent::OnMouseInput(float _mouseX, float _mouseY)
-{
-    float sensX = 2.f;
-    float sensY = 2.f;
-
-    m_AngularVelocity = glm::vec3(-1,0,0) * _mouseX * sensX - glm::vec3(0,1,0) * _mouseY * sensY;
-}
-
-void FreelookCameraComponent::Update(TimeMS _delta)
-{
-    ProfileCurrentFunction();
-
-    const glm::vec3 LOCAL_UP = glm::vec3(0,1,0);
-
-    // Freelook left and right causes the parent object to rotate,
-    // but up and down should only rotate the camera view
-    WorldObject* self = GetOwnerObject();
-    self->Rotate(LOCAL_UP, m_AngularVelocity.x);
-
-    m_VerticalRotation = glm::clamp(m_VerticalRotation + m_AngularVelocity.y, -glm::half_pi<f32>(), glm::half_pi<f32>());
-}
-
-float FreelookCameraComponent::GetFieldOfView() const
-{
-    assert(false && "Unused, reimplement to support FOV modifiers for zooming.");
-    return 0.f;
-}
-
-float FreelookCameraComponent::GetFarClipDistance() const
+f32 FreelookCameraComponent::GetFarClipDistance() const
 {
     return Globals::FREEPLANET_FAR_CLIP_DISTANCE;
-}
-
-const WorldObject* FreelookCameraComponent::GetParentWorldObject() const
-{
-    return GetOwnerObject();
 }
 
 glm::mat4 FreelookCameraComponent::GetCameraZoneTransform() const

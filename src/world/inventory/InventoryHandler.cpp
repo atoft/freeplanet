@@ -88,33 +88,21 @@ void InventoryHandler::RegisterLocalPlayer(u32 _playerIndex)
 
 }
 
-void InventoryHandler::OnButtonInput(InputType _inputType)
+void InventoryHandler::OnButtonInput(u32 _playerIdx, WorldObject* _controlledWorldObject, InputType _inputType)
 {
-    constexpr u32 PLAYER_IDX = 0;
-
     if (_inputType == InputType::Interact || _inputType == InputType::InteractAlternate)
     {
-        const WorldObjectID id = m_World->GetPlayerHandler()->GetControlledWorldObjectID(PLAYER_IDX);
-
-        if (id == WORLDOBJECTID_INVALID)
-        {
-            return;
-        }
-
-        WorldObject* object = m_World->GetWorldObject(id);
-        assert(object != nullptr);
-
-        const FreelookCameraComponent* camera = ComponentAccess::GetComponent<FreelookCameraComponent>(*object);
+        const FreelookCameraComponent* camera = ComponentAccess::GetComponent<FreelookCameraComponent>(*_controlledWorldObject);
 
         const glm::vec3 lookDirection = camera->GetLookDirection();
-        std::optional<f32> rayIntersect = m_World->GetCollisionHandler()->DoRaycast(object->GetWorldPosition(), lookDirection);
+        std::optional<f32> rayIntersect = m_World->GetCollisionHandler()->DoRaycast(_controlledWorldObject->GetWorldPosition(), lookDirection);
 
         if (rayIntersect == std::nullopt)
         {
             return;
         }
 
-        InventorySlot& slot = m_Inventories[PLAYER_IDX].m_Slots[m_Inventories[PLAYER_IDX].m_SelectedIndex];
+        InventorySlot& slot = m_Inventories[_playerIdx].m_Slots[m_Inventories[_playerIdx].m_SelectedIndex];
 
         if (slot.m_Substance.has_value())
         {
@@ -134,14 +122,14 @@ void InventoryHandler::OnButtonInput(InputType _inputType)
             constexpr f32 TERRAIN_INTERACTION_RADIUS = 2.f;
      
             terrainEvent.m_Radius = TERRAIN_INTERACTION_RADIUS;
-            terrainEvent.m_Source = id;
-            terrainEvent.m_TargetPosition = object->GetWorldPosition() + lookDirection * (*rayIntersect);
+            terrainEvent.m_Source = _controlledWorldObject->GetWorldObjectID() ;
+            terrainEvent.m_TargetPosition = _controlledWorldObject->GetWorldPosition() + lookDirection * (*rayIntersect);
      
             m_World->AddWorldEvent(terrainEvent);
         }
         else if (slot.m_Prop.has_value())
         {
-            WorldPosition targetWorldPosition = object->GetWorldPosition() + lookDirection * (*rayIntersect);
+            WorldPosition targetWorldPosition = _controlledWorldObject->GetWorldPosition() + lookDirection * (*rayIntersect);
             targetWorldPosition.GetInsideZone();
             
             WorldZone* targetZone = m_World->FindZoneAtCoordinates(targetWorldPosition.m_ZoneCoordinates);
@@ -184,27 +172,27 @@ void InventoryHandler::OnButtonInput(InputType _inputType)
     {
     case InputType::InventorySlot1:
     {
-        ChangeSlot(PLAYER_IDX, 0);
+        ChangeSlot(_playerIdx, 0);
         break;
     }
     case InputType::InventorySlot2:
     {
-        ChangeSlot(PLAYER_IDX, 1);
+        ChangeSlot(_playerIdx, 1);
         break;
     }
     case InputType::InventorySlot3:
     {
-        ChangeSlot(PLAYER_IDX, 2);
+        ChangeSlot(_playerIdx, 2);
         break;
     }
     case InputType::InventorySlot4:
     {
-        ChangeSlot(PLAYER_IDX, 3);
+        ChangeSlot(_playerIdx, 3);
         break;
     }
     case InputType::InventorySlot5:
     {
-        ChangeSlot(PLAYER_IDX, 4);
+        ChangeSlot(_playerIdx, 4);
         break;
     }
 

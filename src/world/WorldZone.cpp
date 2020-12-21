@@ -57,11 +57,6 @@ bool DestroyComponentOfObject(std::vector<Type>& _components, WorldObjectID _obj
 
         if (component.GetOwner() == _objectID)
         {
-            if (_isBeingRemovedFromWorld)
-            {
-                _components[componentIdx].OnRemovedFromWorld();
-            }
-
             _components[componentIdx] = _components.back();
 
             // Update Ref to the previous last component in WorldObject
@@ -127,37 +122,6 @@ void WorldZone::Update(TimeMS delta)
     for (WorldObject& object : m_WorldObjects)
     {
         object.Update(delta);
-    }
-
-    // TODO finish removing Update methods from components.
-    for (auto& component : m_BipedComponents)
-    {
-        component.Update(delta);
-    }
-    for (auto& component : m_CameraComponents)
-    {
-        component.Update(delta);
-    }
-}
-
-void WorldZone::OnButtonInput(InputType _inputType)
-{
-    // TODO Pass the inputs only to the WorldObject associated with the player.
-    for (BipedComponent& component : m_BipedComponents)
-    {
-        component.OnButtonInput(_inputType);
-    }
-}
-
-void WorldZone::OnMouseInput(f32 _mouseX, f32 _mouseY)
-{
-    for (BipedComponent& component : m_BipedComponents)
-    {
-        component.OnMouseInput(_mouseX, _mouseY);
-    }
-    for (FreelookCameraComponent& component : m_CameraComponents)
-    {
-        component.OnMouseInput(_mouseX, _mouseY);
     }
 }
 

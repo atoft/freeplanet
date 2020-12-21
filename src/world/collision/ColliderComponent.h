@@ -24,12 +24,6 @@ class ColliderComponent : public WorldObjectComponent
 public:
     ColliderComponent(World* world, WorldObjectID _ownerID, CollisionPrimitiveType _primitiveType, MovementType _movementType = MovementType::Fixed);
 
-    void OnButtonInput(InputType type) override {};
-    void OnMouseInput(float mouseX, float mouseY) override {};
-    void OnRemovedFromWorld() override {};
-    void Update(TimeMS delta) override {};
-
-public:
     AABB m_Bounds;
     float m_MassScale = 1.f;
 

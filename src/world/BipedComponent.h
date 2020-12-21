@@ -13,15 +13,8 @@ class BipedComponent : public WorldObjectComponent
 public:
     BipedComponent(World* _world, WorldObjectID _ownerID);
 
-    void OnButtonInput(InputType _type) override;
-    void OnMouseInput(float _mouseX, float _mouseY) override;
-    void Update(TimeMS _delta) override;
-    void DebugDraw(UIDrawInterface& _interface) const override;
+    bool IsStandingOnGround(const WorldObject* _self) const;
 
-private:
-    bool IsStandingOnGround(const WorldObject* self) const;
-
-private:
     glm::vec3 m_LinearVelocity = glm::vec3();
 
     glm::vec3 m_WalkDirection = glm::vec3();

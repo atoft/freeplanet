@@ -27,7 +27,7 @@ class InventoryHandler
 public:
     explicit InventoryHandler(World* _world);
     void RegisterLocalPlayer(u32 _playerIndex);
-    void OnButtonInput(InputType _inputType);
+    void OnButtonInput(u32 _playerIdx, WorldObject* _controlledWorldObject, InputType _inputType);
 
     const Inventory& GetInventory(u32 _playerIndex) const;
 

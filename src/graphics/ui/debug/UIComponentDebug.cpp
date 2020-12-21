@@ -23,11 +23,6 @@ void UIComponentDebug::Draw(TimeMS, UIDrawInterface& _display, const World* _wor
 
         std::string objectList = "WorldObjects in this zone: \n";
 
-        for (const auto& component : zone.GetComponents<BipedComponent>())
-        {
-            component.DebugDraw(_display);
-        }
-
         for (const auto& object : zone.GetWorldObjects())
         {
             objectList += object.GetName() + " (ID" + std::to_string(object.GetWorldObjectID()) + ")\n";
