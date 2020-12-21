@@ -418,7 +418,7 @@ void World::OnButtonInput(InputType _inputType)
     if (controlledId != WORLDOBJECTID_INVALID)
     {
         controlledWorldObject = GetWorldObject(controlledId);
-        assert(object != nullptr);
+        assert(controlledWorldObject != nullptr);
     }
 
     m_BipedHandler->OnButtonInput(localPlayerIdx, controlledWorldObject,_inputType);
@@ -436,7 +436,7 @@ void World::OnMouseInput(f32 _mouseX, f32 _mouseY)
     if (controlledId != WORLDOBJECTID_INVALID)
     {
         controlledWorldObject = GetWorldObject(controlledId);
-        assert(object != nullptr);
+        assert(controlledWorldObject != nullptr);
     }
 
     m_CameraHandler->OnMouseInput(localPlayerIdx, controlledWorldObject, _mouseX, _mouseY);
