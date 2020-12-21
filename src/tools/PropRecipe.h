@@ -4,12 +4,15 @@
 
 #pragma once
 
-#include "src/world/particles/ParticleSystemComponent.h"
 #include <glm/glm.hpp>
+#include <optional>
+#include <utility>
 
 #include <src/assets/MeshAssets.h>
 #include <src/assets/ShaderAssets.h>
 #include <src/assets/TextureAssets.h>
+#include <src/world/LightComponent.h>
+#include <src/world/particles/ParticleSystemComponent.h>
 
 // Specifies some parameters to use when constructing a prop, for testing.
 // Will probably do something similar in the procedural system for
@@ -25,4 +28,5 @@ struct PropRecipe
     ShaderAssetID m_ShaderID = ShaderAsset_Invalid;
     TextureAssetID m_TextureID = TextureAsset_Invalid;
     std::optional<ParticleSystem> m_ParticleSystem;
+    std::optional<LightEmitter> m_Light;
 };

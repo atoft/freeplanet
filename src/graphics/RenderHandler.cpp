@@ -241,13 +241,13 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
         for (const LightComponent& component : zone.GetComponents<LightComponent>())
         {
             Renderable::PointLight light;
-            light.m_Color = component.m_Color;
-            light.m_Intensity = component.m_Brightness;
+            light.m_Color = component.m_Emitter.m_Color;
+            light.m_Intensity = component.m_Emitter.m_Brightness;
 
             const WorldObject* worldObject = component.GetOwnerObject();
             assert(worldObject != nullptr);
 
-            light.m_Origin = worldObject->GetPosition() + MathsHelpers::GetPosition(viewTransform);
+            light.m_Origin = worldObject->GetPosition() + component.m_Emitter.m_LocalOffset + MathsHelpers::GetPosition(viewTransform);
 
             sceneToRender.m_PointLights.push_back(light);
         }

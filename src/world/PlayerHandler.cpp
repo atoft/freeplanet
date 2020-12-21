@@ -126,8 +126,6 @@ void PlayerHandler::SpawnPlayer(const PlayerRequest& _request, WorldZone& _zone)
     _zone.AddComponent<BipedComponent>(worldObject);
     _zone.AddComponent<FreelookCameraComponent>(worldObject);
 
-    _zone.AddComponent<LightComponent>(worldObject, Color(1.f), 1.f);
-
     ColliderComponent& collider = _zone.AddComponent<ColliderComponent>(worldObject, CollisionPrimitiveType::OBB, MovementType::Movable);
     collider.m_Bounds = AABB(glm::vec3(.5f, 1.f, .5f));
     collider.m_KeepUpright = true;

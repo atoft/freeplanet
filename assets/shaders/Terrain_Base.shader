@@ -220,7 +220,6 @@ void main()
 
         float distanceToLight = length(fragToLight);
         pointLighting = pointLighting + (1.0 / (distanceToLight * distanceToLight)) * frplLights[lightIdx].color * frplLights[lightIdx].intensity * pointBrightness;
-        break;
     }
 
     vec3 surfaceColor = GetSurfaceColor();

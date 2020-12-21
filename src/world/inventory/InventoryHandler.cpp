@@ -19,6 +19,7 @@
 #include "src/assets/MeshAssets.h"
 #include "src/assets/ShaderAssets.h"
 #include "src/graphics/Scene.h"
+#include "src/world/LightComponent.h"
 #include "src/world/SpawningHandler.h"
 
 #include <src/assets/TextureAssets.h>
@@ -42,7 +43,11 @@ void InventoryHandler::RegisterLocalPlayer(u32 _playerIndex)
     campfireRecipe.m_ShaderID = ShaderAsset_Lit_Textured;
     campfireRecipe.m_TextureID = TextureAsset_Campfire;
     campfireRecipe.m_ParticleSystem = ParticleSystem();
-
+    campfireRecipe.m_Light = LightEmitter();
+    campfireRecipe.m_Light->m_Brightness = 1.f;
+    campfireRecipe.m_Light->m_Color = Color(1.f);
+    campfireRecipe.m_Light->m_LocalOffset = glm::vec3(0.f, 1.f, 0.f);
+    
     ParticleEmitter& fireEmitter = campfireRecipe.m_ParticleSystem->m_Emitters.emplace_back();
     fireEmitter.m_ParticlesPerEmission = 6;
     fireEmitter.m_EmissionRate = 4.f;
@@ -164,6 +169,11 @@ void InventoryHandler::OnButtonInput(u32 _playerIdx, WorldObject* _controlledWor
                 }
             }
 
+            if (slot.m_Prop->m_Light.has_value())
+            {
+                LightComponent& light = targetZone->AddComponent<LightComponent>(spawnedObject);
+                light.m_Emitter = *slot.m_Prop->m_Light;
+            }
         }
         return;
     }
