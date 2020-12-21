@@ -42,10 +42,12 @@ private:
         glm::ivec3 m_Zone = glm::ivec3();
         u32 m_Index = 0;
         RequestState m_State = RequestState::WaitingToLoadZone;
+        u32 m_AttemptCount = 0;
     };
 
-    void SpawnPlayer(const PlayerRequest& _request, WorldZone& _zone);
-
+    bool SpawnPlayer(PlayerRequest& _request, WorldZone& _zone);
+    glm::ivec3 GetZoneAbove(glm::ivec3 _zoneCoords) const;
+        
 private:
     World* m_World = nullptr;
 

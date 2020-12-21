@@ -53,9 +53,12 @@ void PlayerHandler::Update()
                 // to not unload zones if there's a player requesting them.
                 assert(zone != nullptr);
 
-                SpawnPlayer(request, *zone);
+                const bool spawnSuccess = SpawnPlayer(request, *zone);
 
-                m_Requests.erase(m_Requests.begin() + (requestIdx - 1));
+                if (spawnSuccess)
+                {
+                    m_Requests.erase(m_Requests.begin() + (requestIdx - 1));
+                }
 
                 break;
             }
@@ -86,7 +89,7 @@ bool PlayerHandler::AreLocalPlayersSpawned() const
     return m_Requests.empty() && !m_LocalPlayers.empty();
 }
 
-void PlayerHandler::SpawnPlayer(const PlayerRequest& _request, WorldZone& _zone)
+bool PlayerHandler::SpawnPlayer(PlayerRequest& _request, WorldZone& _zone)
 {
     // Try to find a safe spawn point.
     glm::vec3 targetPosition = glm::vec3(0.f);
@@ -106,17 +109,31 @@ void PlayerHandler::SpawnPlayer(const PlayerRequest& _request, WorldZone& _zone)
         std::optional<f32> raycastResult = m_World->GetCollisionHandler()->DoRaycast(
                 desiredWorldPosition + (raycastStartPosition),
                 -upDirection,
-                CollisionHandler::RaycastRange::InitialZoneOnly);
+                CollisionHandler::RaycastRange::AllLoadedZones);
 
-        if (raycastResult == std::nullopt)
-        {
-            LogWarning("Couldn't find a free space to spawn at.");
-            // TODO Try some other points, then move to a higher zone.
-        }
-        else
+        if (raycastResult.has_value())
         {
             // Player origin is at center, not at feet, probably want to change that.
             targetPosition = raycastStartPosition -upDirection * (raycastResult.value() - 1.f);
+        }
+
+        else
+        {
+            constexpr u32 SPAWN_MAX_ATTEMPTS = 2;
+            
+            if (_request.m_AttemptCount < SPAWN_MAX_ATTEMPTS)
+            {
+                LogWarning("Couldn't find a free space to spawn at.");
+
+                _request.m_Zone = GetZoneAbove(_zone.GetCoordinates());
+                _request.m_State = RequestState::WaitingToLoadZone;
+                ++_request.m_AttemptCount;
+                return false;
+            }
+            else
+            {
+                LogError("Player spawning exceeded max attempt count.");
+            }
         }
     }
 
@@ -135,6 +152,13 @@ void PlayerHandler::SpawnPlayer(const PlayerRequest& _request, WorldZone& _zone)
     m_LocalPlayers.push_back(player);
 
     m_World->OnPlayerSpawned(worldObject);
+    return true;
+}
+
+glm::ivec3 PlayerHandler::GetZoneAbove(glm::ivec3 _zoneCoords) const
+{
+    // TODO Real implementation, find an adjacent zone in the up direction.
+    return _zoneCoords + glm::ivec3(0, 1, 0);
 }
 
 bool PlayerHandler::IsPlayerInZone(glm::ivec3 _coords) const
