@@ -23,5 +23,6 @@ vcpkg/
 .clangd/
 
 compile_commands.json
+engineconfig.txt
 
 *blend1
