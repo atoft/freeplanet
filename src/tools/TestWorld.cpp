@@ -22,20 +22,6 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
         const Planet planet = PlanetGeneration::GenerateFromSeed(1);
 
         world = std::make_shared<World>("Terrain", planet);
-
-        // HACK copy-paste from World.cpp
-        // In the real flow we need to be able to request the world to add a player, it will handle loading the relevant
-        // zones, and decide when everything's ready to spawn the player.
-        const glm::ivec3 spawnZoneCoordinates = glm::ivec3(0, planet.m_Radius / TerrainConstants::WORLD_ZONE_SIZE, 0);
-
-        PropRecipe boxRecipe;
-        boxRecipe.m_TextureID = TextureAsset_Tree;
-        boxRecipe.m_ShaderID = ShaderAsset_Lit_Textured;
-        boxRecipe.m_MeshID = MeshAsset_Tree;
-        boxRecipe.m_Name = "Tree";
-
-        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(0.f,-4.5f,-15.f)), boxRecipe);
-        world->SpawnPropInWorldZone(WorldPosition(spawnZoneCoordinates, glm::vec3(-2.f, -3.5f, -5.f)), boxRecipe);
     }
     else if (_worldName == "empty")
     {

@@ -15,8 +15,6 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
     case TextureAsset_Cubemap_Dev:
         return "cubemaps/dev/";
         
-    case TextureAsset_Tree:
-        return "Tree.jpg";
     case TextureAsset_Branch_01_01:
         return "models/branches/Branch_01_01.png";
     case TextureAsset_Campfire:
@@ -53,7 +51,7 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 18);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 17);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -69,8 +67,6 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
         case TextureAsset_Volume_Grass128:
             return TextureAssetType::Volume;
         case TextureAsset_Dev_512:
-            [[fallthrough]];
-        case TextureAsset_Tree:
             [[fallthrough]];
         case TextureAsset_Branch_01_01:
             [[fallthrough]];
@@ -102,5 +98,5 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 18);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 17);
 }

@@ -16,8 +16,6 @@ enum MeshAsset
     MeshAsset_UnitCylinder,
     MeshAsset_Arrow,
 
-    MeshAsset_Tree,
-
     MeshAsset_Branch_01,
     MeshAsset_Branch_Narrow_01,
     MeshAsset_Campfire,

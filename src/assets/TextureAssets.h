@@ -14,7 +14,6 @@ enum TextureAsset
     TextureAsset_Dev_512,
     TextureAsset_Cubemap_Dev,
     
-    TextureAsset_Tree,
     TextureAsset_Branch_01_01,
     TextureAsset_Campfire,
 
