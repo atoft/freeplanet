@@ -3,9 +3,6 @@
 //
 
 #include "SpawningHandler.h"
-#include "src/engine/AssetBank.h"
-#include "src/graphics/DynamicMeshHandle.h"
-#include "src/world/flora/FloraGeneration.h"
 
 #include <random>
 #include <glm/gtx/norm.hpp>
@@ -16,6 +13,10 @@
 #include <src/world/World.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/world/planet/PlanetGeneration.h>
+#include <src/engine/AssetBank.h>
+#include <src/graphics/DynamicMeshHandle.h>
+#include <src/world/flora/FloraGeneration.h>
+
 
 SpawningHandler::SpawningHandler(World* _world)
     : m_World(_world)
@@ -102,7 +103,7 @@ void SpawningHandler::Update()
 
         if (!zone.IsProceduralSpawningDone() && !rawMesh.IsEmpty())
         {
-            constexpr f32 fractionOfVertsToSpawnTreesOn = 0.03125f;
+            constexpr f32 fractionOfVertsToSpawnTreesOn = 0.015f;
             constexpr f32 fractionOfVertsToSpawnGrassOn = 0.125f;
 
             const Planet::Biome& biome = TerrainGeneration::GetBiome(*planet, WorldPosition(zone.GetCoordinates(), glm::vec3(0.f)));
@@ -165,8 +166,8 @@ void SpawningHandler::Update()
                 }
                 else
                 {
-                    // Probably(?) don't want to go as far as having a WorldObject for every blade of grass. Probably some
-                    // simpler structure which caches all the points to draw a sprite at.
+                    // Probably(?) don't want to go as far as having a WorldObject for every blade of grass. Probably
+                    // do it as a particle system per zone.
                     WorldObject &worldObject = m_World->ConstructWorldObject(zone, "Grass");
                     worldObject.SetInitialPosition(spawnPosition + glm::vec3(0.f, 0.5f, 0.f));
 
