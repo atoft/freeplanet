@@ -21,7 +21,8 @@ void UINewPlanetMenu::Init(bool _startFocused)
 void UINewPlanetMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world)
 {
     _display.FillScreen(UIConstants::BackgroundColor);
-    _display.DrawString(UIConstants::ListStartPosition - glm::ivec2(0,200), "New planet", 48.f);
+    _display.DrawString(UIConstants::ListStartPosition - glm::ivec2(0, 200), "New planet", 48.f);
+    _display.DrawString(UIConstants::ListStartPosition - glm::ivec2(0, 44), "Enter a seed:", 24.f);
     m_List.Draw(_delta, _display);
 
 }
