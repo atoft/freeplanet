@@ -78,7 +78,7 @@ out vec4 outColor;
 
 float Remap(float _value, float _min, float _max)
 {
-    return max(_value - _min, 0.0) / (_max - _min);
+    return clamp(max(_value - _min, 0.0) / (_max - _min), 0.0, 1.0);
 }
 
 vec3 GetGrassColor()
@@ -90,12 +90,12 @@ vec3 GetGrassColor()
         baseColor = texture(texGrass, WorldPosition.xzy).r;
     }
 
-    const float GRASS_CONTRAST = 0.6;
+    const float GRASS_CONTRAST = 0.5;
     const float GRASS_BRIGHTNESS = 0.5;
 
     float scaledColor = (baseColor * GRASS_CONTRAST * GRASS_BRIGHTNESS) + (1.0 - GRASS_CONTRAST);
 
-    const vec3 GRASS_COLOR = vec3(0.521, 0.835, 0.301);
+    const vec3 GRASS_COLOR = vec3(0.560, 0.835, 0.164);
 
     return GRASS_COLOR * vec3(scaledColor);
 }
@@ -114,7 +114,7 @@ vec3 GetDirtColor()
 
     float scaledColor = (baseColor * DIRT_CONTRAST * DIRT_BRIGHTNESS) + (1.0 - DIRT_CONTRAST);
 
-    const vec3 DIRT_COLOR = vec3(0.737, 0.407, 0.101);
+    const vec3 DIRT_COLOR = vec3(0.670, 0.462, 0.070);
 
     return DIRT_COLOR * vec3(scaledColor);
 }
@@ -166,7 +166,7 @@ vec3 GetSurfaceColor()
     const float DETAIL_SCALE2 = 2.0;
     float maskDetail = texture(texPerlin, WorldPosition.xzy / DETAIL_SCALE1).r * 0.5 + texture(texPerlin, WorldPosition.xzy / DETAIL_SCALE2).r * 0.5;
 
-    foliageMask = foliageMask * maskDetail;
+    foliageMask = clamp(foliageMask * maskDetail * 2.0, 0.0, 1.0);
 
     // Extent of base mask depends on steepness of terrain (e.g. more grass if more flat).
     float verticalDotProduct = clamp(dot(Normal, LocalUpDirection), 0, 1);
@@ -187,12 +187,15 @@ vec3 GetSurfaceColor()
 
     float foliageCoverageAccountingForSlope = FOLIAGE_COVERAGE * foliageExtent;
 
+    // Reuse the base mask to add some brightness variation to the foliage.
+    float foliageBrightness = 0.8 + foliageMask * 0.2;
+
     foliageMask = foliageCoverageAccountingForSlope > 0.0 ? Remap(foliageMask, 1.0 - foliageCoverageAccountingForSlope, min((1.0 - foliageCoverageAccountingForSlope) + FOLIAGE_SOFTNESS, 1.0)) : 0.0;
 
     vec3 grassColor = GetGrassColor();
-    vec3 soilColor = GetDirtColor() ;
+    vec3 soilColor = GetDirtColor();
 
-    vec3 topsoilColor = (grassColor * foliageMask + soilColor * (1.0 - foliageMask)) * TerrainSubstance.x;
+    vec3 topsoilColor = (grassColor * foliageMask * foliageBrightness + soilColor * (1.0 - foliageMask)) * TerrainSubstance.x;
     vec3 dirtColor = soilColor * TerrainSubstance.y ;
     vec3 rockColor = GetRockColor() * TerrainSubstance.z;
     vec3 sandColor = GetSandColor() * TerrainSubstance.w;
