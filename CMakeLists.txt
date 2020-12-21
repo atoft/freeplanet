@@ -10,8 +10,8 @@ else()
     set(freeplanet_PLATFORM freeplanet_LINUX)
 endif()
 
-set(freeplanet_VERSION_MAJOR 1)
-set(freeplanet_VERSION_MINOR 0)
+set(freeplanet_VERSION_MAJOR 0)
+set(freeplanet_VERSION_MINOR 1)
 configure_file(
     "src/config.h.in"
     "${CMAKE_SOURCE_DIR}/src/config.h"

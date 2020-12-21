@@ -17,6 +17,7 @@
 
 #include "UIHUDMenu.h"
 
+#include <src/graphics/ui/menus/UIConstants.h>
 #include <src/world/inventory/InventoryHandler.h>
 #include <src/world/World.h>
 
@@ -27,23 +28,23 @@ void UIHUDMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _wor
     constexpr u32 PLAYER_IDX = 0;
     const Inventory& inventory = inventoryHandler->GetInventory(PLAYER_IDX);
 
-    float currentX = 20.f;
+    f32 currentX = UIConstants::ScreenEdgeMargin.x;
 
-    constexpr float UNSELECTED_WIDTH = 100.f;
-    constexpr float SELECTED_WIDTH = 200.f;
-    constexpr float MARGIN_WDITH = 20.f;
+    constexpr f32 UNSELECTED_WIDTH = 100.f;
+    constexpr f32 SELECTED_WIDTH = 200.f;
+    constexpr f32 MARGIN_WDITH = 20.f;
 
     m_TimeSinceChange += _delta;
 
-    constexpr float COOLDOWN_TIME = 1000.f;
-    constexpr float FADE_DURATION = 500.f;
+    constexpr f32 COOLDOWN_TIME = 1000.f;
+    constexpr f32 FADE_DURATION = 500.f;
 
     if (m_TimeSinceChange > COOLDOWN_TIME + FADE_DURATION)
     {
         return;
     }
 
-    const float alpha = 1.f - glm::clamp((m_TimeSinceChange - COOLDOWN_TIME) / FADE_DURATION, 0.f, 1.f);
+    const f32 alpha = 1.f - glm::clamp((m_TimeSinceChange - COOLDOWN_TIME) / FADE_DURATION, 0.f, 1.f);
 
     const Color drawColor = Color(1.f, 1.f, 1.f, alpha);
 
@@ -54,10 +55,10 @@ void UIHUDMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _wor
 
         if (isSelected)
         {
-            _display.DrawString(glm::vec2(currentX, SELECTED_WIDTH + MARGIN_WDITH), slot.m_DisplayName, 24.f, drawColor);
+            _display.DrawString(glm::vec2(currentX, SELECTED_WIDTH + UIConstants::ScreenEdgeMargin.y), slot.m_DisplayName, 24.f, drawColor);
         }
 
-        _display.DrawSprite(glm::vec2(currentX, 20.f), glm::vec2(isSelected ? SELECTED_WIDTH : UNSELECTED_WIDTH), slot.m_Icon, drawColor);
+        _display.DrawSprite(glm::vec2(currentX, UIConstants::ScreenEdgeMargin.y), glm::vec2(isSelected ? SELECTED_WIDTH : UNSELECTED_WIDTH), slot.m_Icon, drawColor);
 
         currentX += (isSelected ? SELECTED_WIDTH : UNSELECTED_WIDTH) + MARGIN_WDITH;
 

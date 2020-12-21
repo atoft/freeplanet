@@ -12,6 +12,8 @@ class UIConstants
 public:
     static constexpr glm::ivec2 UIResolution = glm::ivec2(1920, 1080);
 
+    static constexpr glm::ivec2 ScreenEdgeMargin = glm::ivec2(20, 20);
+    
     static constexpr glm::ivec2 ButtonDimensions = glm::ivec2(500, 50);
 
     static constexpr glm::ivec2 ListStartPosition = glm::ivec2((1920 - ButtonDimensions.x) / 2, 1080 / 2);
