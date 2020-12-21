@@ -28,6 +28,7 @@ class UITexture;
 
 struct InventorySlot
 {
+    std::string m_DisplayName;
     std::optional<TerrainSubstanceType> m_Substance;
     u32 m_Count = 100;
     AssetHandle<UITexture> m_Icon;

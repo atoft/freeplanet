@@ -50,7 +50,7 @@ void InventoryHandler::RegisterLocalPlayer(u32 _playerIndex)
     fireEmitter.m_ParticleLifetime = 1.f;
     fireEmitter.m_FadeoutDuration = 0.6f;
     fireEmitter.m_InitialSpeed = 0.5f;
-    // HACK: To early to do this.    fireEmitter.m_MeshID = m_World->GetSpawningHandler()->m_ParticleSystemMesh.GetID();
+    // HACK: Too early to do this.    fireEmitter.m_MeshID = m_World->GetSpawningHandler()->m_ParticleSystemMesh.GetID();
     fireEmitter.m_Shader = ShaderAsset_Lit_Inst_AlphaBlend_NormalUp;
     fireEmitter.m_Texture = TextureAsset_Billboard_Flame;
     fireEmitter.m_UseParticleColor = true;
@@ -66,7 +66,7 @@ void InventoryHandler::RegisterLocalPlayer(u32 _playerIndex)
     smokeEmitter.m_ParticleLifetime = 4.f;
     smokeEmitter.m_FadeoutDuration = 2.f;
     smokeEmitter.m_InitialSpeed = 0.f;
-    // HACK: To early to do this.    smokeEmitter.m_MeshID = m_World->GetSpawningHandler()->m_ParticleSystemMesh.GetID();
+    // HACK: Too early to do this.    smokeEmitter.m_MeshID = m_World->GetSpawningHandler()->m_ParticleSystemMesh.GetID();
     smokeEmitter.m_Shader = ShaderAsset_Lit_Inst_AlphaBlend_NormalUp;
     smokeEmitter.m_Texture = TextureAsset_Billboard_Smoke;
     smokeEmitter.m_UseParticleColor = true;
@@ -79,11 +79,11 @@ void InventoryHandler::RegisterLocalPlayer(u32 _playerIndex)
     defaultInventory.m_PlayerID = _playerIndex;
     defaultInventory.m_Slots =
         {
-            {TerrainSubstanceType::Topsoil, 100, AssetHandle<UITexture>(TextureAsset_Icon_Topsoil512), std::nullopt},
-            {TerrainSubstanceType::Dirt, 100, AssetHandle<UITexture>(TextureAsset_Icon_Dirt512), std::nullopt},
-            {TerrainSubstanceType::Rock, 100, AssetHandle<UITexture>(TextureAsset_Icon_Stone512), std::nullopt},
-            {TerrainSubstanceType::Sand, 100, AssetHandle<UITexture>(TextureAsset_Icon_Sand512), std::nullopt},
-            {std::nullopt, 100, AssetHandle<UITexture>(TextureAsset_Dev_512), campfireRecipe},
+            {"Topsoil", TerrainSubstanceType::Topsoil, 100, AssetHandle<UITexture>(TextureAsset_Icon_Topsoil512), std::nullopt},
+            {"Dirt", TerrainSubstanceType::Dirt, 100, AssetHandle<UITexture>(TextureAsset_Icon_Dirt512), std::nullopt},
+            {"Rock", TerrainSubstanceType::Rock, 100, AssetHandle<UITexture>(TextureAsset_Icon_Stone512), std::nullopt},
+            {"Sand", TerrainSubstanceType::Sand, 100, AssetHandle<UITexture>(TextureAsset_Icon_Sand512), std::nullopt},
+            {"Campfire", std::nullopt, 100, AssetHandle<UITexture>(TextureAsset_Icon_Fire512), campfireRecipe},
         };
 
 }

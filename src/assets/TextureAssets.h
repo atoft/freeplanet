@@ -31,6 +31,7 @@ enum TextureAsset
     TextureAsset_Icon_Dirt512,
     TextureAsset_Icon_Stone512,
     TextureAsset_Icon_Sand512,
+    TextureAsset_Icon_Fire512,
     
     TextureAsset_Count
 };

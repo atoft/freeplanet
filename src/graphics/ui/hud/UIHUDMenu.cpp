@@ -52,9 +52,9 @@ void UIHUDMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _wor
     {
         const bool isSelected = slotIdx == inventory.m_SelectedIndex;
 
-        if (isSelected && slot.m_Substance.has_value())
+        if (isSelected)
         {
-            _display.DrawString(glm::vec2(currentX, SELECTED_WIDTH + MARGIN_WDITH), ToString(*slot.m_Substance), 24.f, drawColor);
+            _display.DrawString(glm::vec2(currentX, SELECTED_WIDTH + MARGIN_WDITH), slot.m_DisplayName, 24.f, drawColor);
         }
 
         _display.DrawSprite(glm::vec2(currentX, 20.f), glm::vec2(isSelected ? SELECTED_WIDTH : UNSELECTED_WIDTH), slot.m_Icon, drawColor);

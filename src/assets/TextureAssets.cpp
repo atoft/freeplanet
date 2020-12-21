@@ -46,12 +46,14 @@ std::string Assets::GetTextureAssetName(TextureAssetID _assetID)
         return "ui/Icon_Stone_512.png";
     case TextureAsset_Icon_Sand512:
         return "ui/Icon_Sand_512.png";
+    case TextureAsset_Icon_Fire512:
+        return "ui/Icon_Fire_512.png";
         
     case TextureAsset_Invalid:
         default:
             return "INVALID";
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 17);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 18);
 }
 
 TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
@@ -92,11 +94,13 @@ TextureAssetType Assets::GetTextureAssetType(TextureAssetID _assetID)
             [[fallthrough]];
         case TextureAsset_Icon_Sand512:
             [[fallthrough]];
+        case TextureAsset_Icon_Fire512:
+            [[fallthrough]];
             
         case TextureAsset_Invalid:
         default:
             return TextureAssetType::Image;
 
     }
-    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 17);
+    static_assert(static_cast<TextureAssetID>(TextureAsset_Count) == 18);
 }
