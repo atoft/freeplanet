@@ -33,6 +33,7 @@ enum class InspectionType
     TestStruct,
     TestSubStruct,
     TestStructInVector,
+    TestPrimitiveOnlyStruct,
 
     EngineConfig,
     GraphicsConfig,

@@ -20,7 +20,7 @@
 #include "InputTypes.h"
 
 #include <src/engine/inspection/BaseInspects.h>
-#include <src/engine/inspection/InspectionContext.h>
+#include <src/engine/inspection/contexts/InspectionContext.h>
 #include <src/tools/globals.h>
 
 std::string ToString(InputType _inputType)

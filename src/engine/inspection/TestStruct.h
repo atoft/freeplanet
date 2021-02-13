@@ -65,6 +65,17 @@ struct TestStruct
     bool operator==(const TestStruct& _other) const;
 };
 
+struct TestPrimitiveOnlyStruct
+{
+    u32 m_Unsigned = 0;
+    s32 m_Signed = 0;
+    f32 m_Float = 0.f;
+    bool m_BoolA = false;
+    bool m_BoolB = false;
+    bool operator==(const TestPrimitiveOnlyStruct& _other) const;
+};
+
 void Inspect(std::string _name, TestStructInVector& _target, InspectionContext& _context);
 void Inspect(std::string _name, TestSubStruct& _target, InspectionContext& _context);
 void Inspect(std::string _name, TestStruct& _target, InspectionContext& _context);
+void Inspect(std::string _name, TestPrimitiveOnlyStruct& _target, InspectionContext& _context);

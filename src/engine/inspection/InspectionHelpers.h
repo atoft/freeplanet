@@ -24,7 +24,10 @@
 #include <string>
 #include <sstream>
 
-#include <src/engine/inspection/InspectionContext.h>
+#include <src/engine/inspection/contexts/FromBinaryInspectionContext.h>
+#include <src/engine/inspection/contexts/ToBinaryInspectionContext.h>
+#include <src/engine/inspection/contexts/InspectionContext.h>
+#include <src/engine/inspection/contexts/TextInspectionContext.h>
 
 class InspectionHelpers
 {
@@ -36,25 +39,30 @@ public:
         // call a deprecate method. It could read into a "deprecated version" of the struct
         // which the caller can then use to populate the newer version.
 
+        TextInspectionContext textContext;
+        textContext.m_TextIt = _source.begin();
+        textContext.m_TextBegin = _source.begin();
+        textContext.m_TextEnd = _source.end();
+        textContext.m_Operation = TextInspectionContext::Operation::FromText;
+
         InspectionContext inspectionContext;
-        inspectionContext.m_TextIt = _source.begin();
-        inspectionContext.m_TextBegin = _source.begin();
-        inspectionContext.m_TextEnd = _source.end();
-        inspectionContext.m_Operation = InspectionContext::Operation::FromText;
+        textContext.m_Outer = &inspectionContext;
+        inspectionContext.m_Variant = textContext;
+        
         Inspect("", _outValue, inspectionContext);
 
-        if (!inspectionContext.m_ErrorMessage.empty())
+        if (!std::get<TextInspectionContext>(inspectionContext.m_Variant).m_ErrorMessage.empty())
         {
-            LogError(inspectionContext.m_ErrorMessage);
+            LogError(std::get<TextInspectionContext>(inspectionContext.m_Variant).m_ErrorMessage);
         }
 
-        if (!inspectionContext.m_WarningMessage.empty())
+        if (!std::get<TextInspectionContext>(inspectionContext.m_Variant).m_WarningMessage.empty())
         {
-            LogWarning(inspectionContext.m_WarningMessage);
+            LogWarning(std::get<TextInspectionContext>(inspectionContext.m_Variant).m_WarningMessage);
         }
 
-        assert((inspectionContext.m_Finished || inspectionContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
-        return inspectionContext.m_Result;
+        assert((std::get<TextInspectionContext>(inspectionContext.m_Variant).m_Finished || std::get<TextInspectionContext>(inspectionContext.m_Variant).m_Stack.empty()) && "Did you miss an EndStruct() call?");
+        return std::get<TextInspectionContext>(inspectionContext.m_Variant).m_Result;
     }
 
     template <typename T>
@@ -65,13 +73,55 @@ public:
         // copy here. If this becomes slow, can do a const-cast to avoid the copy.
         T nonConstCopyOfSource = _source;
 
+        TextInspectionContext textContext;
+        textContext.m_TextBuffer = &_outText;
+        textContext.m_Operation = TextInspectionContext::Operation::ToText;
+
         InspectionContext inspectionContext;
-        inspectionContext.m_TextBuffer = &_outText;
-        inspectionContext.m_Operation = InspectionContext::Operation::ToText;
+        textContext.m_Outer = &inspectionContext;
+        inspectionContext.m_Variant = textContext;
+
         Inspect("", nonConstCopyOfSource, inspectionContext);
-        assert((inspectionContext.m_Finished || inspectionContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
+        assert((std::get<TextInspectionContext>(inspectionContext.m_Variant).m_Finished || std::get<TextInspectionContext>(inspectionContext.m_Variant).m_Stack.empty()) && "Did you miss an EndStruct() call?");
     }
 
+    template <typename T>
+    static void FromBinary(const std::vector<u8>& _source, T& _outValue)
+    {
+        FromBinaryInspectionContext fromBinaryContext;
+        fromBinaryContext.m_It = _source.begin();
+        fromBinaryContext.m_Begin = _source.begin();
+        fromBinaryContext.m_End = _source.end();        
+
+        InspectionContext inspectionContext;
+        fromBinaryContext.m_Outer = &inspectionContext;
+        inspectionContext.m_Variant = fromBinaryContext;
+        
+        Inspect("", _outValue, inspectionContext);
+        assert((std::get<FromBinaryInspectionContext>(inspectionContext.m_Variant).m_Finished || std::get<FromBinaryInspectionContext>(inspectionContext.m_Variant).m_Depth == 0) && "Did you miss an EndStruct() call?");
+    }
+
+    
+    template <typename T>
+    static void ToBinary(const T& _source, std::vector<u8>& _outData)
+    {
+        // The Inspect methods must have a non-const ref so that the struct
+        // can be written to in FromText/FromBinary operations. For const correctness, make a
+        // copy here. If this becomes slow, can do a const-cast to avoid the copy.
+        T nonConstCopyOfSource = _source;
+
+        ToBinaryInspectionContext toBinaryContext;
+        toBinaryContext.m_Buffer = &_outData;
+
+        InspectionContext inspectionContext;
+        toBinaryContext.m_Outer = &inspectionContext;
+        inspectionContext.m_Variant = toBinaryContext;
+        
+        Inspect("", nonConstCopyOfSource, inspectionContext);
+        //assert((std::get<TextInspectionContext>(inspectionContext.m_Variant).m_Finished || std::get<TextInspectionContext>(inspectionContext.m_Variant).m_Stack.empty()) && "Did you miss an EndStruct() call?");
+    }
+
+    
     template <typename T>
     struct LoadFromTextResult
     {
@@ -123,6 +173,27 @@ public:
         ToText(_source, output);
 
         outfile << output;
+
+        outfile.flush();
+        outfile.close();
+    }
+    
+    template <typename T>
+    static void SaveToBinaryFile(const T& _source, std::string _path)
+    {
+        std::fstream outfile;
+        outfile.open(_path, std::fstream::out);
+
+        if (!outfile)
+        {
+            LogError("File \"" + _path + "\" cannot be opened.");
+            return;
+        }
+
+        std::vector<u8> output;
+        ToBinary(_source, output);
+
+        outfile.write(reinterpret_cast<char*>(output.data()), output.size());
 
         outfile.flush();
         outfile.close();

@@ -17,24 +17,23 @@
  * along with freeplanet. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "InspectionContext.h"
+#include "TextInspectionContext.h"
 
-std::vector<TypeInfo> InspectionContext::ms_TypeInfos =
-        {
-            {"vec2", InspectionType::vec2},
-            {"vec3", InspectionType::vec3},
+std::vector<TypeInfo> TextInspectionContext::ms_TypeInfos = {
+    {"vec2", InspectionType::vec2},
+    {"vec3", InspectionType::vec3},
 
-            {"ivec2", InspectionType::ivec2},
-            {"ivec3", InspectionType::ivec3},
+    {"ivec2", InspectionType::ivec2},
+    {"ivec3", InspectionType::ivec3},
 
-            {"TestStruct", InspectionType::TestStruct},
-            {"TestSubStruct", InspectionType::TestSubStruct},
-            {"TestStructInVector", InspectionType::TestStructInVector},
+    {"TestStruct", InspectionType::TestStruct},
+    {"TestSubStruct", InspectionType::TestSubStruct},
+    {"TestStructInVector", InspectionType::TestStructInVector},
 
-            {"EngineConfig", InspectionType::EngineConfig},
-        };
+    {"EngineConfig", InspectionType::EngineConfig},
+};
 
-InspectionType InspectionContext::ToInspectionType(std::string _typeName)
+InspectionType TextInspectionContext::ToInspectionType(std::string _typeName)
 {
     for (const TypeInfo& info : ms_TypeInfos)
     {
@@ -47,7 +46,7 @@ InspectionType InspectionContext::ToInspectionType(std::string _typeName)
     return InspectionType::Invalid;
 }
 
-std::string InspectionContext::InspectionTypeToString(InspectionType _type)
+std::string TextInspectionContext::InspectionTypeToString(InspectionType _type)
 {
     for (const TypeInfo& info : ms_TypeInfos)
     {
@@ -60,7 +59,7 @@ std::string InspectionContext::InspectionTypeToString(InspectionType _type)
     return "INVALID";
 }
 
-void InspectionContext::SkipWhitespace(std::string::const_iterator& _it, std::string::const_iterator _end)
+void TextInspectionContext::SkipWhitespace(std::string::const_iterator& _it, std::string::const_iterator _end)
 {
     for (; _it != _end; ++_it)
     {
@@ -71,7 +70,10 @@ void InspectionContext::SkipWhitespace(std::string::const_iterator& _it, std::st
     }
 }
 
-bool InspectionContext::SkipSingleToken(std::string::const_iterator& _it, std::string::const_iterator _end, const std::string& _token, bool _allowFailure)
+bool TextInspectionContext::SkipSingleToken(std::string::const_iterator& _it,
+                                            std::string::const_iterator _end,
+                                            const std::string& _token,
+                                            bool _allowFailure)
 {
     if (!StringHelpers::StartsWith(_it, _end, _token))
     {
@@ -91,14 +93,14 @@ bool InspectionContext::SkipSingleToken(std::string::const_iterator& _it, std::s
     return true;
 }
 
-void InspectionContext::AddError(std::string _error)
+void TextInspectionContext::AddError(std::string _error)
 {
     m_Finished = true;
     m_Result = InspectionResult::ReadSyntaxError;
     m_ErrorMessage += "Error: " + _error + " at line " + std::to_string(GetLineNumber()) + ".""\n";
 }
 
-void InspectionContext::AddWarning(std::string _error)
+void TextInspectionContext::AddWarning(std::string _error)
 {
     if (m_Result != InspectionResult::ReadSyntaxError)
     {
@@ -108,8 +110,7 @@ void InspectionContext::AddWarning(std::string _error)
     m_WarningMessage += "Warning: " + _error + " at line " + std::to_string(GetLineNumber()) + ".""\n";
 }
 
-
-u32 InspectionContext::GetLineNumber() const
+u32 TextInspectionContext::GetLineNumber() const
 {
     u32 lineNumber = 1;
     for (auto it = m_TextBegin; it < m_TextIt; ++it)
@@ -122,7 +123,9 @@ u32 InspectionContext::GetLineNumber() const
     return lineNumber;
 }
 
-std::optional<std::string> InspectionContext::ParseValueAndSkip(std::string _name, std::string::const_iterator& _it, std::string::const_iterator _end)
+std::optional<std::string> TextInspectionContext::ParseValueAndSkip(std::string _name,
+                                                                    std::string::const_iterator& _it,
+                                                                    std::string::const_iterator _end)
 {
     if (!m_Stack.back().m_InsideContainer)
     {
@@ -169,7 +172,7 @@ std::optional<std::string> InspectionContext::ParseValueAndSkip(std::string _nam
     return valueString;
 }
 
-void InspectionContext::AppendNameAndValue(std::string _name, std::string _value)
+void TextInspectionContext::AppendNameAndValue(std::string _name, std::string _value)
 {
     if (!m_Stack.back().m_InsideContainer)
     {
@@ -185,7 +188,7 @@ void InspectionContext::AppendNameAndValue(std::string _name, std::string _value
     }
 }
 
-void InspectionContext::AppendNewlineWithIndent()
+void TextInspectionContext::AppendNewlineWithIndent()
 {
     *m_TextBuffer += "\n";
 
@@ -195,7 +198,10 @@ void InspectionContext::AppendNewlineWithIndent()
     }
 }
 
-void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _version, InspectionStructRequirements _requirements)
+void TextInspectionContext::Struct(std::string _name,
+                                   InspectionType _type,
+                                   u32 _version,
+                                   InspectionStructRequirements _requirements)
 {
     if (m_Finished || (!m_Stack.empty() && m_Stack.back().m_SkipThisLevel))
     {
@@ -281,7 +287,7 @@ void InspectionContext::Struct(std::string _name, InspectionType _type, u32 _ver
     }
 }
 
-void InspectionContext::EndStruct()
+void TextInspectionContext::EndStruct()
 {
     if (m_Finished)
     {
@@ -348,7 +354,7 @@ void InspectionContext::EndStruct()
     }
 }
 
-void InspectionContext::U32(std::string _name, u32& _value)
+void TextInspectionContext::U32(std::string _name, u32& _value)
 {
     if (m_Finished || m_Stack.back().m_SkipThisLevel)
     {
@@ -381,7 +387,7 @@ void InspectionContext::U32(std::string _name, u32& _value)
     }
 }
 
-void InspectionContext::S32(std::string _name, s32& _value)
+void TextInspectionContext::S32(std::string _name, s32& _value)
 {
     if (m_Finished || m_Stack.back().m_SkipThisLevel)
     {
@@ -414,7 +420,7 @@ void InspectionContext::S32(std::string _name, s32& _value)
     }
 }
 
-void InspectionContext::F32(std::string _name, f32& _value)
+void TextInspectionContext::F32(std::string _name, f32& _value)
 {
     if (m_Finished || m_Stack.back().m_SkipThisLevel)
     {
@@ -446,7 +452,7 @@ void InspectionContext::F32(std::string _name, f32& _value)
     }
 }
 
-void InspectionContext::Bool(std::string _name, bool& _value)
+void TextInspectionContext::Bool(std::string _name, bool& _value)
 {
     if (m_Finished || m_Stack.back().m_SkipThisLevel)
     {

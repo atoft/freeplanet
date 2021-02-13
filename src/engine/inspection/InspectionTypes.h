@@ -19,10 +19,23 @@
 
 #pragma once
 
-#include <src/engine/inspection/contexts/InspectionContext.h>
-
-template <typename ElementType>
-void Inspect(std::string _name, std::vector<ElementType>& _element, InspectionContext& _context)
+enum class InspectionResult
 {
-    _context.Vector(_name, _element);
-}
+    Success,
+
+    // Some properties were missing from the struct, but it was allowed.
+    ReadIncomplete,
+
+    ReadSyntaxError,
+
+    FileIOError
+};
+
+enum class InspectionStructRequirements
+{
+    // The struct must always match the definition in its Inspect function.
+    RequireExactMatch,
+
+    // When reading from text, values are allowed to be missing from the struct, for example if the input is an older version.
+    AllowMissingValues
+};

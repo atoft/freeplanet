@@ -31,6 +31,8 @@ bool Test::TestInspection()
     result &= TestInspectionFromTextWithMissingValues();
     result &= TestInspectionFromTextWithExactMatchRequired();
 
+    result &= TestInspectionToBinary();
+    
     return result;
 }
 
@@ -97,4 +99,21 @@ bool Test::TestInspectionFromTextWithExactMatchRequired()
 
     // This struct requires an exact match, so this should be an error.
     return TestResult(result == InspectionResult::ReadSyntaxError);
+}
+
+bool Test::TestInspectionToBinary()
+{
+    TestPrimitiveOnlyStruct structA;
+    structA.m_Unsigned = 4294967294;
+    structA.m_Signed = -1;
+    structA.m_Float = 32.5f;
+    structA.m_BoolA = true;
+
+    std::vector<u8> binaryData;
+    InspectionHelpers::ToBinary(structA, binaryData);
+    
+    TestPrimitiveOnlyStruct fromBinary;
+    InspectionHelpers::FromBinary(binaryData, fromBinary);
+
+    return TestResult(structA == fromBinary);
 }

@@ -20,7 +20,7 @@
 #include "TestStruct.h"
 
 #include <src/engine/inspection/BaseInspects.h>
-#include <src/engine/inspection/InspectionContext.h>
+#include <src/engine/inspection/contexts/InspectionContext.h>
 #include <src/engine/inspection/VectorInspect.h>
 
 bool TestSubStruct::operator==(const TestSubStruct& _other) const
@@ -48,6 +48,15 @@ bool TestStructInVector::operator==(const TestStructInVector& _other) const
         && m_Floaty == _other.m_Floaty
         && m_Fruit == _other.m_Fruit
         ;
+}
+
+bool TestPrimitiveOnlyStruct::operator==(const TestPrimitiveOnlyStruct& _other) const
+{
+    return m_Unsigned == _other.m_Unsigned
+        && m_Signed == _other.m_Signed
+        && m_Float == _other.m_Float
+        && m_BoolA == _other.m_BoolA
+        && m_BoolB == _other.m_BoolB;
 }
 
 void Inspect(std::string _name, TestStructInVector& _target, InspectionContext& _context)
@@ -89,6 +98,20 @@ void Inspect(std::string _name, TestStruct& _target, InspectionContext& _context
     Inspect("OtherProperty", _target.m_OtherProperty, _context);
     Inspect("StructProperty", _target.m_StructProperty, _context);
     Inspect("EnumProperty", _target.m_EnumProperty, _context);
+
+    _context.EndStruct();
+};
+
+void Inspect(std::string _name, TestPrimitiveOnlyStruct& _target, InspectionContext& _context)
+{
+    constexpr u32 version = 0;
+    _context.Struct(_name, InspectionType::TestPrimitiveOnlyStruct, version);
+
+    Inspect("Unsigned", _target.m_Unsigned, _context);
+    Inspect("Signed", _target.m_Signed, _context);
+    Inspect("Float", _target.m_Float, _context);
+    Inspect("BoolA", _target.m_BoolA, _context);
+    Inspect("BoolB", _target.m_BoolB, _context);
 
     _context.EndStruct();
 };

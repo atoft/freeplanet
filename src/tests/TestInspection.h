@@ -26,4 +26,6 @@ namespace Test
     bool TestInspectionToFromText();
     bool TestInspectionFromTextWithMissingValues();
     bool TestInspectionFromTextWithExactMatchRequired();
+
+    bool TestInspectionToBinary();
 }

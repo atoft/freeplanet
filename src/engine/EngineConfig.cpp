@@ -21,7 +21,7 @@
 
 #include <src/engine/inspection/BaseInspects.h>
 #include <src/engine/inspection/TypeInfo.h>
-#include <src/engine/inspection/InspectionContext.h>
+#include <src/engine/inspection/contexts/InspectionContext.h>
 #include <src/engine/inspection/VectorInspect.h>
 
 void Inspect(std::string _name, GraphicsConfig& _target, InspectionContext& _context)

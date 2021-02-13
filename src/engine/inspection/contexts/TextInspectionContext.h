@@ -25,32 +25,12 @@
 #include <type_traits>
 
 #include <src/tools/globals.h>
+#include <src/engine/inspection/InspectionTypes.h>
 #include <src/engine/inspection/TypeInfo.h>
 #include <src/tools/STL.h>
 #include <src/tools/StringHelpers.h>
 
-enum class InspectionResult
-{
-    Success,
-
-    // Some properties were missing from the struct, but it was allowed.
-    ReadIncomplete,
-
-    ReadSyntaxError,
-
-    FileIOError
-};
-
-enum class InspectionStructRequirements
-{
-    // The struct must always match the definition in its Inspect function.
-    RequireExactMatch,
-
-    // When reading from text, values are allowed to be missing from the struct, for example if the input is an older version.
-    AllowMissingValues
-};
-
-class InspectionContext
+class TextInspectionContext
 {
     friend class InspectionHelpers;
 
@@ -121,10 +101,11 @@ private:
     std::string::const_iterator m_TextBegin;
     std::string::const_iterator m_TextIt;
     std::string::const_iterator m_TextEnd;
+
+    class InspectionContext* m_Outer = nullptr;
 };
 
-template <typename EnumType, typename>
-void InspectionContext::Enum(std::string _name, EnumType& _value)
+template<typename EnumType, typename> void TextInspectionContext::Enum(std::string _name, EnumType& _value)
 {
     if (m_Finished || m_Stack.back().m_SkipThisLevel)
     {
@@ -157,8 +138,7 @@ void InspectionContext::Enum(std::string _name, EnumType& _value)
     }
 }
 
-template <typename ElementType>
-void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
+template<typename ElementType> void TextInspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
 {
     if (m_Finished || m_Stack.back().m_SkipThisLevel)
     {
@@ -180,7 +160,7 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
             m_Stack.push_back({true, InspectionStructRequirements::RequireExactMatch});
             for (u32 elementIdx = 0; elementIdx < _value.size(); ++elementIdx)
             {
-                Inspect(_name, _value[elementIdx], *this);
+                Inspect(_name, _value[elementIdx], *m_Outer);
 
                 if (elementIdx != _value.size() - 1)
                 {
@@ -214,14 +194,14 @@ void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _val
                 while (!StringHelpers::StartsWith(m_TextIt, m_TextEnd, ";"))
                 {
                     ElementType element;
-                    Inspect(_name, element, *this);
+                    Inspect(_name, element, *m_Outer);
 
-					// If there was something wrong with the inspection of the element, give up
-					// to make sure we aren't stuck in place with our iteration.
-					if (m_Finished)
-					{
-						return AddError("Failed to read vector");
-					}
+                    // If there was something wrong with the inspection of the element, give up
+                    // to make sure we aren't stuck in place with our iteration.
+                    if (m_Finished)
+                    {
+                        return AddError("Failed to read vector");
+                    }
 
                     _value.push_back(element);
 

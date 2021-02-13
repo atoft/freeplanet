@@ -20,9 +20,7 @@
 #pragma once
 
 #include <src/tools/globals.h>
-#include <src/engine/inspection/InspectionContext.h>
-
-class InspectionContext;
+#include <src/engine/inspection/contexts/InspectionContext.h>
 
 void Inspect(std::string _name, u32& _target, InspectionContext& context);
 void Inspect(std::string _name, s32& _target, InspectionContext& context);
