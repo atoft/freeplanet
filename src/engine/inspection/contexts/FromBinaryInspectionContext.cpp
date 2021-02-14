@@ -22,38 +22,44 @@
 
 void FromBinaryInspectionContext::Struct(std::string, InspectionType _type, u32 _version, InspectionStructRequirements)
 {
-    assert(!m_Finished);
-
     ++m_Depth;
+
+    if (m_Finished)
+    {
+        return;
+    }
     
-    const std::optional<u32> typeIdentifier = ReadU32();
-
-    if (!typeIdentifier)
+    if (m_Depth == 1)
     {
-        m_Finished = true;
-        return;
-    }
+        const std::optional<u32> typeIdentifier = ReadU32();
 
-    if (*typeIdentifier != static_cast<u32>(_type))
-    {
-        LogError("Incorrect type identifier found (" + std::to_string(*typeIdentifier) + ")");
-        m_Finished = true;
-        return;
-    }
+        if (!typeIdentifier)
+        {
+            m_Finished = true;
+            return;
+        }
 
-    const std::optional<u32> version = ReadU32();
+        if (*typeIdentifier != static_cast<u32>(_type))
+        {
+            LogError("Incorrect type identifier found (" + std::to_string(*typeIdentifier) + ")");
+            m_Finished = true;
+            return;
+        }
 
-    if (!version)
-    {
-        m_Finished = true;
-        return;
-    }
+        const std::optional<u32> version = ReadU32();
 
-    if (*version != _version)
-    {
-        LogError("Incorrect version.");
-        m_Finished = true;
-        return;
+        if (!version)
+        {
+            m_Finished = true;
+            return;
+        }
+
+        if (*version != _version)
+        {
+            LogError("Incorrect version.");
+            m_Finished = true;
+            return;
+        }
     }
 }
 

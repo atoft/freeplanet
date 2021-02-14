@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <limits>
 #include <optional>
 #include <string>
 #include <vector>
@@ -45,10 +46,10 @@ public:
     void Bool(std::string _name, const bool& _value);
 
     template <typename EnumType, typename = std::enable_if_t<std::is_enum<EnumType>::value>>
-    void Enum(std::string _name, const EnumType& _value);
+    void Enum(std::string _name, EnumType& _value);
 
     template <typename ElementType>
-    void Vector(std::string _name, const std::vector<ElementType>& _value);
+    void Vector(std::string _name, std::vector<ElementType>& _value);
 
 private:
     void WriteU32(u32 _value);
@@ -58,14 +59,29 @@ private:
 };
 
 template <typename EnumType, typename>
-void ToBinaryInspectionContext::Enum(std::string _name, const EnumType& _value)
+void ToBinaryInspectionContext::Enum(std::string _name, EnumType& _value)
 {
-
+    // TODO Could support different sizes for enums.
+    WriteU32(static_cast<u32>(_value));
 }
 
 template <typename ElementType>
-void ToBinaryInspectionContext::Vector(std::string _name, const std::vector<ElementType>& _value)
+void ToBinaryInspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
 {
-}
+    if (_value.size() > std::numeric_limits<u32>::max())
+    {
+        LogError("Vector " + _name + " contains too many elements to serialize.");
+        // TODO Fail.
+        return;
+    }
 
+    // Write the count first.
+    WriteU32(_value.size());
+
+    for (ElementType& element : _value)
+    {
+        Inspect("", element, *m_Outer);
+        // TODO Handle element failure.
+    }
+}
 

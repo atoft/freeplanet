@@ -27,5 +27,9 @@ namespace Test
     bool TestInspectionFromTextWithMissingValues();
     bool TestInspectionFromTextWithExactMatchRequired();
 
-    bool TestInspectionToBinary();
+    bool TestInspectionToFromBinaryPrimitives();
+    bool TestInspectionToFromBinaryComplex();
+    bool TestInspectionFromBinaryEmpty();
+    bool TestInspectionFromBinaryTooShort();
+    bool TestInspectionFromBinaryTooLong();
 }

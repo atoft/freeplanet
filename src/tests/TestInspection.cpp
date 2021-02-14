@@ -31,7 +31,11 @@ bool Test::TestInspection()
     result &= TestInspectionFromTextWithMissingValues();
     result &= TestInspectionFromTextWithExactMatchRequired();
 
-    result &= TestInspectionToBinary();
+    result &= TestInspectionToFromBinaryPrimitives();
+    result &= TestInspectionToFromBinaryComplex();
+    result &= TestInspectionFromBinaryEmpty();
+    result &= TestInspectionFromBinaryTooShort();
+    result &= TestInspectionFromBinaryTooLong();
     
     return result;
 }
@@ -101,7 +105,7 @@ bool Test::TestInspectionFromTextWithExactMatchRequired()
     return TestResult(result == InspectionResult::ReadSyntaxError);
 }
 
-bool Test::TestInspectionToBinary()
+bool Test::TestInspectionToFromBinaryPrimitives()
 {
     TestPrimitiveOnlyStruct structA;
     structA.m_Unsigned = 4294967294;
@@ -117,3 +121,65 @@ bool Test::TestInspectionToBinary()
 
     return TestResult(structA == fromBinary);
 }
+
+bool Test::TestInspectionToFromBinaryComplex()
+{
+    TestStruct testValue;
+    testValue.m_Property = 9;
+    testValue.m_OtherProperty = 65535;
+    testValue.m_StructProperty.m_SubProperty = 321;
+    testValue.m_StructProperty.m_IsTrue = true;
+    testValue.m_StructProperty.m_SeveralThings = {88, 4, 5, 22};
+    testValue.m_StructProperty.m_Amplitude = -7.f;
+    testValue.m_StructProperty.m_VectorOfStructs.push_back({true, -3.f, {TestInspectEnum::Banana, TestInspectEnum::Carrot}});
+    testValue.m_StructProperty.m_VectorOfStructs.push_back({false, 4.f, {TestInspectEnum::Apple}});
+    testValue.m_EnumProperty = TestInspectEnum::Carrot;
+
+    std::vector<u8> binaryData;
+    InspectionHelpers::ToBinary(testValue, binaryData);
+
+    TestStruct fromBinary;
+    InspectionHelpers::FromBinary(binaryData, fromBinary);
+
+    return TestResult(testValue == fromBinary);
+}
+
+bool Test::TestInspectionFromBinaryEmpty()
+{
+    std::vector<u8> data = {};
+
+    TestStruct result;
+    InspectionHelpers::FromBinary(data, result);
+
+    // TODO return value from inspection.
+    return TestResult(true);
+}
+
+bool Test::TestInspectionFromBinaryTooShort()
+{
+    std::vector<u8> data = {0,0,0,5,0,0,0,0,0,0,0};
+    
+    TestStruct result;
+    InspectionHelpers::FromBinary(data, result);
+
+    // TODO return value from inspection.
+    return TestResult(true);
+}
+
+bool Test::TestInspectionFromBinaryTooLong()
+{
+    TestStruct testValue;
+
+    std::vector<u8> binaryData;
+    InspectionHelpers::ToBinary(testValue, binaryData);
+
+    binaryData.push_back(0);
+    binaryData.push_back(255);
+    
+    TestStruct result;
+    InspectionHelpers::FromBinary(binaryData, result);
+
+    // TODO return value from inspection.
+    return TestResult(true);
+}
+

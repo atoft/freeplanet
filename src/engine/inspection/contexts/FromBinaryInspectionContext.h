@@ -71,12 +71,55 @@ private:
 template <typename EnumType, typename>
 void FromBinaryInspectionContext::Enum(std::string _name, EnumType& _value)
 {
+    if (m_Finished)
+    {
+        return;
+    }
 
+    // TODO Could support different sizes for enums.
+    const std::optional<u32> readValue = ReadU32();
+
+    if (!readValue)
+    {
+        m_Finished = true;
+        return;
+    }
+
+    _value = static_cast<EnumType>(*readValue);
 }
 
 template <typename ElementType>
 void FromBinaryInspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
 {
-}
+    if (m_Finished)
+    {
+        return;
+    }
 
+    // TODO Could support different sizes for enums.
+    const std::optional<u32> readValue = ReadU32();
+
+    if (!readValue)
+    {
+        m_Finished = true;
+        return;
+    }
+
+    const u32 vectorSize = *readValue;
+
+    _value.reserve(vectorSize);
+    
+    for (u32 idx = 0; idx < vectorSize; ++idx)
+    {
+        ElementType& element =_value.emplace_back();
+        Inspect("", element, *m_Outer);
+
+        if (m_Finished)
+        {
+            return;
+        }
+    }
+
+    assert(_value.size() == vectorSize);
+}
 
