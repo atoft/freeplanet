@@ -163,7 +163,7 @@ std::optional<u32> FromBinaryInspectionContext::ReadU32()
 {
     constexpr u32 bytesInU32 = sizeof(u32) / sizeof(u8);
 
-    if (m_It + bytesInU32 > m_End)
+    if (m_It >= m_End || m_End - m_It < bytesInU32)
     {
         LogError("Attempted to read past end of buffer.");
         return std::nullopt;
