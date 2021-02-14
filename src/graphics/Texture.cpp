@@ -112,7 +112,7 @@ void Texture::CreateVolumeTexture(std::string _fileName)
 
     // Convert to single channel texture (quick fix to avoid the SFML limitation).
     std::vector<u8> rawTexture;
-    rawTexture.reserve(imgData.getSize().x * imgData.getSize().x * imgData.getSize().x);
+    rawTexture.resize(imgData.getSize().x * imgData.getSize().x * imgData.getSize().x);
 
     const u8* pixelPtr = imgData.getPixelsPtr();
     for (u32 idx = 0; idx < imgData.getSize().x * imgData.getSize().x * imgData.getSize().x; ++idx)
