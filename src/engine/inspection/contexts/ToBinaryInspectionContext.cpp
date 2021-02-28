@@ -20,6 +20,8 @@
 #include "ToBinaryInspectionContext.h"
 #include <cstring>
 
+#include <src/engine/inspection/InspectionUtils.h>
+
 void ToBinaryInspectionContext::Struct(std::string, InspectionType _type, u32 _version, InspectionStructRequirements)
 {
     if (m_Buffer->empty())
@@ -42,16 +44,12 @@ void ToBinaryInspectionContext::U32(std::string _name, const u32& _value)
 
 void ToBinaryInspectionContext::S32(std::string _name, const s32& _value)
 {
-    u32 rawValue;
-    std::memcpy(&rawValue, &_value, sizeof(s32));
-    WriteU32(rawValue);
+    WriteU32(InspectionUtils::RawCast<s32, u32>(_value));
 }
 
 void ToBinaryInspectionContext::F32(std::string _name, const f32& _value)
 {
-    u32 rawValue;
-    std::memcpy(&rawValue, &_value, sizeof(f32));
-    WriteU32(rawValue);    
+    WriteU32(InspectionUtils::RawCast<f32, u32>(_value));    
 }
 
 void ToBinaryInspectionContext::Bool(std::string _name, const bool& _value)

@@ -52,6 +52,9 @@ public:
 
 private:
     std::optional<u32> ReadU32();
+
+    void AddError(const std::string& _error);
+    void AddWarning(const std::string& _warning);
     
     std::vector<u8>::const_iterator m_It;
 
@@ -61,7 +64,7 @@ private:
     bool m_Finished = false;
     u32 m_Depth = 0;
     
-    InspectionResult m_Result = InspectionResult::Success;
+    FromBinaryInspectionResult m_Result = FromBinaryInspectionResult::Success;
     std::string m_ErrorMessage = "";
     std::string m_WarningMessage = "";
     
@@ -81,7 +84,7 @@ void FromBinaryInspectionContext::Enum(std::string _name, EnumType& _value)
 
     if (!readValue)
     {
-        m_Finished = true;
+        AddError("Read failed at " + _name);
         return;
     }
 
@@ -101,7 +104,7 @@ void FromBinaryInspectionContext::Vector(std::string _name, std::vector<ElementT
 
     if (!readValue)
     {
-        m_Finished = true;
+        AddError("Read failed at " + _name);
         return;
     }
 

@@ -18,6 +18,8 @@
  */
 
 #include "TestInspection.h"
+#include "src/engine/inspection/InspectionTypes.h"
+#include "src/engine/inspection/contexts/FromBinaryInspectionContext.h"
 
 #include <src/tests/TestHelpers.h>
 #include <src/engine/inspection/TestStruct.h>
@@ -117,9 +119,9 @@ bool Test::TestInspectionToFromBinaryPrimitives()
     InspectionHelpers::ToBinary(structA, binaryData);
     
     TestPrimitiveOnlyStruct fromBinary;
-    InspectionHelpers::FromBinary(binaryData, fromBinary);
+    const FromBinaryInspectionResult result = InspectionHelpers::FromBinary(binaryData, fromBinary);
 
-    return TestResult(structA == fromBinary);
+    return TestResult(result == FromBinaryInspectionResult::Success && structA == fromBinary);
 }
 
 bool Test::TestInspectionToFromBinaryComplex()
@@ -139,31 +141,30 @@ bool Test::TestInspectionToFromBinaryComplex()
     InspectionHelpers::ToBinary(testValue, binaryData);
 
     TestStruct fromBinary;
-    InspectionHelpers::FromBinary(binaryData, fromBinary);
+    const FromBinaryInspectionResult result = InspectionHelpers::FromBinary(binaryData, fromBinary);
 
-    return TestResult(testValue == fromBinary);
+    return TestResult(result == FromBinaryInspectionResult::Success && testValue == fromBinary);
 }
 
 bool Test::TestInspectionFromBinaryEmpty()
 {
     std::vector<u8> data = {};
 
-    TestStruct result;
-    InspectionHelpers::FromBinary(data, result);
+    TestStruct testStruct;
+    const FromBinaryInspectionResult result = InspectionHelpers::FromBinary(data, testStruct);
 
-    // TODO return value from inspection.
-    return TestResult(true);
+    return TestResult(result == FromBinaryInspectionResult::ReadSyntaxError);
 }
 
 bool Test::TestInspectionFromBinaryTooShort()
 {
     std::vector<u8> data = {0,0,0,5,0,0,0,0,0,0,0};
     
-    TestStruct result;
-    InspectionHelpers::FromBinary(data, result);
+    TestStruct testStruct;
+    const FromBinaryInspectionResult result = InspectionHelpers::FromBinary(data, testStruct);
 
     // TODO return value from inspection.
-    return TestResult(true);
+    return TestResult(result == FromBinaryInspectionResult::ReadSyntaxError);
 }
 
 bool Test::TestInspectionFromBinaryTooLong()
@@ -176,10 +177,9 @@ bool Test::TestInspectionFromBinaryTooLong()
     binaryData.push_back(0);
     binaryData.push_back(255);
     
-    TestStruct result;
-    InspectionHelpers::FromBinary(binaryData, result);
+    TestStruct testStruct;
+    const FromBinaryInspectionResult result = InspectionHelpers::FromBinary(binaryData, testStruct);
 
-    // TODO return value from inspection.
-    return TestResult(true);
+    return TestResult(result == FromBinaryInspectionResult::ReadSyntaxError);
 }
 

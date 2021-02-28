@@ -18,6 +18,8 @@
  */
 
 #include "FromBinaryInspectionContext.h"
+#include "src/engine/inspection/InspectionUtils.h"
+#include "src/engine/inspection/InspectionTypes.h"
 #include <cstring>
 
 void FromBinaryInspectionContext::Struct(std::string, InspectionType _type, u32 _version, InspectionStructRequirements)
@@ -35,14 +37,13 @@ void FromBinaryInspectionContext::Struct(std::string, InspectionType _type, u32 
 
         if (!typeIdentifier)
         {
-            m_Finished = true;
+            AddError("Read failed at type identifier");
             return;
         }
 
         if (*typeIdentifier != static_cast<u32>(_type))
         {
-            LogError("Incorrect type identifier found (" + std::to_string(*typeIdentifier) + ")");
-            m_Finished = true;
+            AddError("Incorrect type identifier found (" + std::to_string(*typeIdentifier) + ")");
             return;
         }
 
@@ -50,14 +51,13 @@ void FromBinaryInspectionContext::Struct(std::string, InspectionType _type, u32 
 
         if (!version)
         {
-            m_Finished = true;
+            AddError("Read failed at version number");
             return;
         }
 
         if (*version != _version)
         {
-            LogError("Incorrect version.");
-            m_Finished = true;
+            AddError("Incorrect version (found " + std::to_string(*version) + ", expected " + std::to_string(_version) + ")");
             return;
         }
     }
@@ -67,6 +67,14 @@ void FromBinaryInspectionContext::EndStruct()
 {
     assert(m_Depth > 0);
     --m_Depth;
+
+    if (m_Depth == 0)
+    {
+        if (m_It != m_End)
+        {
+            AddError("Unexpected extra data in buffer");
+        }
+    }
 }
 
 void FromBinaryInspectionContext::U32(std::string _name, u32& _value)
@@ -80,7 +88,7 @@ void FromBinaryInspectionContext::U32(std::string _name, u32& _value)
 
     if (!readValue)
     {
-        m_Finished = true;
+        AddError("Read failed at " + _name);
         return;
     }
 
@@ -98,13 +106,11 @@ void FromBinaryInspectionContext::S32(std::string _name, s32& _value)
 
     if (!readValue)
     {
-        m_Finished = true;
+        AddError("Read failed at " + _name);
         return;
     }
 
-    const u32 unsignedValue = *readValue;
-
-    std::memcpy(&_value, &unsignedValue, sizeof(s32));
+    _value = InspectionUtils::RawCast<u32, s32>(*readValue);
 }
 
 void FromBinaryInspectionContext::F32(std::string _name, f32& _value)
@@ -118,13 +124,11 @@ void FromBinaryInspectionContext::F32(std::string _name, f32& _value)
 
     if (!readValue)
     {
-        m_Finished = true;
+        AddError("Read failed at " + _name);
         return;
     }
 
-    const u32 unsignedValue = *readValue;
-
-    std::memcpy(&_value, &unsignedValue, sizeof(f32));
+    _value = InspectionUtils::RawCast<u32, f32>(*readValue);
 }
 
 void FromBinaryInspectionContext::Bool(std::string _name, bool& _value)
@@ -136,8 +140,8 @@ void FromBinaryInspectionContext::Bool(std::string _name, bool& _value)
 
     if (m_It >= m_End)
     {
-        LogError("Attempted to read past end of buffer.");
-        m_Finished = true;
+        AddError("The buffer is malformed, causing an attempted overflow");
+        AddError("Read failed at " + _name);
         return;
     }
 
@@ -154,8 +158,7 @@ void FromBinaryInspectionContext::Bool(std::string _name, bool& _value)
     }
     else
     {
-        LogError("Malformed bool in buffer.");
-        m_Finished = true;
+        AddError("The buffer contains a malformed bool");
     }
 }
 
@@ -165,7 +168,7 @@ std::optional<u32> FromBinaryInspectionContext::ReadU32()
 
     if (m_It >= m_End || m_End - m_It < bytesInU32)
     {
-        LogError("Attempted to read past end of buffer.");
+        AddError("The buffer is malformed, causing an attempted overflow");
         return std::nullopt;
     }
 
@@ -178,5 +181,17 @@ std::optional<u32> FromBinaryInspectionContext::ReadU32()
     }
 
     return value;
+}
+
+void FromBinaryInspectionContext::AddError(const std::string& _error)
+{
+    m_Finished = true;
+    m_Result = FromBinaryInspectionResult::ReadSyntaxError;
+    m_ErrorMessage += "Error: " + _error + ".""\n";
+}
+
+void FromBinaryInspectionContext::AddWarning(const std::string& _error)
+{
+    m_WarningMessage += "Warning: " + _error + ".""\n";
 }
 

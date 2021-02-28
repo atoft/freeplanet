@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Alastair Toft
+ * Copyright 2021 Alastair Toft
  *
  * This file is part of freeplanet.
  *
@@ -17,32 +17,20 @@
  * along with freeplanet. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-enum class InspectionResult
+class InspectionUtils
 {
-    Success,
+public:
+    template<typename From, typename To>
+    static To RawCast(const From& _from)
+    {
+        // TODO this can be replaced with a bit_cast in C++20
+        return *((To*)(void*)&_from);
+    };
 
-    // Some properties were missing from the struct, but it was allowed.
-    ReadIncomplete,
-
-    ReadSyntaxError,
-
-    FileIOError
-};
-
-enum class FromBinaryInspectionResult
-{
-    Success,
-    ReadSyntaxError,
-    FileIOError
-};
-
-enum class InspectionStructRequirements
-{
-    // The struct must always match the definition in its Inspect function.
-    RequireExactMatch,
-
-    // When reading from text, values are allowed to be missing from the struct, for example if the input is an older version.
-    AllowMissingValues
+    template<typename From, typename To>
+    static To& RawCast(From& _from)
+    {
+        // TODO this can be replaced with a bit_cast in C++20
+        return *((To*)(void*)&_from);
+    };
 };
