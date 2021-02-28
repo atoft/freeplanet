@@ -70,7 +70,7 @@ void FromBinaryInspectionContext::EndStruct()
 
     if (m_Depth == 0)
     {
-        if (m_It != m_End)
+        if (!m_Finished && m_It != m_End)
         {
             AddError("Unexpected extra data in buffer");
         }

@@ -119,6 +119,17 @@ public:
         Inspect("", _outValue, inspectionContext);
 
         const FromBinaryInspectionContext& finishedFromBinaryContext = std::get<FromBinaryInspectionContext>(inspectionContext.m_Variant);
+
+        if (!finishedFromBinaryContext.m_ErrorMessage.empty())
+        {
+            LogError(finishedFromBinaryContext.m_ErrorMessage);
+        }
+
+        if (!finishedFromBinaryContext.m_WarningMessage.empty())
+        {
+            LogWarning(finishedFromBinaryContext.m_WarningMessage);
+        }
+
         
         assert((finishedFromBinaryContext.m_Finished || finishedFromBinaryContext.m_Depth == 0) && "Did you miss an EndStruct() call?");
         return finishedFromBinaryContext.m_Result;
