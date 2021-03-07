@@ -20,6 +20,7 @@
 #pragma once
 
 #include <memory>
+#include <variant>
 #include <vector>
 
 #include <src/tools/globals.h>
@@ -56,12 +57,15 @@ struct TestSubStruct
     bool operator==(const TestSubStruct& _other) const;
 };
 
+using TestVariant = std::variant<TestInspectEnum, TestSubStruct>;
+
 struct TestStruct
 {
     u32 m_Property = 0;
     u32 m_OtherProperty = 3;
     TestSubStruct m_StructProperty;
     TestInspectEnum m_EnumProperty = TestInspectEnum::Apple;
+    TestVariant m_Variant;
     bool operator==(const TestStruct& _other) const;
 };
 

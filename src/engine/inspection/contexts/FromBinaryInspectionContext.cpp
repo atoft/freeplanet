@@ -22,7 +22,7 @@
 #include "src/engine/inspection/InspectionTypes.h"
 #include <cstring>
 
-void FromBinaryInspectionContext::Struct(std::string, InspectionType _type, u32 _version, InspectionStructRequirements)
+void FromBinaryInspectionContext::Struct(std::string _name, InspectionType _type, u32 _version, InspectionStructRequirements)
 {
     ++m_Depth;
 
@@ -37,7 +37,7 @@ void FromBinaryInspectionContext::Struct(std::string, InspectionType _type, u32 
 
         if (!typeIdentifier)
         {
-            AddError("Read failed at type identifier");
+            AddError("Read failed at type identifier for " + _name);
             return;
         }
 

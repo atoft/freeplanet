@@ -56,6 +56,9 @@ public:
     template <typename ElementType>
     void Vector(std::string _name, std::vector<ElementType>& _value);
 
+    template <typename... VariantTypes>
+    void Variant(std::string _name, std::variant<VariantTypes...>& _value);
+
 private:
     InspectionVariant m_Variant;
 };
@@ -70,5 +73,11 @@ template<typename ElementType>
 void InspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
 {
     std::visit([&](auto&& _var){ _var.Vector(_name, _value); }, m_Variant);
+}
+
+template <typename... VariantTypes>
+void InspectionContext::Variant(std::string _name, std::variant<VariantTypes...>& _value)
+{
+   std::visit([&](auto&& _var){ _var.Variant(_name, _value); }, m_Variant);
 }
 

@@ -38,3 +38,9 @@ void Inspect(std::string _name, EnumType& _enum, InspectionContext& _context)
 {
     _context.Enum(_name, _enum);
 }
+
+template <typename... VariantTypes>
+void Inspect(std::string _name, std::variant<VariantTypes...>& _target, InspectionContext& _context)
+{
+    _context.Variant(_name, _target);
+}

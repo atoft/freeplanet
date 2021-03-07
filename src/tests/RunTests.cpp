@@ -19,6 +19,8 @@
 
 #include "RunTests.h"
 
+#include <iostream>
+
 #include <src/tests/TestAssets.h>
 #include <src/tests/TestCollision.h>
 #include <src/tests/TestInspection.h>
@@ -31,5 +33,16 @@ bool Test::RunTests()
     result &= TestCollision();
     result &= TestInspection();
 
+    std::cout << std::flush;
+    std::cerr << std::flush;
+    if (result)
+    {
+        LogMessage("All tests passed.");
+    }
+    else
+    {
+        LogError("Tests failed!");
+    }
+    
     return result;
 }

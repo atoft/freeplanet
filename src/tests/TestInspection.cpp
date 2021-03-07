@@ -137,6 +137,11 @@ bool Test::TestInspectionToFromBinaryComplex()
     testValue.m_StructProperty.m_VectorOfStructs.push_back({false, 4.f, {TestInspectEnum::Apple}});
     testValue.m_EnumProperty = TestInspectEnum::Carrot;
 
+    TestSubStruct structInsideVariant;
+    structInsideVariant.m_SeveralThings = {1, 2, 3, 4};
+    structInsideVariant.m_Amplitude = -2.f;
+    testValue.m_Variant = structInsideVariant;
+    
     std::vector<u8> binaryData;
     InspectionHelpers::ToBinary(testValue, binaryData);
 

@@ -17,6 +17,11 @@
  * along with freeplanet. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
+#include <cassert>
+#include <variant>
+
 class InspectionUtils
 {
 public:
@@ -33,4 +38,18 @@ public:
         // TODO this can be replaced with a bit_cast in C++20
         return *((To*)(void*)&_from);
     };
+
+    // Construct a std::variant from a runtime index.
+    template <typename VariantType, std::size_t Index = 0>
+    static VariantType VariantFromIndex(std::size_t _index)
+    {
+        if constexpr(Index >= std::variant_size_v<VariantType>)
+        {
+            return VariantType();
+        }
+        else
+        {
+            return _index == 0 ? VariantType{std::in_place_index<Index>} : InspectionUtils::VariantFromIndex<VariantType, Index + 1>(_index - 1);
+        }
+    }
 };

@@ -22,6 +22,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 #include <type_traits>
 
@@ -51,6 +52,9 @@ public:
     template <typename ElementType>
     void Vector(std::string _name, std::vector<ElementType>& _value);
 
+    template <typename... VariantTypes>
+    void Variant(std::string _name, std::variant<VariantTypes...>& _value);
+    
 private:
     void WriteU32(u32 _value);
     
@@ -83,5 +87,23 @@ void ToBinaryInspectionContext::Vector(std::string _name, std::vector<ElementTyp
         Inspect("", element, *m_Outer);
         // TODO Handle element failure.
     }
+}
+
+template <typename... VariantTypes>
+void ToBinaryInspectionContext::Variant(std::string _name, std::variant<VariantTypes...>& _value)
+{
+    const std::size_t variantIndex = _value.index();
+
+    if (variantIndex > std::numeric_limits<u32>::max())
+    {
+        LogError("Variant " + _name + " contains too many alternatives to serialize.");
+        // TODO Fail.
+        return;
+    }
+
+    // Write the index first.
+    WriteU32(variantIndex);
+
+    std::visit([&](auto&& _var){ Inspect("", _var, *m_Outer); }, _value);
 }
 

@@ -21,6 +21,7 @@
 
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 #include <type_traits>
 
@@ -50,6 +51,10 @@ public:
     template <typename ElementType>
     void Vector(std::string _name, std::vector<ElementType>& _value);
 
+    template <typename... VariantTypes>
+    void Variant(std::string _name, std::variant<VariantTypes...>& _value) { LogWarning("Variant text inspection not implemented.");};
+
+    
 private:
     static InspectionType ToInspectionType(std::string _typeName);
     static std::string InspectionTypeToString(InspectionType _type);

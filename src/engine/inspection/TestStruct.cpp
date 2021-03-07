@@ -39,6 +39,7 @@ bool TestStruct::operator==(const TestStruct& _other) const
         && m_OtherProperty == _other.m_OtherProperty
         && m_StructProperty == _other.m_StructProperty
         && m_EnumProperty == _other.m_EnumProperty
+        && m_Variant == _other.m_Variant
         ;
 }
 
@@ -98,6 +99,7 @@ void Inspect(std::string _name, TestStruct& _target, InspectionContext& _context
     Inspect("OtherProperty", _target.m_OtherProperty, _context);
     Inspect("StructProperty", _target.m_StructProperty, _context);
     Inspect("EnumProperty", _target.m_EnumProperty, _context);
+    Inspect("Variant", _target.m_Variant, _context);
 
     _context.EndStruct();
 };

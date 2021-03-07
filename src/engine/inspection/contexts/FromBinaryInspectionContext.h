@@ -21,11 +21,13 @@
 
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 #include <type_traits>
 
 #include <src/tools/globals.h>
 #include <src/engine/inspection/InspectionTypes.h>
+#include <src/engine/inspection/InspectionUtils.h>
 #include <src/engine/inspection/TypeInfo.h>
 #include <src/tools/STL.h>
 #include <src/tools/StringHelpers.h>
@@ -49,6 +51,9 @@ public:
 
     template <typename ElementType>
     void Vector(std::string _name, std::vector<ElementType>& _value);
+
+    template <typename... VariantTypes>
+    void Variant(std::string _name, std::variant<VariantTypes...>& _value);
 
 private:
     std::optional<u32> ReadU32();
@@ -115,7 +120,7 @@ void FromBinaryInspectionContext::Vector(std::string _name, std::vector<ElementT
     for (u32 idx = 0; idx < vectorSize; ++idx)
     {
         ElementType& element =_value.emplace_back();
-        Inspect("", element, *m_Outer);
+        Inspect(_name + "[" + std::to_string(idx) + "]", element, *m_Outer);
 
         if (m_Finished)
         {
@@ -126,3 +131,25 @@ void FromBinaryInspectionContext::Vector(std::string _name, std::vector<ElementT
     assert(_value.size() == vectorSize);
 }
 
+template <typename... VariantTypes>
+void FromBinaryInspectionContext::Variant(std::string _name, std::variant<VariantTypes...>& _value)
+{
+    if (m_Finished)
+    {
+        return;
+    }
+    
+    const std::optional<u32> readValue = ReadU32();
+
+    if (!readValue)
+    {
+        AddError("Read failed at " + _name);
+        return;
+    }
+
+    const u32 variantIdx = *readValue;
+
+    _value = InspectionUtils::VariantFromIndex<std::variant<VariantTypes...>>(variantIdx);
+
+    std::visit([&](auto&& _var){ Inspect(_name + ".[VariantContents]", _var, *m_Outer); }, _value);
+}
