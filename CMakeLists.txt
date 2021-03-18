@@ -29,6 +29,7 @@ if(WIN32)
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 else()
+	SET(OpenGL_GL_PREFERENCE "GLVND")
 	SET (CMAKE_CXX_COMPILER "clang++")
 	set_source_files_properties(
         ${sources}
@@ -63,7 +64,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE sfml-system sfml-window sfml
 if(WIN32)
 	target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE FLAC OpenAL OpenGL Vorbis)
 else()
-	target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE X11 FLAC UDev OpenAL)
+	target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE X11 FLAC UDev OpenAL GLU)
 endif()
 
 ### End dependencies from vcpkg ###
