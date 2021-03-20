@@ -23,16 +23,30 @@
 #include <src/tools/globals.h>
 #include <src/world/terrain/TerrainSubstance.h>
 
+#include <src/engine/inspection/contexts/InspectionContext.h>
+#include <src/engine/inspection/BaseInspects.h>
+
 class SphereTerrainElement
 {
 public:
+    SphereTerrainElement() = default;
     SphereTerrainElement(glm::vec3 _origin, float _radius, TerrainSubstanceType _substance);
 
     f32 GetDensity(glm::vec3 _position) const;
     TerrainSubstanceType GetSubstance() const { return m_Substance; };
 
-private:
     glm::vec3 m_Origin;
     float m_Radius;
     TerrainSubstanceType m_Substance = TerrainSubstanceType::Rock;
 };
+
+template <typename InspectionContext>
+void Inspect(std::string _name, SphereTerrainElement& _target, InspectionContext& _context)
+{
+    _context.Struct("SphereTerrainElement", InspectionType::Invalid, 0);
+    Inspect("Position", _target.m_Origin, _context);
+    Inspect("Radius", _target.m_Radius, _context);
+    Inspect("Substance", _target.m_Substance, _context);
+    _context.EndStruct();
+}
+

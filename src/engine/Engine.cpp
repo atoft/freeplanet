@@ -19,6 +19,8 @@
 
 #include "Engine.h"
 
+#include <filesystem>
+
 #include <SFML/Window.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
@@ -47,6 +49,9 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
 
     ThreadUtils::tl_ThreadType = ThreadType::Main;
     m_CommandLineArgs = _commandLineArgs;
+
+    // Make a directory for savegames.
+    std::filesystem::create_directory("saved");
 
     const InspectionHelpers::LoadFromTextResult<EngineConfig> loadedConfig = InspectionHelpers::LoadFromText<EngineConfig>("engineconfig.txt");
 

@@ -71,10 +71,9 @@ public:
         // copy here. If this becomes slow, can do a const-cast to avoid the copy.
         T nonConstCopyOfSource = _source;
 
-            TextInspectionContext textContext;
-            textContext.m_TextBuffer = &_outText;
-            textContext.m_Operation = TextInspectionContext::Operation::ToText;
-
+        TextInspectionContext textContext;
+        textContext.m_TextBuffer = &_outText;
+        textContext.m_Operation = TextInspectionContext::Operation::ToText;
 
         Inspect("", nonConstCopyOfSource, textContext);
 
@@ -86,11 +85,10 @@ public:
     static FromBinaryInspectionResult FromBinary(const std::vector<u8>& _source, T& _outValue)
     {
         
-            FromBinaryInspectionContext fromBinaryContext;
-            fromBinaryContext.m_It = _source.begin();
-            fromBinaryContext.m_Begin = _source.begin();
-            fromBinaryContext.m_End = _source.end();        
-
+        FromBinaryInspectionContext fromBinaryContext;
+        fromBinaryContext.m_It = _source.begin();
+        fromBinaryContext.m_Begin = _source.begin();
+        fromBinaryContext.m_End = _source.end();        
         
         Inspect("", _outValue, fromBinaryContext);
 

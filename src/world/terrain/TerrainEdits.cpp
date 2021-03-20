@@ -54,7 +54,7 @@ void TerrainEdits::GetSubstance(glm::vec3 _localPosition, TerrainSubstance& _inO
         }
     }
 
-    constexpr float ELEMENT_CONSIDERED_FOR_SUBSTANCE_THRESHOLD = -0.5f;
+    constexpr f32 ELEMENT_CONSIDERED_FOR_SUBSTANCE_THRESHOLD = -0.5f;
 
     if (highestDensity >= ELEMENT_CONSIDERED_FOR_SUBSTANCE_THRESHOLD)
     {

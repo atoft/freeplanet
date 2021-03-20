@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 Alastair Toft
+ * Copyright 2021 Alastair Toft
  *
  * This file is part of freeplanet.
  *
@@ -19,34 +19,28 @@
 
 #pragma once
 
-#include <variant>
+#include <glm/glm.hpp>
 #include <vector>
 
+#include <src/tools/globals.h>
+#include <src/engine/InputTypes.h>
 #include <src/engine/inspection/contexts/InspectionContext.h>
 #include <src/engine/inspection/BaseInspects.h>
-#include <src/world/terrain/elements/BoxTerrainElement.h>
-#include <src/world/terrain/elements/SphereTerrainElement.h>
+#include <src/world/terrain/TerrainEdits.h>
 
-using TerrainElementVariant = std::variant<SphereTerrainElement, BoxTerrainElement>;
-
-struct TerrainEdits
+struct WorldZoneSave
 {
-    f32 GetDensity(glm::vec3 _localPosition) const;
-    void GetSubstance(glm::vec3 _localPosition, TerrainSubstance& _inOutSubstance) const;
-    bool IsEmpty() const;
+    glm::ivec3 m_ZoneCoords;
 
-    std::vector<TerrainElementVariant> m_AdditiveElements;
-    std::vector<TerrainElementVariant> m_SubtractiveElements;
+    TerrainEdits m_TerrainEdits;
 };
 
-
 template <typename InspectionContext>
-void Inspect(std::string _name, TerrainEdits& _target, InspectionContext& _context)
+void Inspect(std::string _name, WorldZoneSave& _target, InspectionContext& _context)
 {
-    _context.Struct("TerrainEdits", InspectionType::Invalid, 0);
-    Inspect("AdditiveElements", _target.m_AdditiveElements, _context);
-    Inspect("SubtractiveElements", _target.m_SubtractiveElements, _context);
+    _context.Struct("WorldZoneSave", InspectionType::Invalid, 0);
+    Inspect("ZoneCoords", _target.m_ZoneCoords, _context);
+    Inspect("TerrainEdits", _target.m_TerrainEdits, _context);
     _context.EndStruct();
 }
-
 

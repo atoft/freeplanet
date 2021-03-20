@@ -53,10 +53,6 @@ public:
     std::vector<TerrainChunk> m_TerrainChunks;
 
     TerrainProperties m_Properties;
-    //u32 m_ChunksPerEdge = 0;
-    //f32 m_ChunkSize = 0.f;
-
-private:
     TerrainEdits m_TerrainEdits;
 
     glm::ivec3 m_ZoneCoordinates;

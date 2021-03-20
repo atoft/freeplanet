@@ -18,9 +18,11 @@
  */
 
 #include "World.h"
+#include "src/engine/inspection/InspectionHelpers.h"
 
 #include <memory>
 
+#include <src/engine/inspection/InspectionHelpers.h>
 #include <src/world/BipedHandler.h>
 #include <src/world/CameraHandler.h>
 #include <src/world/SpawningHandler.h>
@@ -29,6 +31,7 @@
 #include <src/world/particles/ParticleSystemHandler.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/world/terrain/TerrainHandler.h>
+#include <src/world/WorldZoneSave.h>
 #include <src/world/vista/VistaHandler.h>
 #include <src/profiling/Profiler.h>
 #include <src/tools/MathsHelpers.h>
@@ -344,6 +347,13 @@ void World::UpdateActiveZones()
             if (shouldRemove)
             {
                 LogMessage("Removing " + glm::to_string(zone.GetCoordinates()));
+
+                WorldZoneSave save;
+                save.m_ZoneCoords = zone.GetCoordinates();
+                save.m_TerrainEdits = zone.GetTerrainComponent().m_TerrainEdits;
+                const std::string coords = std::to_string(save.m_ZoneCoords.x) + "_" + std::to_string(save.m_ZoneCoords.y) + "_" + std::to_string(save.m_ZoneCoords.z);
+                InspectionHelpers::SaveToText<WorldZoneSave>(save, "saved/" + coords + ".frpl");
+                
                 zone.OnRemovedFromWorld();                
             }
         }
