@@ -24,8 +24,7 @@
 #include <SFML/Window/Mouse.hpp>
 #include <src/tools/globals.h>
 #include <src/engine/KeyboardKey.h>
-
-class InspectionContext;
+#include <src/engine/inspection/contexts/InspectionContext.h>
 
 enum class InputType
 {
@@ -109,4 +108,17 @@ std::string ToString(InputContext _inputContext);
 std::string ToString(InputButtonInteraction _interaction);
 std::string ToString(KeyboardKey _key);
 
-void Inspect(std::string _name, InputKeyMapping& _target, InspectionContext& _context);
+template <typename InspectionContext>
+void Inspect(std::string _name, InputKeyMapping& _target, InspectionContext& _context)
+{
+    constexpr u32 version = 0;
+    _context.Struct(_name, InspectionType::InputKeyMapping, version);
+
+    Inspect("InputType", _target.m_InputType, _context);
+    Inspect("InputContext", _target.m_InputContext, _context);
+    Inspect("Key", _target.m_Key, _context);
+    Inspect("Interaction", _target.m_Interaction, _context);
+
+    _context.EndStruct();
+}
+

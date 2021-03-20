@@ -174,15 +174,3 @@ std::string ToString(KeyboardKey _key)
     return "UNHANDLED";
 }
 
-void Inspect(std::string _name, InputKeyMapping& _target, InspectionContext& _context)
-{
-    constexpr u32 version = 0;
-    _context.Struct(_name, InspectionType::InputKeyMapping, version);
-
-    Inspect("InputType", _target.m_InputType, _context);
-    Inspect("InputContext", _target.m_InputContext, _context);
-    Inspect("Key", _target.m_Key, _context);
-    Inspect("Interaction", _target.m_Interaction, _context);
-
-    _context.EndStruct();
-}

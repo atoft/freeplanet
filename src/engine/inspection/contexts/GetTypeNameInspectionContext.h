@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Alastair Toft
+ * Copyright 2017-2020 Alastair Toft
  *
  * This file is part of freeplanet.
  *
@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <limits>
 #include <optional>
 #include <string>
 #include <variant>
@@ -32,7 +31,7 @@
 #include <src/tools/STL.h>
 #include <src/tools/StringHelpers.h>
 
-class ToBinaryInspectionContext
+class GetTypeNameInspectionContext
 {
     friend class InspectionHelpers;
 
@@ -40,11 +39,11 @@ public:
     void Struct(std::string _name, InspectionType _type, u32 _version, InspectionStructRequirements _requirements = InspectionStructRequirements::RequireExactMatch);
     void EndStruct();
 
-    void U32(std::string _name, const u32& _value);
-    void S32(std::string _name, const s32& _value);
-    void F32(std::string _name, const f32& _value);
+    void U32(std::string _name, u32& _value);
+    void S32(std::string _name, s32& _value);
+    void F32(std::string _name, f32& _value);
 
-    void Bool(std::string _name, const bool& _value);
+    void Bool(std::string _name, bool& _value);
 
     template <typename EnumType, typename = std::enable_if_t<std::is_enum<EnumType>::value>>
     void Enum(std::string _name, EnumType& _value);
@@ -54,55 +53,33 @@ public:
 
     template <typename... VariantTypes>
     void Variant(std::string _name, std::variant<VariantTypes...>& _value);
-    
-private:
-    void WriteU32(u32 _value);
-    
-    std::vector<u8>* m_Buffer = nullptr;
+
+    std::string m_Result;
 };
 
-template <typename EnumType, typename>
-void ToBinaryInspectionContext::Enum(std::string _name, EnumType& _value)
+template<typename EnumType, typename> void GetTypeNameInspectionContext::Enum(std::string _name, EnumType& _value)
 {
-    // TODO Could support different sizes for enums.
-    WriteU32(static_cast<u32>(_value));
+    if (m_Result.empty())
+    {
+        m_Result = "Enum";
+    }
 }
 
-template <typename ElementType>
-void ToBinaryInspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
+template<typename ElementType> void GetTypeNameInspectionContext::Vector(std::string _name, std::vector<ElementType>& _value)
 {
-    if (_value.size() > std::numeric_limits<u32>::max())
+    if (m_Result.empty())
     {
-        LogError("Vector " + _name + " contains too many elements to serialize.");
-        // TODO Fail.
-        return;
-    }
-
-    // Write the count first.
-    WriteU32(_value.size());
-
-    for (ElementType& element : _value)
-    {
-        Inspect("", element, *this);
-        // TODO Handle element failure.
+        m_Result = "Vector"; // TODO Recursive call here.
     }
 }
 
 template <typename... VariantTypes>
-void ToBinaryInspectionContext::Variant(std::string _name, std::variant<VariantTypes...>& _value)
+void GetTypeNameInspectionContext::Variant(std::string _name, std::variant<VariantTypes...>& _value)
 {
-    const std::size_t variantIndex = _value.index();
-
-    if (variantIndex > std::numeric_limits<u32>::max())
+    if (m_Result.empty())
     {
-        LogError("Variant " + _name + " contains too many alternatives to serialize.");
-        // TODO Fail.
-        return;
+        m_Result = "Variant"; // TODO Recursive call here.
     }
-
-    // Write the index first.
-    WriteU32(variantIndex);
-
-    std::visit([&](auto&& _var){ Inspect("", _var, *this); }, _value);
 }
+
 

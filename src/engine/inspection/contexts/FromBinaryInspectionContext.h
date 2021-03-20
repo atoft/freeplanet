@@ -72,8 +72,6 @@ private:
     FromBinaryInspectionResult m_Result = FromBinaryInspectionResult::Success;
     std::string m_ErrorMessage = "";
     std::string m_WarningMessage = "";
-    
-    class InspectionContext* m_Outer = nullptr;
 };
 
 template <typename EnumType, typename>
@@ -120,7 +118,7 @@ void FromBinaryInspectionContext::Vector(std::string _name, std::vector<ElementT
     for (u32 idx = 0; idx < vectorSize; ++idx)
     {
         ElementType& element =_value.emplace_back();
-        Inspect(_name + "[" + std::to_string(idx) + "]", element, *m_Outer);
+        Inspect(_name + "[" + std::to_string(idx) + "]", element, *this);
 
         if (m_Finished)
         {
@@ -151,5 +149,5 @@ void FromBinaryInspectionContext::Variant(std::string _name, std::variant<Varian
 
     _value = InspectionUtils::VariantFromIndex<std::variant<VariantTypes...>>(variantIdx);
 
-    std::visit([&](auto&& _var){ Inspect(_name + ".[VariantContents]", _var, *m_Outer); }, _value);
+    std::visit([&](auto&& _var){ Inspect(_name + ".[VariantContents]", _var, *this); }, _value);
 }

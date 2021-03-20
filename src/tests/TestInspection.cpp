@@ -20,6 +20,7 @@
 #include "TestInspection.h"
 #include "src/engine/inspection/InspectionTypes.h"
 #include "src/engine/inspection/contexts/FromBinaryInspectionContext.h"
+#include "src/tools/globals.h"
 
 #include <src/tests/TestHelpers.h>
 #include <src/engine/inspection/TestStruct.h>
@@ -54,10 +55,11 @@ bool Test::TestInspectionToFromText()
     testValue.m_StructProperty.m_VectorOfStructs.push_back({true, -1.f, {TestInspectEnum::Banana, TestInspectEnum::Carrot}});
     testValue.m_StructProperty.m_VectorOfStructs.push_back({false, 2.f, {TestInspectEnum::Apple}});
     testValue.m_EnumProperty = TestInspectEnum::Banana;
+    testValue.m_Variant = TestInspectEnum::Carrot;
 
     std::string toString = "";
     InspectionHelpers::ToText(testValue, toString);
-
+    
     TestStruct fromString;
     const InspectionResult result = InspectionHelpers::FromText(toString, fromString);
 

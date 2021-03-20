@@ -21,7 +21,7 @@
 
 #include <src/engine/inspection/contexts/InspectionContext.h>
 
-template <typename ElementType>
+template <typename InspectionContext, typename ElementType>
 void Inspect(std::string _name, std::vector<ElementType>& _element, InspectionContext& _context)
 {
     _context.Vector(_name, _element);

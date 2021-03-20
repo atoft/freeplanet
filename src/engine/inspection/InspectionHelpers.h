@@ -41,36 +41,26 @@ public:
         // call a deprecate method. It could read into a "deprecated version" of the struct
         // which the caller can then use to populate the newer version.
 
-        InspectionContext inspectionContext;
-
-        {
-            TextInspectionContext textContext;
-            textContext.m_TextIt = _source.begin();
-            textContext.m_TextBegin = _source.begin();
-            textContext.m_TextEnd = _source.end();
-            textContext.m_Operation = TextInspectionContext::Operation::FromText;
-
-            textContext.m_Outer = &inspectionContext;
-
-            inspectionContext.m_Variant = textContext;
-        }
+        TextInspectionContext textContext;
+        textContext.m_TextIt = _source.begin();
+        textContext.m_TextBegin = _source.begin();
+        textContext.m_TextEnd = _source.end();
+        textContext.m_Operation = TextInspectionContext::Operation::FromText;
         
-        Inspect("", _outValue, inspectionContext);
+        Inspect("", _outValue, textContext);
 
-        const TextInspectionContext& finishedTextContext = std::get<TextInspectionContext>(inspectionContext.m_Variant);
-        
-        if (!finishedTextContext.m_ErrorMessage.empty())
+        if (!textContext.m_ErrorMessage.empty())
         {
-            LogError(finishedTextContext.m_ErrorMessage);
+            LogError(textContext.m_ErrorMessage);
         }
 
-        if (!finishedTextContext.m_WarningMessage.empty())
+        if (!textContext.m_WarningMessage.empty())
         {
-            LogWarning(finishedTextContext.m_WarningMessage);
+            LogWarning(textContext.m_WarningMessage);
         }
 
-        assert((finishedTextContext.m_Finished || finishedTextContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
-        return finishedTextContext.m_Result;
+        assert((textContext.m_Finished || textContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
+        return textContext.m_Result;
     }
 
     template <typename T>
@@ -81,58 +71,42 @@ public:
         // copy here. If this becomes slow, can do a const-cast to avoid the copy.
         T nonConstCopyOfSource = _source;
 
-        InspectionContext inspectionContext;
-
-        {
             TextInspectionContext textContext;
             textContext.m_TextBuffer = &_outText;
             textContext.m_Operation = TextInspectionContext::Operation::ToText;
 
-            textContext.m_Outer = &inspectionContext;
-            inspectionContext.m_Variant = textContext;
-        }
 
-        Inspect("", nonConstCopyOfSource, inspectionContext);
+        Inspect("", nonConstCopyOfSource, textContext);
 
-        [[maybe_unused]]
-        const TextInspectionContext& finishedTextContext = std::get<TextInspectionContext>(inspectionContext.m_Variant);
-
-        assert((finishedTextContext.m_Finished || finishedTextContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
+        assert((textContext.m_Finished || textContext.m_Stack.empty()) && "Did you miss an EndStruct() call?");
     }
 
     template <typename T>
     [[nodiscard]]
     static FromBinaryInspectionResult FromBinary(const std::vector<u8>& _source, T& _outValue)
     {
-        InspectionContext inspectionContext;
-
-        {
+        
             FromBinaryInspectionContext fromBinaryContext;
             fromBinaryContext.m_It = _source.begin();
             fromBinaryContext.m_Begin = _source.begin();
             fromBinaryContext.m_End = _source.end();        
 
-            fromBinaryContext.m_Outer = &inspectionContext;
-            inspectionContext.m_Variant = fromBinaryContext;
-        }
         
-        Inspect("", _outValue, inspectionContext);
+        Inspect("", _outValue, fromBinaryContext);
 
-        const FromBinaryInspectionContext& finishedFromBinaryContext = std::get<FromBinaryInspectionContext>(inspectionContext.m_Variant);
-
-        if (!finishedFromBinaryContext.m_ErrorMessage.empty())
+        if (!fromBinaryContext.m_ErrorMessage.empty())
         {
-            LogError(finishedFromBinaryContext.m_ErrorMessage);
+            LogError(fromBinaryContext.m_ErrorMessage);
         }
 
-        if (!finishedFromBinaryContext.m_WarningMessage.empty())
+        if (!fromBinaryContext.m_WarningMessage.empty())
         {
-            LogWarning(finishedFromBinaryContext.m_WarningMessage);
+            LogWarning(fromBinaryContext.m_WarningMessage);
         }
 
         
-        assert((finishedFromBinaryContext.m_Finished || finishedFromBinaryContext.m_Depth == 0) && "Did you miss an EndStruct() call?");
-        return finishedFromBinaryContext.m_Result;
+        assert((fromBinaryContext.m_Finished || fromBinaryContext.m_Depth == 0) && "Did you miss an EndStruct() call?");
+        return fromBinaryContext.m_Result;
     }
 
     
@@ -144,21 +118,12 @@ public:
         // copy here. If this becomes slow, can do a const-cast to avoid the copy.
         T nonConstCopyOfSource = _source;
 
-        InspectionContext inspectionContext;
-
-        {
             ToBinaryInspectionContext toBinaryContext;
             toBinaryContext.m_Buffer = &_outData;
 
-            toBinaryContext.m_Outer = &inspectionContext;
-            inspectionContext.m_Variant = toBinaryContext;
-        }
         
-        Inspect("", nonConstCopyOfSource, inspectionContext);
+        Inspect("", nonConstCopyOfSource, toBinaryContext);
 
-        [[maybe_unused]]
-        const ToBinaryInspectionContext& finishedToBinaryContext = std::get<ToBinaryInspectionContext>(inspectionContext.m_Variant);
-        
         // TODO assert((finishedToBinaryContext.m_Finished) && "Did you miss an EndStruct() call?");
     }
 

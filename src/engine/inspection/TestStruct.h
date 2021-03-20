@@ -23,9 +23,9 @@
 #include <variant>
 #include <vector>
 
+#include <src/engine/inspection/BaseInspects.h>
+#include <src/engine/inspection/contexts/InspectionContext.h>
 #include <src/tools/globals.h>
-
-class InspectionContext;
 
 enum class TestInspectEnum
 {
@@ -79,7 +79,65 @@ struct TestPrimitiveOnlyStruct
     bool operator==(const TestPrimitiveOnlyStruct& _other) const;
 };
 
-void Inspect(std::string _name, TestStructInVector& _target, InspectionContext& _context);
-void Inspect(std::string _name, TestSubStruct& _target, InspectionContext& _context);
-void Inspect(std::string _name, TestStruct& _target, InspectionContext& _context);
-void Inspect(std::string _name, TestPrimitiveOnlyStruct& _target, InspectionContext& _context);
+template <typename InspectionContext>
+void Inspect(std::string _name, TestStructInVector& _target, InspectionContext& _context)
+{
+    constexpr u32 version = 0;
+
+    // Explicitly ban missing values for this struct.
+    _context.Struct(_name, InspectionType::TestStructInVector, version, InspectionStructRequirements::RequireExactMatch);
+
+    Inspect("Boolean", _target.m_Boolean, _context);
+    Inspect("Floaty", _target.m_Floaty, _context);
+    Inspect("Fruit", _target.m_Fruit, _context);
+
+    _context.EndStruct();
+}
+
+template <typename InspectionContext>
+void Inspect(std::string _name, TestSubStruct& _target, InspectionContext& _context)
+{
+    constexpr u32 version = 0;
+    _context.Struct(_name, InspectionType::TestSubStruct, version, InspectionStructRequirements::AllowMissingValues);
+
+    Inspect("SubProperty", _target.m_SubProperty, _context);
+    Inspect("IsTrue", _target.m_IsTrue, _context);
+
+    Inspect("SeveralThings", _target.m_SeveralThings, _context);
+    Inspect("NoThings", _target.m_NoThings, _context);
+    Inspect("Amplitude", _target.m_Amplitude, _context);
+    Inspect("VectorOfStructs", _target.m_VectorOfStructs, _context);
+
+    _context.EndStruct();
+}
+
+template <typename InspectionContext>
+void Inspect(std::string _name, TestStruct& _target, InspectionContext& _context)
+{
+    constexpr u32 version = 0;
+    _context.Struct(_name, InspectionType::TestStruct, version);
+
+    Inspect("Property", _target.m_Property, _context);
+    Inspect("OtherProperty", _target.m_OtherProperty, _context);
+    Inspect("StructProperty", _target.m_StructProperty, _context);
+    Inspect("EnumProperty", _target.m_EnumProperty, _context);
+    Inspect("Variant", _target.m_Variant, _context);
+
+    _context.EndStruct();
+};
+
+template <typename InspectionContext>
+void Inspect(std::string _name, TestPrimitiveOnlyStruct& _target, InspectionContext& _context)
+{
+    constexpr u32 version = 0;
+    _context.Struct(_name, InspectionType::TestPrimitiveOnlyStruct, version);
+
+    Inspect("Unsigned", _target.m_Unsigned, _context);
+    Inspect("Signed", _target.m_Signed, _context);
+    Inspect("Float", _target.m_Float, _context);
+    Inspect("BoolA", _target.m_BoolA, _context);
+    Inspect("BoolB", _target.m_BoolB, _context);
+
+    _context.EndStruct();
+};
+

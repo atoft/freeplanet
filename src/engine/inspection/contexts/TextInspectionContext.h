@@ -26,7 +26,9 @@
 #include <type_traits>
 
 #include <src/tools/globals.h>
+#include <src/engine/inspection/contexts/GetTypeNameInspectionContext.h>
 #include <src/engine/inspection/InspectionTypes.h>
+#include <src/engine/inspection/VariantFromName.h>
 #include <src/engine/inspection/TypeInfo.h>
 #include <src/tools/STL.h>
 #include <src/tools/StringHelpers.h>
@@ -52,7 +54,7 @@ public:
     void Vector(std::string _name, std::vector<ElementType>& _value);
 
     template <typename... VariantTypes>
-    void Variant(std::string _name, std::variant<VariantTypes...>& _value) { LogWarning("Variant text inspection not implemented.");};
+    void Variant(std::string _name, std::variant<VariantTypes...>& _value);
 
     
 private:
@@ -106,8 +108,6 @@ private:
     std::string::const_iterator m_TextBegin;
     std::string::const_iterator m_TextIt;
     std::string::const_iterator m_TextEnd;
-
-    class InspectionContext* m_Outer = nullptr;
 };
 
 template<typename EnumType, typename> void TextInspectionContext::Enum(std::string _name, EnumType& _value)
@@ -165,7 +165,7 @@ template<typename ElementType> void TextInspectionContext::Vector(std::string _n
             m_Stack.push_back({true, InspectionStructRequirements::RequireExactMatch});
             for (u32 elementIdx = 0; elementIdx < _value.size(); ++elementIdx)
             {
-                Inspect(_name, _value[elementIdx], *m_Outer);
+                Inspect(_name, _value[elementIdx], *this);
 
                 if (elementIdx != _value.size() - 1)
                 {
@@ -199,7 +199,7 @@ template<typename ElementType> void TextInspectionContext::Vector(std::string _n
                 while (!StringHelpers::StartsWith(m_TextIt, m_TextEnd, ";"))
                 {
                     ElementType element;
-                    Inspect(_name, element, *m_Outer);
+                    Inspect(_name, element, *this);
 
                     // If there was something wrong with the inspection of the element, give up
                     // to make sure we aren't stuck in place with our iteration.
@@ -232,3 +232,85 @@ template<typename ElementType> void TextInspectionContext::Vector(std::string _n
             break;
     }
 }
+
+template <typename... VariantTypes>
+void TextInspectionContext::Variant(std::string _name, std::variant<VariantTypes...>& _value)
+{
+    if (m_Finished || m_Stack.back().m_SkipThisLevel)
+    {
+        return;
+    }
+
+    switch (m_Operation)
+    {
+        case Operation::ToText:
+        {
+            AppendNewlineWithIndent();
+            if (!m_Stack.back().m_InsideContainer)
+            {
+                *m_TextBuffer += _name + ": ";
+            }
+
+            GetTypeNameInspectionContext typeNameContext;
+            std::visit([&typeNameContext](auto&& val) { Inspect("", val, typeNameContext);}, _value);
+            *m_TextBuffer += "<" + typeNameContext.m_Result + ">";
+            
+            *m_TextBuffer += "[";
+            m_Stack.push_back({true, InspectionStructRequirements::RequireExactMatch});
+
+            std::visit([this](auto&& val) { Inspect("", val, *this);}, _value);
+
+            assert(m_Stack.back().m_InsideContainer);
+            m_Stack.pop_back();
+
+            *m_TextBuffer += "];";
+            
+            break;
+        }
+        case Operation::FromText:
+        {
+            if (!m_Stack.back().m_InsideContainer)
+            {
+                const std::string expectedPropertyIdentifier = _name + ":";
+                assert(StringHelpers::StartsWith(m_TextIt, m_TextEnd, expectedPropertyIdentifier));
+                m_TextIt += expectedPropertyIdentifier.size();
+            }
+
+            SkipWhitespace(m_TextIt, m_TextEnd);
+            if (!SkipSingleToken(m_TextIt, m_TextEnd, "<")) return;
+
+            auto endOfTypeNameIt = StringHelpers::Find(m_TextIt, m_TextEnd, ">");
+            const std::string typeName = std::string(m_TextIt, endOfTypeNameIt);
+            bool didNameMatch = false;
+            _value = InspectionVariants::VariantFromName<std::variant<VariantTypes...>>(typeName, didNameMatch);
+
+            if (!didNameMatch)
+            {
+                AddError("Variant name did not match any alternative for " + _name);
+                return;
+            }
+
+            m_TextIt = endOfTypeNameIt;
+            if (!SkipSingleToken(m_TextIt, m_TextEnd, ">")) return;
+            SkipWhitespace(m_TextIt, m_TextEnd);
+            if (!SkipSingleToken(m_TextIt, m_TextEnd, "[")) return;
+            
+            m_Stack.push_back({true, InspectionStructRequirements::RequireExactMatch});
+
+            std::visit([&](auto&& val) { Inspect("", val, *this);}, _value);
+
+            assert(m_Stack.back().m_InsideContainer);
+            m_Stack.pop_back();
+
+            if (!SkipSingleToken(m_TextIt, m_TextEnd, ";")) return;
+            
+            SkipWhitespace(m_TextIt, m_TextEnd);
+
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+
