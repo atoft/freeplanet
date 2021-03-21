@@ -387,6 +387,32 @@ void World::UpdateActiveZones()
 
     // Check for zones that have finished loading
     m_ZoneLoaders.TransferLoadedContent(m_ActiveZones);
+
+    for (WorldZone& zone : m_ActiveZones)
+    {
+        if (!zone.m_HasLoadedFromSave)
+        {
+            const glm::ivec3 zoneCoords = zone.GetCoordinates();
+            const std::string coords = std::to_string(zoneCoords.x) + "_" + std::to_string(zoneCoords.y) + "_" + std::to_string(zoneCoords.z);
+            const InspectionHelpers::LoadFromTextResult<WorldZoneSave> loaded = InspectionHelpers::LoadFromText<WorldZoneSave>("saved/" + coords + ".frpl");
+            if (loaded.m_Result == InspectionResult::Success)
+            {
+                const WorldZoneSave& save = *loaded.m_Value;
+
+                if (save.m_ZoneCoords == zoneCoords)
+                {
+                    zone.GetTerrainComponent().m_TerrainEdits = save.m_TerrainEdits;
+                    LogMessage("Loaded " + std::to_string(save.m_TerrainEdits.m_AdditiveElements.size() + save.m_TerrainEdits.m_AdditiveElements.size()) + " edits from save.");
+                }
+                else
+                {
+                    LogError("Error attempting to load save for " + glm::to_string(zoneCoords) + " - file contains the wrong coordinates.");
+                }
+            }
+
+            zone.m_HasLoadedFromSave = true;
+        }
+    }
 }
 
 void World::SendWorldEvents()

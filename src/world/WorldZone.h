@@ -131,6 +131,9 @@ public:
 
     bool ContainsPlayer() const;
 
+    // HACK: Need a better place to do things in World on first load.
+    bool m_HasLoadedFromSave = false;
+    
 private:
     bool DestroyWorldObject_Internal(WorldObjectID _objectID, bool _removedFromWorld);
 

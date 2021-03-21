@@ -263,7 +263,12 @@ void TextInspectionContext::Variant(std::string _name, std::variant<VariantTypes
             assert(m_Stack.back().m_InsideContainer);
             m_Stack.pop_back();
 
-            *m_TextBuffer += "];";
+            *m_TextBuffer += "]";
+       
+            if (!m_Stack.back().m_InsideContainer)
+            {
+                *m_TextBuffer += ";";
+            }
             
             break;
         }
@@ -302,7 +307,28 @@ void TextInspectionContext::Variant(std::string _name, std::variant<VariantTypes
             assert(m_Stack.back().m_InsideContainer);
             m_Stack.pop_back();
 
-            if (!SkipSingleToken(m_TextIt, m_TextEnd, ";")) return;
+            // TODO Add a unit test with a variant inside a vector.
+            
+            // TODO Copy-paste: This part of the parsing should be shared with other methods.
+            std::string endOfValueString = ";";
+
+            if (m_Stack.back().m_InsideContainer)
+            {
+                // Find the closest token of , or ].
+                const std::string::const_iterator nextComma = StringHelpers::Find(m_TextIt, m_TextEnd, ",");
+                const std::string::const_iterator nextClosingSquareBrace = StringHelpers::Find(m_TextIt, m_TextEnd, "]");
+
+                if (nextComma < nextClosingSquareBrace)
+                {
+                    endOfValueString = ",";
+                }
+                else
+                {
+                    endOfValueString = "]";
+                }
+            }
+
+            if (!SkipSingleToken(m_TextIt, m_TextEnd, endOfValueString)) return;
             
             SkipWhitespace(m_TextIt, m_TextEnd);
 
