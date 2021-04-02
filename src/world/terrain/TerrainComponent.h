@@ -47,6 +47,8 @@ public:
     // in the TerrainMeshUpdater every time there's a change to only part of the Terrain.
     const std::vector<TerrainChunk>& GetChunks() const { return m_TerrainChunks; };
 
+    void SetAllDirty();
+    
 public:
     mutable DynamicMeshHandle m_DynamicMesh;
 

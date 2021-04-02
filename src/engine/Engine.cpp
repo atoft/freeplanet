@@ -290,7 +290,6 @@ void Engine::HandleEvent(EngineEvent _event)
     {
         LogMessage("OnQuit");
         m_IsGameplayRunning = false;
-        m_World = nullptr;
         m_RequestedWorld = nullptr;
         break;
     }

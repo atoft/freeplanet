@@ -45,14 +45,17 @@ void PlayerHandler::Update()
             if (isLoadingOrLoaded)
             {
                 request.m_State = RequestState::WaitingForZone;
+                LogMessage("Waiting for zone to be active for local player " + std::to_string(request.m_Index));
             }
             break;
         }
         case RequestState::WaitingForZone:
         {
-            if (m_World->FindZoneAtCoordinates(request.m_Zone) != nullptr)
+            WorldZone* zone = m_World->FindZoneAtCoordinates(request.m_Zone);
+            if (zone != nullptr)
             {
                 request.m_State = RequestState::WaitingForTerrain;
+                LogMessage("Waiting for terrain to be ready for local player " + std::to_string(request.m_Index));
             }
             break;
         }
@@ -64,6 +67,11 @@ void PlayerHandler::Update()
             {
                 WorldZone* zone = m_World->FindZoneAtCoordinates(request.m_Zone);
 
+                if (!zone->m_HasLoadedFromSave)
+                {
+                    break;
+                }
+                
                 // We might hit this once there are multiple players. In that case need to fix World
                 // to not unload zones if there's a player requesting them.
                 assert(zone != nullptr);
@@ -97,6 +105,7 @@ void PlayerHandler::RegisterLocalPlayer(u32 _index)
     }
 
     m_Requests.push_back({spawnZone, _index, RequestState::WaitingToLoadZone});
+    LogMessage("Waiting to load zone for local player " + std::to_string(_index));
 }
 
 bool PlayerHandler::AreLocalPlayersSpawned() const

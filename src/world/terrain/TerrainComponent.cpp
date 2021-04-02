@@ -25,7 +25,12 @@ TerrainComponent::TerrainComponent(u32 _chunksPerEdge, f32 _chunkSize, glm::ivec
     m_Properties.m_ChunksPerEdge = _chunksPerEdge;
     m_ZoneCoordinates = _zoneCoords;
     m_Properties.m_ChunkSize = _chunkSize;
-    m_DirtyRegion = {glm::ivec3(), glm::ivec3(_chunksPerEdge, _chunksPerEdge, _chunksPerEdge)};
+    SetAllDirty();
+}
+
+void TerrainComponent::SetAllDirty()
+{
+   m_DirtyRegion = {glm::ivec3(), glm::ivec3(m_Properties.m_ChunksPerEdge)};
 }
 
 TerrainComponent::TerrainComponent()

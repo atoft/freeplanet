@@ -138,6 +138,8 @@ void RenderHandler::Render(const World* _world, std::shared_ptr<const UIDisplay>
     {
         const FreelookCameraComponent* camera = _world->GetPlayerHandler()->GetLocalCamera();
 
+        UpdateSharedDynamicMeshes(_world, frame);
+
         if (camera != nullptr)
         {
             GenerateBackgroundScene(_world, camera, frame.m_PendingScenes);
@@ -169,7 +171,6 @@ void RenderHandler::GenerateScenes(const World* _world, const FreelookCameraComp
 
     GenerateSceneCamera(_world, _camera, sceneToRender);
     GenerateSceneGlobalLighting(_world, _camera, sceneToRender);
-    UpdateSharedDynamicMeshes(_world, _inOutFrame);
 
     std::vector<Renderable::InstancedSceneObject> particleInstances;
     std::vector<Renderable::InstancedSceneObject> meshInstances;

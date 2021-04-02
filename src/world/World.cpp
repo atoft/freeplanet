@@ -193,13 +193,12 @@ void World::TransferEntitiesBetweenZones()
     {
         bool m_ShouldDelete = false;
 
-        glm::ivec3 m_SourceZone;
-        glm::ivec3 m_DestinationZone;
+        glm::ivec3 m_SourceZone = glm::ivec3();
+        glm::ivec3 m_DestinationZone = glm::ivec3();
 
-        WorldObjectID m_ObjectID;
+        WorldObjectID m_ObjectID = WORLDOBJECTID_INVALID;
 
-        PendingZoneTransfer()
-        {};
+        PendingZoneTransfer() = default;
     };
 
     std::vector<PendingZoneTransfer> worldObjectsToTransfer;
@@ -348,11 +347,7 @@ void World::UpdateActiveZones()
             {
                 LogMessage("Removing " + glm::to_string(zone.GetCoordinates()));
 
-                WorldZoneSave save;
-                save.m_ZoneCoords = zone.GetCoordinates();
-                save.m_TerrainEdits = zone.GetTerrainComponent().m_TerrainEdits;
-                const std::string coords = std::to_string(save.m_ZoneCoords.x) + "_" + std::to_string(save.m_ZoneCoords.y) + "_" + std::to_string(save.m_ZoneCoords.z);
-                InspectionHelpers::SaveToText<WorldZoneSave>(save, "saved/" + coords + ".frpl");
+                SaveZoneToFile(zone);
                 
                 zone.OnRemovedFromWorld();                
             }
@@ -390,29 +385,52 @@ void World::UpdateActiveZones()
 
     for (WorldZone& zone : m_ActiveZones)
     {
-        if (!zone.m_HasLoadedFromSave)
+        if (!zone.m_HasLoadedFromSave && zone.IsProceduralSpawningDone())
         {
-            const glm::ivec3 zoneCoords = zone.GetCoordinates();
-            const std::string coords = std::to_string(zoneCoords.x) + "_" + std::to_string(zoneCoords.y) + "_" + std::to_string(zoneCoords.z);
-            const InspectionHelpers::LoadFromTextResult<WorldZoneSave> loaded = InspectionHelpers::LoadFromText<WorldZoneSave>("saved/" + coords + ".frpl");
-            if (loaded.m_Result == InspectionResult::Success)
-            {
-                const WorldZoneSave& save = *loaded.m_Value;
-
-                if (save.m_ZoneCoords == zoneCoords)
-                {
-                    zone.GetTerrainComponent().m_TerrainEdits = save.m_TerrainEdits;
-                    LogMessage("Loaded " + std::to_string(save.m_TerrainEdits.m_AdditiveElements.size() + save.m_TerrainEdits.m_AdditiveElements.size()) + " edits from save.");
-                }
-                else
-                {
-                    LogError("Error attempting to load save for " + glm::to_string(zoneCoords) + " - file contains the wrong coordinates.");
-                }
-            }
-
-            zone.m_HasLoadedFromSave = true;
+            LoadZoneFromFile(zone);
         }
     }
+}
+
+void World::LoadZoneFromFile(WorldZone& _zone)
+{
+    const glm::ivec3 zoneCoords = _zone.GetCoordinates();
+    const std::string coords = std::to_string(zoneCoords.x) + "_" + std::to_string(zoneCoords.y) + "_" + std::to_string(zoneCoords.z);
+    const InspectionHelpers::LoadFromTextResult<WorldZoneSave> loaded = InspectionHelpers::LoadFromText<WorldZoneSave>("saved/" + coords + ".frpl");
+    if (loaded.m_Result == InspectionResult::Success)
+    {
+        const WorldZoneSave& save = *loaded.m_Value;
+
+        if (save.m_ZoneCoords == zoneCoords)
+        {
+            _zone.GetTerrainComponent().m_TerrainEdits = save.m_TerrainEdits;
+            LogMessage("Loaded " + std::to_string(save.m_TerrainEdits.m_AdditiveElements.size() + save.m_TerrainEdits.m_AdditiveElements.size()) + " edits from save.");
+            _zone.GetTerrainComponent().SetAllDirty();
+        }
+        else
+        {
+            LogError("Error attempting to load save for " + glm::to_string(zoneCoords) + " - file contains the wrong coordinates.");
+        }
+    }
+
+    _zone.m_HasLoadedFromSave = true;
+}
+
+void World::SaveZoneToFile(WorldZone &_zone)
+{
+    WorldZoneSave save;
+    save.m_ZoneCoords = _zone.GetCoordinates();
+    save.m_TerrainEdits = _zone.GetTerrainComponent().m_TerrainEdits;
+
+    const bool bIsZoneEdited = !save.m_TerrainEdits.IsEmpty();
+
+    if (!bIsZoneEdited)
+    {
+        return;
+    }
+
+    const std::string coords = std::to_string(save.m_ZoneCoords.x) + "_" + std::to_string(save.m_ZoneCoords.y) + "_" + std::to_string(save.m_ZoneCoords.z);
+    InspectionHelpers::SaveToText<WorldZoneSave>(save, "saved/" + coords + ".frpl");
 }
 
 void World::SendWorldEvents()
@@ -625,6 +643,13 @@ void World::HandleEvent(EngineEvent _event)
 
         break;
     }
+    case EngineEvent::Type::OnQuit:
+    {
+        for (WorldZone& zone : m_ActiveZones)
+        {
+            SaveZoneToFile(zone);
+        }
+    }
     default:
         break;
     }
@@ -687,4 +712,3 @@ void World::DebugDraw(UIDrawInterface& _interface) const
     // TODO separate debug UI for this.
     m_SpawningHandler->DebugDraw(_interface);
 }
-

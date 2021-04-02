@@ -111,6 +111,9 @@ private:
     void SendWorldEvents();
     void VerifyWorld() const;
 
+    void LoadZoneFromFile(WorldZone &_zone);
+    void SaveZoneToFile(WorldZone& _zone);
+
     bool TryLoadZone(glm::ivec3 _position);
 
     bool IsZoneLoading(glm::ivec3 _coords) const;
