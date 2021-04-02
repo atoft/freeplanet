@@ -280,9 +280,33 @@ void Engine::HandleEvent(EngineEvent _event)
         m_UIDisplay->OpenHUD();
         break;
     }
-    case EngineEvent::Type::EngineLoadPlanetFromSeed:
+    case EngineEvent::Type::EngineNewPlanet:
     {
-        m_RequestedWorld = std::make_shared<World>("Generated World", PlanetGeneration::GenerateFromSeed(_event.GetIntData()));
+        m_RequestedWorld = std::make_shared<World>();
+
+        const EnginePlanetRequest request = _event.Get<EnginePlanetRequest>();
+
+        const bool newWorldSuccess = m_RequestedWorld->InitializeNew(request.m_Name, request.m_Seed);
+
+        if (!newWorldSuccess)
+        {
+            LogError("Failed to create new world.");
+        }
+
+        m_UIDisplay->OpenHUD();
+        break;
+    }
+    case EngineEvent::Type::EngineLoadPlanet:
+    {
+        m_RequestedWorld = std::make_shared<World>();
+
+        const bool newWorldSuccess = m_RequestedWorld->LoadFromFile(_event.GetStringData());
+
+        if (!newWorldSuccess)
+        {
+            LogError("Failed to create new world.");
+        }
+
         m_UIDisplay->OpenHUD();
         break;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Alastair Toft
+ * Copyright 2021 Alastair Toft
  *
  * This file is part of freeplanet.
  *
@@ -19,21 +19,10 @@
 
 #pragma once
 
-#include <string>
+#include <src/tools/globals.h>
 
-class UIDisplay;
-
-class UIActions
+struct EnginePlanetRequest
 {
-public:
-    void GoToNewPlanetMenu();
-    void GoToMainMenu();
-    void Quit();
-
-    void NewPlanetFromSeed(const std::string& _nameString, const std::string& _seedString);
-
-    void SetUIDisplay(UIDisplay* _display);
-
-private:
-    UIDisplay* m_UIDisplay = nullptr;
+    std::string m_Name;
+    u32 m_Seed = 0;
 };

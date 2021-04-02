@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Alastair Toft
+ * Copyright 2021 Alastair Toft
  *
  * This file is part of freeplanet.
  *
@@ -19,21 +19,24 @@
 
 #pragma once
 
-#include <string>
+#include <glm/glm.hpp>
+#include <vector>
 
-class UIDisplay;
+#include <src/tools/globals.h>
 
-class UIActions
+struct WorldSave
 {
-public:
-    void GoToNewPlanetMenu();
-    void GoToMainMenu();
-    void Quit();
-
-    void NewPlanetFromSeed(const std::string& _nameString, const std::string& _seedString);
-
-    void SetUIDisplay(UIDisplay* _display);
-
-private:
-    UIDisplay* m_UIDisplay = nullptr;
+    std::string m_Name;
+    bool m_HasPlanet = true;
+    u32 m_Seed = 0;
 };
+
+template <typename InspectionContext>
+void Inspect(std::string _name, WorldSave& _target, InspectionContext& _context)
+{
+    _context.Struct("WorldSave", InspectionType::Invalid, 0);
+    // TODO Support string inspection Inspect("Name", _target.m_Name, _context);
+    Inspect("HasPlanet", _target.m_HasPlanet, _context);
+    Inspect("Seed", _target.m_Seed, _context);
+    _context.EndStruct();
+}

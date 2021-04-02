@@ -25,6 +25,8 @@
 #include <vector>
 
 #include <src/tools/globals.h>
+#include <algorithm>
+#include "EnginePlanetRequest.h"
 
 // Top-level events. These shouldn't be used within systems, eg. WorldObjects communicating with each other,
 // they should be for handling events across systems. May split into finer grained event types if this becomes
@@ -48,7 +50,8 @@ public:
 
         EngineRequestQuit,
         EngineTestWorld,
-        EngineLoadPlanetFromSeed,
+        EngineNewPlanet,
+        EngineLoadPlanet,
 
         RenderSetBoundingBoxes,
         RenderSetWireframe,
@@ -73,6 +76,8 @@ public:
         Float,
         String,
 
+        EnginePlanetRequest,
+
         Count
     };
     struct CommandDefinition
@@ -85,9 +90,9 @@ public:
     };
 
 public:
-    EngineEvent(Type _type, std::string _data);
-    EngineEvent(Type _type, u64 _data);
-    EngineEvent(Type _type, f32 _data);
+    template <typename DataType>
+    EngineEvent(Type _type, DataType _data);
+
     explicit EngineEvent(Type _type);
 
     Type GetType() const { return m_Type; };
@@ -96,16 +101,68 @@ public:
     u64 GetIntData() const;
     f32 GetFloatData() const;
 
+    template<typename DataType>
+    DataType Get() const;
+
     static std::optional<EngineEvent> ParseEvent(std::string _input);
     static std::string GetHelpText();
+    static std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS;
 
 private:
     Type m_Type;
 
-    std::variant<u64, std::string, f32> m_Data;
+    std::variant<u64, std::string, f32, EnginePlanetRequest> m_Data;
 
-    static bool IsIntType(Type _type);
-    static bool IsStringType(Type _type);
-    static bool IsFloatType(Type _type);
-    static bool IsVoidType(Type _type);
+    template <typename DataType>
+    static bool HasDataType(Type _type);
 };
+
+template <typename DataType>
+EngineEvent::EngineEvent(Type _type, DataType _data)
+        : m_Type(_type),
+          m_Data(_data)
+{
+    assert(HasDataType<DataType>(_type));
+}
+
+template <typename DataType>
+bool EngineEvent::HasDataType(Type _type)
+{
+    ArgumentType wantedArgType;
+
+    if constexpr (std::is_same<DataType, void>())
+    {
+        wantedArgType = ArgumentType::Void;
+    }
+    else if constexpr (std::is_same<DataType, u64>())
+    {
+        wantedArgType = ArgumentType::Int;
+    }
+    else if constexpr (std::is_same<DataType, std::string>())
+    {
+        wantedArgType = ArgumentType::String;
+    }
+    else if constexpr (std::is_same<DataType, f32>())
+    {
+        wantedArgType = ArgumentType::Float;
+    }
+    else //if constexpr (std::is_same<DataType, EnginePlanetRequest>())
+    {
+        wantedArgType = ArgumentType::EnginePlanetRequest;
+    }
+
+    const auto& it = std::find_if(COMMAND_DEFINITIONS.begin(), COMMAND_DEFINITIONS.end(), [_type](const EngineEvent::CommandDefinition& definition)
+    {
+        return _type == definition.m_EventType;
+    });
+
+    return it != COMMAND_DEFINITIONS.end() && it->m_ArgumentType == wantedArgType;
+}
+
+template<typename DataType>
+DataType EngineEvent::Get() const
+{
+    assert(HasDataType<DataType>(m_Type));
+
+    return std::get<DataType>(m_Data);
+}

@@ -25,6 +25,7 @@
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/world/planet/PlanetGeneration.h>
 
+// TODO Fix this. Make TestWorlds assets that can be loaded from disk.
 std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
 {
     std::shared_ptr<World> world = nullptr;
@@ -36,11 +37,11 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     {
         const Planet planet = PlanetGeneration::GenerateFromSeed(1);
 
-        world = std::make_shared<World>("Terrain", planet);
+        world = std::make_shared<World>();
     }
     else if (_worldName == "empty")
     {
-        world = std::make_shared<World>("Empty", std::nullopt);
+        world = std::make_shared<World>();
 
         PropRecipe planeRecipe;
         planeRecipe.m_TextureID = TextureAsset_Dev_512;
@@ -53,7 +54,7 @@ std::shared_ptr<World> Test::BuildTestWorld(std::string _worldName)
     }
     else if (_worldName == "collision")
     {
-        world = std::make_shared<World>("Collision", std::nullopt);
+        world = std::make_shared<World>();
 
         {
             PropRecipe planeRecipe;

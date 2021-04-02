@@ -23,7 +23,7 @@
 
 #include <src/tools/StringHelpers.h>
 
-const std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS =
+std::vector<EngineEvent::CommandDefinition> EngineEvent::COMMAND_DEFINITIONS =
         {
             {EngineEvent::Type::Echo, true, "echo", "Print the specified string.", EngineEvent::ArgumentType::String},
             {EngineEvent::Type::Help, true, "help", "Display the help text.", EngineEvent::ArgumentType::Void},
@@ -36,7 +36,8 @@ const std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS =
             {EngineEvent::Type::WorldFreezeZones, true, "freeze", "Prevent the active zones from changing (0,1).", EngineEvent::ArgumentType::Int},
             {EngineEvent::Type::EngineRequestQuit, true, "quit", "Request to end any running tasks and quit the engine.", EngineEvent::ArgumentType::Void},
             {EngineEvent::Type::EngineTestWorld, true, "testworld", "Switch world to the specified test world.", EngineEvent::ArgumentType::String},
-            {EngineEvent::Type::EngineLoadPlanetFromSeed, true, "seed", "Generate a world with a planet based on the seed provided.", EngineEvent::ArgumentType::Int},
+            {EngineEvent::Type::EngineNewPlanet, true, "new", "Create a world with a planet based on [name seed] provided.", EngineEvent::ArgumentType::EnginePlanetRequest},
+            {EngineEvent::Type::EngineLoadPlanet, true, "load", "Load the world with the given name.", EngineEvent::ArgumentType::String},
             {
                 EngineEvent::Type::RenderSetBoundingBoxes,
                 true,
@@ -60,93 +61,26 @@ const std::vector<EngineEvent::CommandDefinition> COMMAND_DEFINITIONS =
 
 constexpr u64 VOID_DATA = 0;
 
-bool EngineEvent::IsIntType(Type _type)
-{
-    const auto& it = std::find_if(COMMAND_DEFINITIONS.begin(), COMMAND_DEFINITIONS.end(), [_type](const EngineEvent::CommandDefinition& definition)
-    {
-        return _type == definition.m_EventType;
-    });
-
-    return it != COMMAND_DEFINITIONS.end() && it->m_ArgumentType == EngineEvent::ArgumentType::Int;
-}
-
-bool EngineEvent::IsFloatType(Type _type)
-{
-    const auto& it = std::find_if(COMMAND_DEFINITIONS.begin(), COMMAND_DEFINITIONS.end(), [_type](const EngineEvent::CommandDefinition& definition)
-    {
-        return _type == definition.m_EventType;
-    });
-
-    return it != COMMAND_DEFINITIONS.end() && it->m_ArgumentType == EngineEvent::ArgumentType::Float;
-}
-
-bool EngineEvent::IsStringType(Type _type)
-{
-    const auto& it = std::find_if(COMMAND_DEFINITIONS.begin(), COMMAND_DEFINITIONS.end(), [_type](const EngineEvent::CommandDefinition& definition)
-    {
-        return _type == definition.m_EventType;
-    });
-
-    return it != COMMAND_DEFINITIONS.end() && it->m_ArgumentType == EngineEvent::ArgumentType::String;
-}
-
-bool EngineEvent::IsVoidType(Type _type)
-{
-    const auto& it = std::find_if(COMMAND_DEFINITIONS.begin(), COMMAND_DEFINITIONS.end(), [_type](const EngineEvent::CommandDefinition& definition)
-    {
-        return _type == definition.m_EventType;
-    });
-
-    return it != COMMAND_DEFINITIONS.end() && it->m_ArgumentType == EngineEvent::ArgumentType::Void;
-}
-
-EngineEvent::EngineEvent(Type _type, std::string _data)
-    : m_Type(_type),
-      m_Data(_data)
-{
-    assert(IsStringType(_type));
-}
-
-EngineEvent::EngineEvent(Type _type, u64 _data)
-    : m_Type(_type),
-      m_Data(_data)
-{
-    assert(IsIntType(_type));
-}
-
-EngineEvent::EngineEvent(Type _type, f32 _data)
-        : m_Type(_type),
-          m_Data(_data)
-{
-    assert(IsFloatType(_type));
-}
-
 EngineEvent::EngineEvent(Type _type)
         : m_Type(_type),
           m_Data(VOID_DATA)
 {
-    assert(IsVoidType(_type));
+    assert(HasDataType<void>(_type));
 }
 
 std::string EngineEvent::GetStringData() const
 {
-    assert(IsStringType(m_Type));
-
-    return std::get<std::string>(m_Data);
+    return Get<std::string>();
 }
 
 u64 EngineEvent::GetIntData() const
 {
-    assert(IsIntType(m_Type));
-
-    return std::get<u64>(m_Data);
+    return Get<u64>();
 }
 
 f32 EngineEvent::GetFloatData() const
 {
-    assert(IsFloatType(m_Type));
-
-    return std::get<f32>(m_Data);
+    return Get<f32>();
 }
 
 /*static*/ std::optional<EngineEvent> EngineEvent::ParseEvent(std::string _input)
@@ -199,6 +133,18 @@ f32 EngineEvent::GetFloatData() const
                 const f32 floatData = atof(tokens[1].data());
                 return EngineEvent(it->m_EventType, floatData);
             }
+            case EngineEvent::ArgumentType::EnginePlanetRequest:
+            {
+                if(tokens.size() != 3)
+                {
+                    LogError("Parsing failed: incorrect number of tokens for " + tokens.front());
+                    return std::nullopt;
+                }
+                EnginePlanetRequest request;
+                request.m_Name = tokens[1];
+                request.m_Seed = atoi(tokens[2].data());
+                return EngineEvent(it->m_EventType, request);
+            }
             case EngineEvent::ArgumentType::Void:
             default:
             {
@@ -210,7 +156,7 @@ f32 EngineEvent::GetFloatData() const
                 return EngineEvent(it->m_EventType);
             }
         }
-        static_assert(static_cast<u32>(EngineEvent::ArgumentType::Count) == 4);
+        static_assert(static_cast<u32>(EngineEvent::ArgumentType::Count) == 5);
     }
     else
     {
@@ -241,11 +187,14 @@ std::string EngineEvent::GetHelpText()
             case EngineEvent::ArgumentType::Float:
                 helpText += "<float>";
                 break;
+            case EngineEvent::ArgumentType::EnginePlanetRequest:
+                helpText += "<name seed>";
+                break;
             case EngineEvent::ArgumentType::Void:
             default:
                 break;
         }
-        static_assert(static_cast<u32>(EngineEvent::ArgumentType::Count) == 4);
+        static_assert(static_cast<u32>(EngineEvent::ArgumentType::Count) == 5);
 
         helpText += "\n\t\t\t" + command.m_Description;
     }

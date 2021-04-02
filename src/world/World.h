@@ -49,7 +49,10 @@ class ParticleSystemHandler;
 class World
 {
 public:
-    World(std::string _worldName, std::optional<Planet> _planet);
+    World();
+
+    bool InitializeNew(const std::string& _name, std::optional<u32> _planetSeed);
+    bool LoadFromFile(const std::string& _name);
 
     void Update(TimeMS _delta);
 
@@ -97,7 +100,6 @@ public:
 
     const Planet* GetPlanet() const { return m_Planet.has_value() ? &m_Planet.value() : nullptr; };
     const EnvironmentState& GetEnvironmentState() const { return m_EnvironmentState; };
-    const WorldZoneRegion& GetWorldBounds() const { return m_WorldBounds; };
     f32 GetTimeScale() const { return m_TimeScale; };
     f32 GetGravityStrength() const { return m_GravityStrength; };
 
@@ -113,6 +115,7 @@ private:
 
     void LoadZoneFromFile(WorldZone &_zone);
     void SaveZoneToFile(WorldZone& _zone);
+    void SaveWorldToFile();
 
     bool TryLoadZone(glm::ivec3 _position);
 
@@ -140,7 +143,6 @@ private:
     WorldZoneLoaders m_ZoneLoaders;
 
     std::string m_Name;
-    WorldZoneRegion m_WorldBounds;
 
     WorldObjectDirectory m_Directory;
 

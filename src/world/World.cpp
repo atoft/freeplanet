@@ -17,8 +17,7 @@
  * along with freeplanet. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "World.h"
-#include "src/engine/inspection/InspectionHelpers.h"
+#include <src/world/World.h>
 
 #include <memory>
 
@@ -31,16 +30,16 @@
 #include <src/world/particles/ParticleSystemHandler.h>
 #include <src/world/terrain/TerrainConstants.h>
 #include <src/world/terrain/TerrainHandler.h>
+#include <src/world/WorldSave.h>
 #include <src/world/WorldZoneSave.h>
 #include <src/world/vista/VistaHandler.h>
 #include <src/profiling/Profiler.h>
 #include <src/tools/MathsHelpers.h>
 #include <src/tools/PropRecipe.h>
+#include <src/world/planet/PlanetGeneration.h>
 
-World::World(std::string _worldName, std::optional<Planet> _planet)
+World::World()
 {
-    m_Name = _worldName;
-
     m_BipedHandler = std::make_shared<BipedHandler>(this);
     m_PlayerHandler = std::make_shared<PlayerHandler>(this);
     m_CollisionHandler = std::make_shared<CollisionHandler>(this);
@@ -50,29 +49,61 @@ World::World(std::string _worldName, std::optional<Planet> _planet)
     m_InventoryHandler = std::make_shared<InventoryHandler>(this);
     m_ParticleSystemHandler = std::make_shared<ParticleSystemHandler>(this);
     m_CameraHandler = std::make_shared<CameraHandler>(this);
-    
-    m_Planet = _planet;
 
     constexpr u32 INITIAL_RESERVED_ZONES = 27;
     m_ActiveZones.reserve(INITIAL_RESERVED_ZONES);
+}
 
-    u32 zonesRadius = 16;
-    glm::ivec3 spawnZoneCoordinates = glm::ivec3(0);
+bool World::InitializeNew(const std::string& _name, std::optional<u32> _planetSeed)
+{
+    const std::string worldPath = "saved/" + _name;
 
-    if (_planet.has_value())
+    if (std::filesystem::exists(worldPath))
     {
-        const f32 worldSpaceRadius = _planet->m_Radius + _planet->m_AtmosphereHeight + _planet->m_WorldPadding;
-        zonesRadius = worldSpaceRadius / TerrainConstants::WORLD_ZONE_SIZE;
-        spawnZoneCoordinates = glm::ivec3(0, _planet->m_Radius / TerrainConstants::WORLD_ZONE_SIZE, 0);
+        LogError("The desired world name already exists.");
+        return false;
     }
 
-    // TODO Make sure zones outside these bounds are never loaded.
-    m_WorldBounds.m_Min = glm::ivec3(-zonesRadius, -zonesRadius, -zonesRadius);
-    m_WorldBounds.m_Max = glm::ivec3( zonesRadius,  zonesRadius,  zonesRadius);
+    // Make a directory for savegames.
+    std::filesystem::create_directory(worldPath);
 
-    // Construct an initial zone so it's possible to start spawning right away in TestWorlds.
-    // Normally zones are built async by a DynamicLoader.
-    m_ActiveZones.emplace_back(this, spawnZoneCoordinates, glm::vec3(TerrainConstants::WORLD_ZONE_SIZE));
+    m_Name = _name;
+
+    if (_planetSeed.has_value())
+    {
+        m_Planet = PlanetGeneration::GenerateFromSeed(*_planetSeed);
+    }
+
+    return true;
+}
+
+bool World::LoadFromFile(const std::string& _name)
+{
+    const std::string worldPath = "saved/" + _name + "/World.frpl";
+
+    const InspectionHelpers::LoadFromTextResult<WorldSave> result = InspectionHelpers::LoadFromText<WorldSave>(worldPath);
+
+    if (result.m_Result == InspectionResult::Success)
+    {
+        const WorldSave save = *result.m_Value;
+
+        if (save.m_HasPlanet)
+        {
+            m_Planet = PlanetGeneration::GenerateFromSeed(result.m_Value->m_Seed);
+        }
+
+        // TODO Use name from data m_Name = result.m_Value->m_Name;
+        m_Name = _name;
+        return true;
+    }
+    else if (result.m_Result == InspectionResult::FileIOError)
+    {
+        LogError("Failed to open world file.");
+        return false;
+    }
+
+    LogError("World save is incomplete.");
+    return false;
 }
 
 const WorldObject* World::FindWorldObject(const WorldObjectRef& _objectRef) const
@@ -396,7 +427,8 @@ void World::LoadZoneFromFile(WorldZone& _zone)
 {
     const glm::ivec3 zoneCoords = _zone.GetCoordinates();
     const std::string coords = std::to_string(zoneCoords.x) + "_" + std::to_string(zoneCoords.y) + "_" + std::to_string(zoneCoords.z);
-    const InspectionHelpers::LoadFromTextResult<WorldZoneSave> loaded = InspectionHelpers::LoadFromText<WorldZoneSave>("saved/" + coords + ".frpl");
+    const std::string path = "saved/" + m_Name + "/" + coords + ".frpl";
+    const InspectionHelpers::LoadFromTextResult<WorldZoneSave> loaded = InspectionHelpers::LoadFromText<WorldZoneSave>(path);
     if (loaded.m_Result == InspectionResult::Success)
     {
         const WorldZoneSave& save = *loaded.m_Value;
@@ -430,7 +462,22 @@ void World::SaveZoneToFile(WorldZone &_zone)
     }
 
     const std::string coords = std::to_string(save.m_ZoneCoords.x) + "_" + std::to_string(save.m_ZoneCoords.y) + "_" + std::to_string(save.m_ZoneCoords.z);
-    InspectionHelpers::SaveToText<WorldZoneSave>(save, "saved/" + coords + ".frpl");
+    InspectionHelpers::SaveToText(save, "saved/" + m_Name + "/" + coords + ".frpl");
+}
+
+void World::SaveWorldToFile()
+{
+    WorldSave save;
+    save.m_Name = m_Name;
+
+    save.m_HasPlanet = m_Planet.has_value();
+
+    if (m_Planet.has_value())
+    {
+        save.m_Seed = m_Planet->m_TerrainSeed;
+    }
+
+    InspectionHelpers::SaveToText(save, "saved/" + m_Name + "/World.frpl");
 }
 
 void World::SendWorldEvents()
@@ -649,6 +696,7 @@ void World::HandleEvent(EngineEvent _event)
         {
             SaveZoneToFile(zone);
         }
+        SaveWorldToFile();
     }
     default:
         break;
@@ -712,3 +760,4 @@ void World::DebugDraw(UIDrawInterface& _interface) const
     // TODO separate debug UI for this.
     m_SpawningHandler->DebugDraw(_interface);
 }
+

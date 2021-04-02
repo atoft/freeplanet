@@ -23,8 +23,14 @@
 
 void UINewPlanetMenu::Init(bool _startFocused)
 {
+    // TODO name input.
+    const std::string placeholderName = "MyWorld";
+
     m_List.AddTextInput("");
-    m_List.AddButton("Create", [this](UIActions& actions){actions.CreatePlanetFromSeed(std::get<UITextInput>(m_List.m_Widgets[0]).GetText());});
+    m_List.AddButton("Create", [this, &placeholderName](UIActions& actions)
+    {
+        actions.NewPlanetFromSeed(placeholderName, std::get<UITextInput>(m_List.m_Widgets[0]).GetText());
+    });
     m_List.AddButton("Back", [](UIActions& actions){actions.GoToMainMenu();});
 
     if (_startFocused)

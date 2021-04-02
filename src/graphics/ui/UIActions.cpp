@@ -42,7 +42,7 @@ void UIActions::Quit()
     m_UIDisplay->RequestQuit();
 }
 
-void UIActions::CreatePlanetFromSeed(std::string _seedString)
+void UIActions::NewPlanetFromSeed(const std::string& _nameString, const std::string& _seedString)
 {
     u64 intSeed = atoi(_seedString.c_str());
 
@@ -53,7 +53,11 @@ void UIActions::CreatePlanetFromSeed(std::string _seedString)
 
     LogMessage("Requesting planet with parsed seed " + std::to_string(static_cast<u32>(intSeed)) + " from string " + _seedString);
 
-    m_UIDisplay->AddEvent(EngineEvent(EngineEvent::Type::EngineLoadPlanetFromSeed, intSeed));
+    EnginePlanetRequest request;
+    request.m_Name = _nameString;
+    request.m_Seed = intSeed;
+
+    m_UIDisplay->AddEvent(EngineEvent(EngineEvent::Type::EngineNewPlanet, request));
 }
 
 void UIActions::SetUIDisplay(UIDisplay* _display)
