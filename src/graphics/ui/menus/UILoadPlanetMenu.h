@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Alastair Toft
+ * Copyright 2021 Alastair Toft
  *
  * This file is part of freeplanet.
  *
@@ -17,25 +17,22 @@
  * along with freeplanet. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <src/graphics/ui/UIBaseMenu.h>
+#include <src/graphics/ui/widgets/UIList.h>
+
 #pragma once
 
-#include <string>
-
-class UIDisplay;
-
-class UIActions
+class UILoadPlanetMenu : public UIBaseMenu
 {
 public:
-    void GoToNewPlanetMenu();
-    void GoToLoadPlanetMenu();
-    void GoToMainMenu();
-    void Quit();
+    void Init(bool _startFocused) override;
 
-    void NewPlanetFromSeed(const std::string& _nameString, const std::string& _seedString);
-    void LoadPlanetFromName(const std::string& _name);
-
-    void SetUIDisplay(UIDisplay* _display);
+    void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
+    void OnButtonReleased(InputType _type, UIActions& _actions) override;
+    void OnTextEntered(std::string _text) override;
+    void OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y) override;
+    bool ShouldTakeFocus() const override { return true; };
 
 private:
-    UIDisplay* m_UIDisplay = nullptr;
+    UIList m_List;
 };

@@ -26,6 +26,7 @@
 void UIMainMenu::Init(bool _startFocused)
 {
     m_List.AddButton("New Planet", [](UIActions& actions) { actions.GoToNewPlanetMenu(); });
+    m_List.AddButton("Load Planet", [](UIActions& actions) { actions.GoToLoadPlanetMenu(); });
     m_List.AddButton("Quit", [](UIActions& actions) { actions.Quit(); });
 
     if (_startFocused)

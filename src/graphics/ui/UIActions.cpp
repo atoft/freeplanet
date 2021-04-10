@@ -23,13 +23,18 @@
 
 #include <src/graphics/ui/UIDisplay.h>
 
-#include <src/graphics/ui/menus/UINewPlanetMenu.h>
+#include <src/graphics/ui/menus/UILoadPlanetMenu.h>
 #include <src/graphics/ui/menus/UIMainMenu.h>
-
+#include <src/graphics/ui/menus/UINewPlanetMenu.h>
 
 void UIActions::GoToNewPlanetMenu()
 {
     m_UIDisplay->RequestMenu<UINewPlanetMenu>();
+}
+
+void UIActions::GoToLoadPlanetMenu()
+{
+    m_UIDisplay->RequestMenu<UILoadPlanetMenu>();
 }
 
 void UIActions::GoToMainMenu()
@@ -58,6 +63,11 @@ void UIActions::NewPlanetFromSeed(const std::string& _nameString, const std::str
     request.m_Seed = intSeed;
 
     m_UIDisplay->AddEvent(EngineEvent(EngineEvent::Type::EngineNewPlanet, request));
+}
+
+void UIActions::LoadPlanetFromName(const std::string& _name)
+{
+    m_UIDisplay->AddEvent(EngineEvent(EngineEvent::Type::EngineLoadPlanet, _name));
 }
 
 void UIActions::SetUIDisplay(UIDisplay* _display)

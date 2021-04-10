@@ -54,6 +54,8 @@ public:
     bool InitializeNew(const std::string& _name, std::optional<u32> _planetSeed);
     bool LoadFromFile(const std::string& _name);
 
+    static std::vector<std::string> GetSavedWorldNames();
+
     void Update(TimeMS _delta);
 
     const WorldObject* GetWorldObject(WorldObjectID _objectID) const;

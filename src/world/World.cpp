@@ -106,6 +106,30 @@ bool World::LoadFromFile(const std::string& _name)
     return false;
 }
 
+std::vector<std::string> World::GetSavedWorldNames()
+{
+    std::vector<std::string> names;
+
+    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator("saved"))
+    {
+        if (!entry.is_directory())
+        {
+            continue;
+        }
+
+        const bool hasWorldFile = std::filesystem::exists(entry.path().string() + "/World.frpl");
+
+        // Could pre-read some data from the World file here to show a preview.
+
+        if (hasWorldFile)
+        {
+            names.push_back(entry.path().filename());
+        }
+    }
+
+    return names;
+}
+
 const WorldObject* World::FindWorldObject(const WorldObjectRef& _objectRef) const
 {
     for (const WorldZone& zone : m_ActiveZones)
