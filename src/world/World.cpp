@@ -123,7 +123,7 @@ std::vector<std::string> World::GetSavedWorldNames()
 
         if (hasWorldFile)
         {
-            names.push_back(entry.path().filename());
+            names.push_back(entry.path().filename().string());
         }
     }
 
