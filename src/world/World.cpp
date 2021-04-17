@@ -81,9 +81,9 @@ bool World::LoadFromFile(const std::string& _name)
 {
     const std::string worldPath = "saved/" + _name + "/World.frpl";
 
-    const InspectionHelpers::LoadFromTextResult<WorldSave> result = InspectionHelpers::LoadFromText<WorldSave>(worldPath);
+    const InspectionHelpers::LoadFromBinaryFileResult<WorldSave> result = InspectionHelpers::LoadFromBinaryFile<WorldSave>(worldPath);
 
-    if (result.m_Result == InspectionResult::Success)
+    if (result.m_Result == FromBinaryInspectionResult::Success)
     {
         const WorldSave save = *result.m_Value;
 
@@ -96,7 +96,7 @@ bool World::LoadFromFile(const std::string& _name)
         m_Name = _name;
         return true;
     }
-    else if (result.m_Result == InspectionResult::FileIOError)
+    else if (result.m_Result == FromBinaryInspectionResult::FileIOError)
     {
         LogError("Failed to open world file.");
         return false;
@@ -452,8 +452,8 @@ void World::LoadZoneFromFile(WorldZone& _zone)
     const glm::ivec3 zoneCoords = _zone.GetCoordinates();
     const std::string coords = std::to_string(zoneCoords.x) + "_" + std::to_string(zoneCoords.y) + "_" + std::to_string(zoneCoords.z);
     const std::string path = "saved/" + m_Name + "/" + coords + ".frpl";
-    const InspectionHelpers::LoadFromTextResult<WorldZoneSave> loaded = InspectionHelpers::LoadFromText<WorldZoneSave>(path);
-    if (loaded.m_Result == InspectionResult::Success)
+    const InspectionHelpers::LoadFromBinaryFileResult<WorldZoneSave> loaded = InspectionHelpers::LoadFromBinaryFile<WorldZoneSave>(path);
+    if (loaded.m_Result == FromBinaryInspectionResult::Success)
     {
         const WorldZoneSave& save = *loaded.m_Value;
 
@@ -486,7 +486,7 @@ void World::SaveZoneToFile(WorldZone &_zone)
     }
 
     const std::string coords = std::to_string(save.m_ZoneCoords.x) + "_" + std::to_string(save.m_ZoneCoords.y) + "_" + std::to_string(save.m_ZoneCoords.z);
-    InspectionHelpers::SaveToText(save, "saved/" + m_Name + "/" + coords + ".frpl");
+    InspectionHelpers::SaveToBinaryFile(save, "saved/" + m_Name + "/" + coords + ".frpl");
 }
 
 void World::SaveWorldToFile()
@@ -501,7 +501,7 @@ void World::SaveWorldToFile()
         save.m_Seed = m_Planet->m_TerrainSeed;
     }
 
-    InspectionHelpers::SaveToText(save, "saved/" + m_Name + "/World.frpl");
+    InspectionHelpers::SaveToBinaryFile(save, "saved/" + m_Name + "/World.frpl");
 }
 
 void World::SendWorldEvents()
