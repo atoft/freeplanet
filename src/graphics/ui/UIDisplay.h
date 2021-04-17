@@ -61,6 +61,7 @@ public:
     void UpdateSplashScreen();
 
     bool IsInMenu();
+    bool IsUsingMouse() const { return m_IsUsingMouseInput; };
 
     void AddEvent(EngineEvent _event);
     void HandleEvent(EngineEvent _event);

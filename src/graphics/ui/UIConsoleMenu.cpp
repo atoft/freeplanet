@@ -51,7 +51,7 @@ void UIConsoleMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World*)
 
     currentY-= MARGIN_Y + CONSOLE_LOG_SIZE;
 
-    m_Textbox.Draw(_delta, _display, true);
+    m_Textbox.Draw(_delta, _display, true, true);
 
     for(s32 logIdx = log.size() -1; logIdx >=0; --logIdx)
     {
@@ -94,7 +94,7 @@ void UIConsoleMenu::OnTextEntered(std::string _text)
     m_Textbox.OnTextEntered(_text);
 }
 
-void UIConsoleMenu::OnButtonReleased(InputType _type, UIActions& _actions)
+void UIConsoleMenu::OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions)
 {
     switch(_type)
     {

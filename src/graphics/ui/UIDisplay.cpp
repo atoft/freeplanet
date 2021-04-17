@@ -156,17 +156,17 @@ void UIDisplay::OnButtonInput(InputType _type)
 
     if (m_GameMenu != nullptr && !m_DisplayLog)
     {
-        m_GameMenu->OnButtonReleased(_type, m_Actions);
+        m_GameMenu->OnButtonReleased(m_Interface, _type, m_Actions);
     }
 
     if (m_DebugMenu != nullptr)
     {
-        m_DebugMenu->OnButtonReleased(_type, m_Actions);
+        m_DebugMenu->OnButtonReleased(m_Interface, _type, m_Actions);
     }
 
     if (m_Console != nullptr)
     {
-        m_Console->OnButtonReleased(_type, m_Actions);
+        m_Console->OnButtonReleased(m_Interface, _type, m_Actions);
     }
 }
 

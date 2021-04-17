@@ -35,10 +35,11 @@ void UIList::AddTextInput(std::string _label)
     UITextInput input;
     input.m_Position = UIConstants::ListStartPosition + glm::ivec2(0, UIConstants::ListItemSpacing) * static_cast<s32>(m_Widgets.size());
     input.m_Dimensions = UIConstants::ButtonDimensions;
+    input.m_Label = _label;
     m_Widgets.push_back(input);
 }
 
-void UIList::OnButtonReleased(InputType _type, UIActions& _actions)
+void UIList::OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions)
 {
     if (m_Widgets.empty())
     {
@@ -75,6 +76,26 @@ void UIList::OnButtonReleased(InputType _type, UIActions& _actions)
     }
     case InputType::MenuAccept:
     {
+        if (_display.IsUsingMouse())
+        {
+            u32 widgetIdx = 0;
+            for (const UIWidgetVariant& variant : m_Widgets)
+            {
+                const f32 x = m_HoverPosition.x;
+                const f32 y = m_HoverPosition.y;
+                const bool isHovered =
+                    std::visit([&](const auto& value) { return value.IsHovered(_display, x, y); }, variant);
+
+                if (isHovered)
+                {
+                    m_ActiveIndex = widgetIdx;
+                    break;
+                }
+
+                ++widgetIdx;
+            }
+        }
+
         if (m_ActiveIndex != std::nullopt)
         {
             std::visit([&_actions](auto&& value){value.OnPressed(_actions);}, m_Widgets[*m_ActiveIndex]);
@@ -89,29 +110,31 @@ void UIList::OnButtonReleased(InputType _type, UIActions& _actions)
 
 void UIList::OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y)
 {
-    m_ActiveIndex = std::nullopt;
+    m_HoverPosition.x = _x;
+    m_HoverPosition.y = _y;
+}
 
-    u32 index = 0;
-    for (const UIWidgetVariant& widget : m_Widgets)
+void UIList::OnTextEntered(const std::string& _text)
+{
+    if (m_ActiveIndex)
     {
-        const bool isHovered = std::visit([&_display, _x, _y](auto&& value){return value.IsHovered(_display, _x, _y);}, widget);
-
-        if (isHovered)
-        {
-            m_ActiveIndex = index;
-            break;
-        }
-
-        ++index;
+        UIWidgetVariant& widget = m_Widgets[*m_ActiveIndex];
+        std::visit([&](auto&& value){value.OnTextEntered(_text);}, widget);
     }
 }
 
 void UIList::Draw(TimeMS _delta, UIDrawInterface& _display)
 {
+    const f32 x = m_HoverPosition.x;
+    const f32 y = m_HoverPosition.y;
+
     u32 index = 0;
-    for (UIWidgetVariant & widget : m_Widgets)
+    for (UIWidgetVariant& widget : m_Widgets)
     {
-        std::visit([&](auto&& value){value.Draw(_delta, _display, index == m_ActiveIndex);}, widget);
+        const bool isHovered = _display.IsUsingMouse() && std::visit([&](const auto& value){return value.IsHovered(_display, x, y);}, widget);
+        const bool isActive = m_ActiveIndex == index;
+
+        std::visit([&](auto&& value){value.Draw(_delta, _display, isHovered, isActive);}, widget);
 
         ++index;
     }

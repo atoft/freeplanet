@@ -23,13 +23,14 @@
 
 void UINewPlanetMenu::Init(bool _startFocused)
 {
-    // TODO name input.
-    const std::string placeholderName = "MyWorld";
-
-    m_List.AddTextInput("");
-    m_List.AddButton("Create", [this, &placeholderName](UIActions& actions)
+    m_List.AddTextInput("Name");
+    m_List.AddTextInput("Seed");
+    m_List.AddButton("Create", [this](UIActions& actions)
     {
-        actions.NewPlanetFromSeed(placeholderName, std::get<UITextInput>(m_List.m_Widgets[0]).GetText());
+      const std::string name = std::get<UITextInput>(m_List.m_Widgets[0]).GetText();
+      const std::string seed = std::get<UITextInput>(m_List.m_Widgets[1]).GetText();
+
+        actions.NewPlanetFromSeed(name, seed);
     });
     m_List.AddButton("Back", [](UIActions& actions){actions.GoToMainMenu();});
 
@@ -43,20 +44,18 @@ void UINewPlanetMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World
 {
     _display.FillScreen(UIConstants::BackgroundColor);
     _display.DrawString(UIConstants::ListStartPosition - glm::ivec2(0, 200), "New planet", 48.f);
-    _display.DrawString(UIConstants::ListStartPosition - glm::ivec2(0, 44), "Enter a seed:", 24.f);
     m_List.Draw(_delta, _display);
 
 }
 
-void UINewPlanetMenu::OnButtonReleased(InputType _type, UIActions& _actions)
+void UINewPlanetMenu::OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions)
 {
-    m_List.OnButtonReleased(_type, _actions);
+    m_List.OnButtonReleased(_display, _type, _actions);
 }
 
 void UINewPlanetMenu::OnTextEntered(std::string _text)
 {
-    // TODO A nice way to access widgets..?
-    std::get<UITextInput>(m_List.m_Widgets[0]).OnTextEntered(_text);
+    m_List.OnTextEntered(_text);
 }
 
 void UINewPlanetMenu::OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y)

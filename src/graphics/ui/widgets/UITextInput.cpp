@@ -84,8 +84,28 @@ void UITextInput::MoveCaretRight()
     m_CaretPosition = (m_CaretPosition == m_InputBuffer.size()) ? m_CaretPosition : m_CaretPosition + 1;
 }
 
-void UITextInput::Draw(TimeMS _delta, UIDrawInterface& _display, bool _isFocused)
+void UITextInput::Draw(TimeMS _delta, UIDrawInterface& _display, bool _isFocused, bool _isActive)
 {
-    _display.DrawRectangle(m_Position, m_Dimensions, Color(0.1f, 0.1f, 0.1f, 1.f));
-    _display.DrawString(m_Position, m_InputBuffer, m_FontSize, Color(0,1.f,0,1.f), FontStyle::Monospace, UIAnchorPosition::Centered, false, m_CaretPosition);
+    _display.DrawString(m_Position, m_Label, 24.f, Color(1.f), FontStyle::Sans, UIAnchorPosition::Centered, false);
+
+    const f32 labelSpacing = m_Label.empty() ? 0.f : 0.3f;
+    const glm::ivec2 boxPosition = m_Position + glm::ivec2(m_Dimensions.x * labelSpacing, 0.f);
+    const glm::ivec2 boxDimensions = glm::ivec2(m_Dimensions.x * (1.f - labelSpacing), m_Dimensions.y);
+
+    _display.DrawRectangle(boxPosition, boxDimensions, _isActive ? Color(0.1f, 0.1f, 0.1f, 1.f) : Color(0.3f, 0.3f, 0.3f, 1.f));
+
+    _display.DrawString(
+        boxPosition,
+        m_InputBuffer,
+        m_FontSize,
+        Color(0,1.f,0,1.f),
+        FontStyle::Monospace,
+        UIAnchorPosition::Centered,
+        false,
+        _isActive ? static_cast<s32>(m_CaretPosition) : -1);
+}
+
+bool UITextInput::IsHovered(const UIDrawInterface& _display, f32 _x, f32 _y) const
+{
+    return _display.IsInAABB(glm::uvec2(_x, _y), m_Position, m_Dimensions, UIAnchorPosition::Centered);
 }

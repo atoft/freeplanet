@@ -28,9 +28,10 @@ class UIActions;
 class UIButton
 {
 public:
-    void Draw(TimeMS _delta, UIDrawInterface& _display, bool _isFocused);
+    void Draw(TimeMS _delta, UIDrawInterface& _display, bool _isFocused, bool _isActive);
     void OnPressed(UIActions& _actions);
     bool IsHovered(const UIDrawInterface& _display, f32 _x, f32 _y) const;
+    void OnTextEntered(std::string _text) {};
 
 public:
     std::string m_Label;

@@ -68,7 +68,7 @@ void UIHUDMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _wor
     }
 }
 
-void UIHUDMenu::OnButtonReleased(InputType _type, UIActions& _actions)
+void UIHUDMenu::OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions)
 {
     if (_type == InputType::InventorySlot1
      || _type == InputType::InventorySlot2

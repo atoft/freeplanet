@@ -28,7 +28,7 @@ public:
     void Init(bool _startFocused) override;
 
     void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
-    void OnButtonReleased(InputType _type, UIActions& _actions) override;
+    void OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions) override;
     void OnTextEntered(std::string _text) override;
     void OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y) override;
     bool ShouldTakeFocus() const override { return true; };

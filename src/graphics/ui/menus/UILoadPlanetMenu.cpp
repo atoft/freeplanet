@@ -50,9 +50,9 @@ void UILoadPlanetMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const Worl
 
 }
 
-void UILoadPlanetMenu::OnButtonReleased(InputType _type, UIActions& _actions)
+void UILoadPlanetMenu::OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions)
 {
-    m_List.OnButtonReleased(_type, _actions);
+    m_List.OnButtonReleased(_display, _type, _actions);
 }
 
 void UILoadPlanetMenu::OnTextEntered(std::string _text)

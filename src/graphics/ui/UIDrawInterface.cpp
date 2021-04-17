@@ -274,3 +274,9 @@ bool UIDrawInterface::IsInAABB(glm::uvec2 _point, glm::uvec2 _boxPosition, glm::
         && _point.x <= displayedPosition.x + displayedScale.x
         && _point.y <= displayedPosition.y + displayedScale.y;
 }
+
+bool UIDrawInterface::IsUsingMouse() const
+{
+    assert(m_UIDisplay != nullptr);
+    return m_UIDisplay->IsUsingMouse();
+}

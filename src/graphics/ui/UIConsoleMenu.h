@@ -20,7 +20,7 @@
 #pragma once
 
 #include <src/graphics/ui/UIBaseMenu.h>
-#include <src/graphics/ui/UITextInput.h>
+#include <src/graphics/ui/widgets/UITextInput.h>
 
 class UIConsoleMenu : public UIBaseMenu
 {
@@ -28,7 +28,7 @@ public:
     UIConsoleMenu();
     void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
     void OnTextEntered(std::string _text) override;
-    void OnButtonReleased(InputType _type, UIActions& _actions) override;
+    void OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions) override;
 
 private:
     UITextInput m_Textbox;

@@ -53,9 +53,9 @@ void UIMainMenu::Draw(TimeMS _delta, UIDrawInterface& _display, const World* _wo
     m_List.Draw(_delta, _display);
 }
 
-void UIMainMenu::OnButtonReleased(InputType _type, UIActions& _actions)
+void UIMainMenu::OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions)
 {
-    m_List.OnButtonReleased(_type, _actions);
+    m_List.OnButtonReleased(_display, _type, _actions);
 }
 
 void UIMainMenu::OnMouseHover(const UIDrawInterface& _display, f32 _x, f32 _y)

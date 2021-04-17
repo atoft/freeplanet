@@ -25,7 +25,7 @@ class UIHUDMenu : public UIBaseMenu
 {
 public:
     void Draw(TimeMS _delta, UIDrawInterface& _display, const World* _world) override;
-    void OnButtonReleased(InputType _type, UIActions& _actions) override;
+    void OnButtonReleased(const UIDrawInterface& _display, InputType _type, UIActions& _actions) override;
 
 private:
     float m_TimeSinceChange = 0.f;
