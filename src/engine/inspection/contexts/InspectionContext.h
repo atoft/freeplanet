@@ -28,7 +28,7 @@
 #include <src/tools/globals.h>
 #include <src/engine/inspection/contexts/FromBinaryInspectionContext.h>
 #include <src/engine/inspection/contexts/ToBinaryInspectionContext.h>
-#include <src/engine/inspection/contexts/TextInspectionContext.h>
+#include <src/engine/inspection/contexts/ToTextInspectionContext.h>
 #include <src/engine/inspection/InspectionTypes.h>
 #include <src/engine/inspection/TypeInfo.h>
 #include <src/tools/STL.h>

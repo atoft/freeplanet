@@ -28,7 +28,8 @@
 #include <src/engine/inspection/contexts/FromBinaryInspectionContext.h>
 #include <src/engine/inspection/contexts/ToBinaryInspectionContext.h>
 #include <src/engine/inspection/contexts/InspectionContext.h>
-#include <src/engine/inspection/contexts/TextInspectionContext.h>
+#include <src/engine/inspection/contexts/FromTextInspectionContext.h>
+#include <src/engine/inspection/contexts/ToTextInspectionContext.h>
 
 class InspectionHelpers
 {
@@ -41,12 +42,11 @@ public:
         // call a deprecate method. It could read into a "deprecated version" of the struct
         // which the caller can then use to populate the newer version.
 
-        TextInspectionContext textContext;
+        FromTextInspectionContext textContext;
         textContext.m_TextIt = _source.begin();
         textContext.m_TextBegin = _source.begin();
         textContext.m_TextEnd = _source.end();
-        textContext.m_Operation = TextInspectionContext::Operation::FromText;
-        
+
         Inspect("", _outValue, textContext);
 
         if (!textContext.m_ErrorMessage.empty())
@@ -71,9 +71,8 @@ public:
         // copy here. If this becomes slow, can do a const-cast to avoid the copy.
         T nonConstCopyOfSource = _source;
 
-        TextInspectionContext textContext;
+        ToTextInspectionContext textContext;
         textContext.m_TextBuffer = &_outText;
-        textContext.m_Operation = TextInspectionContext::Operation::ToText;
 
         Inspect("", nonConstCopyOfSource, textContext);
 
