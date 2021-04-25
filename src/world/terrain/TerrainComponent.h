@@ -61,4 +61,5 @@ public:
 
     std::optional<TerrainRegion> m_DirtyRegion;
     std::vector<WorldEvent> m_AssociatedEvents;
+    bool m_HasFinishedFirstUpdate = false;
 };

@@ -111,13 +111,13 @@ void SpawningHandler::Update()
 
     for (WorldZone& zone : m_World->GetActiveZones())
     {
-        // Use the terrain's RawMesh to allow us to query vertices directly.
-        // This approach is not ideal since it prevents us from spawning objects in the same place in the vista as
-        // in the actual world.
-        const RawMesh& rawMesh = zone.GetTerrainComponent().m_DynamicMesh.GetRawMesh();
-
-        if (!zone.IsProceduralSpawningDone() && !rawMesh.IsEmpty())
+        if (!zone.IsProceduralSpawningDone() && zone.GetTerrainComponent().m_HasFinishedFirstUpdate)
         {
+            // Use the terrain's RawMesh to allow us to query vertices directly.
+            // This approach is not ideal since it prevents us from spawning objects in the same place in the vista as
+            // in the actual world.
+            const RawMesh& rawMesh = zone.GetTerrainComponent().m_DynamicMesh.GetRawMesh();
+
             constexpr f32 fractionOfVertsToSpawnTreesOn = 0.015f;
             constexpr f32 fractionOfVertsToSpawnGrassOn = 0.125f;
 

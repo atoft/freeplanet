@@ -49,6 +49,7 @@ void TerrainHandler::Update(TimeMS _dt)
         if (finishedUpdater != nullptr)
         {
             terrainComponent.m_TerrainChunks = finishedUpdater->GetChunks();
+            terrainComponent.m_HasFinishedFirstUpdate = true;
 
             // Trigger the renderer to make a new DynamicMesh for this TerrainComponent.
             terrainComponent.m_DynamicMesh.RequestMeshUpdate(finishedUpdater->GetRawMesh());
