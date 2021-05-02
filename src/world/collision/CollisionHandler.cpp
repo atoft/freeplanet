@@ -426,25 +426,26 @@ void CollisionHandler::DebugDraw(UIDrawInterface& _interface) const
     {
         for (const ColliderComponent& collider : zone.GetComponents<ColliderComponent>())
         {
-            const WorldObject* owner = collider.GetOwnerObject();
-
-            for (const CollisionResult& result : collider.m_CollisionsLastFrame)
-            {
-                const glm::vec3 colliderOrigin = owner->GetPosition() + collider.m_Bounds.m_PositionOffset;
-
-                _interface.DebugDrawArrow(zone.GetCoordinates(), colliderOrigin, 1.f + glm::abs(result.m_Distance), result.m_Normal);
-                _interface.DrawString(
-                        glm::vec2(20, 40 + collisionCount * 50.f),
-                        "Collider: " + owner->GetName() + "\nChosen axis: " + result.m_DebugInfo,
-                        16.f,
-                        Color(1.f,0.f,0.f,1.f),
-                        FontStyle::Sans);
-
-                ++collisionCount;
-            }
-
             if (collider.m_CollisionPrimitiveType == CollisionPrimitiveType::OBB)
             {
+                const WorldObject* owner = collider.GetOwnerObject();
+                const CollisionHelpers::OBBProperties properties = CollisionHelpers::GetOBBProperties(owner->GetZoneTransform(), collider.m_Bounds, glm::vec3(0.f));
+
+                const glm::vec3& colliderOrigin = properties.m_Origin;
+
+                for (const CollisionResult& result : collider.m_CollisionsLastFrame)
+                {
+                    _interface.DebugDrawArrow(zone.GetCoordinates(), colliderOrigin, 1.f + glm::abs(result.m_Distance), result.m_Normal);
+                    _interface.DrawString(
+                            glm::vec2(20, 40 + collisionCount * 50.f),
+                            "Collider: " + owner->GetName() + "\nChosen axis: " + result.m_DebugInfo,
+                            16.f,
+                            Color(1.f,0.f,0.f,1.f),
+                            FontStyle::Sans);
+
+                    ++collisionCount;
+                }
+
                 const AABB boundsForOBB = CollisionHelpers::GetAABBForOBB(MathsHelpers::GetRotationMatrix(owner->GetZoneTransform()), collider.m_Bounds);
                 _interface.DebugDrawAABB(zone.GetCoordinates(), owner->GetPosition(), boundsForOBB);
             }

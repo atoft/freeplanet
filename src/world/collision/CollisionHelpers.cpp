@@ -61,7 +61,7 @@ CollisionHelpers::OBBProperties CollisionHelpers::GetOBBProperties(const glm::ma
 {
     CollisionHelpers::OBBProperties properties;
 
-    properties.m_Origin = MathsHelpers::GetPosition(_transform) + _bounds.m_PositionOffset - _positionOffset;
+    properties.m_Origin = MathsHelpers::GetPosition(_transform) + glm::vec3(MathsHelpers::GetRotationMatrix(_transform) * glm::vec4(_bounds.m_PositionOffset, 1.f)) - _positionOffset;
     properties.m_X = glm::normalize(MathsHelpers::GetRightVector(_transform));
     properties.m_Y = glm::normalize(MathsHelpers::GetUpVector(_transform));
     properties.m_Z = glm::normalize(MathsHelpers::GetForwardVector(_transform));
@@ -90,7 +90,7 @@ AABB CollisionHelpers::GetAABBForOBB(const glm::mat4& _rotation, const AABB& _bo
     glm::vec3 basisZ = glm::abs(glm::vec4(0,0,1,1) * glm::inverse(_rotation)) * _bounds.m_Dimensions.z;
 
     AABB result;
-    result.m_PositionOffset = _bounds.m_PositionOffset;
+    result.m_PositionOffset = _rotation * glm::vec4(_bounds.m_PositionOffset, 1.f);
     result.m_Dimensions = basisX + basisY + basisZ;
 
     return result;

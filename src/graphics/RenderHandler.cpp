@@ -557,9 +557,10 @@ void RenderHandler::GenerateBoundingBoxScenes(const World* _world, const Freeloo
                     [[fallthrough]];
                 case CollisionPrimitiveType::AABB:  // Currently we don't actually support AABBs, they just act like OBBs if the object is rotated...
                 {
+                    const CollisionHelpers::OBBProperties properties = CollisionHelpers::GetOBBProperties(worldObject->GetZoneTransform(), collider.m_Bounds, glm::vec3(0.f));
                     AddBoundingBoxObject(
                             glm::scale(
-                                    glm::translate(glm::mat4(1.f), worldObject->GetPosition() + collider.m_Bounds.m_PositionOffset)
+                                    glm::translate(glm::mat4(1.f), properties.m_Origin)
                                     * MathsHelpers::GetRotationMatrix(worldObject->GetZoneTransform()), collider.m_Bounds.m_Dimensions * 2.f),
                             cubeMesh, sceneToRender);
                     break;
