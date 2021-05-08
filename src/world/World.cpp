@@ -468,6 +468,10 @@ void World::LoadZoneFromFile(WorldZone& _zone)
             LogError("Error attempting to load save for " + glm::to_string(zoneCoords) + " - file contains the wrong coordinates.");
         }
     }
+    else if (loaded.m_Result == FromBinaryInspectionResult::ReadSyntaxError)
+    {
+        LogError("Error attempting to load save for " + glm::to_string(zoneCoords) + " - file was malformed.");
+    }
 
     _zone.m_HasLoadedFromSave = true;
 }

@@ -53,7 +53,7 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
     // Make a directory for savegames.
     std::filesystem::create_directory("saved");
 
-    const InspectionHelpers::LoadFromTextResult<EngineConfig> loadedConfig = InspectionHelpers::LoadFromText<EngineConfig>("engineconfig.txt");
+    const InspectionHelpers::LoadFromTextResult<EngineConfig> loadedConfig = InspectionHelpers::LoadFromTextFile<EngineConfig>("engineconfig.txt");
 
     // If it couldn't be loaded, or it was missing some values, we want to update the file on disk.
     const bool needToWriteBack = loadedConfig.m_Result == InspectionResult::ReadIncomplete;
@@ -115,12 +115,12 @@ s32 Engine::Run(const CommandLineArgs& _commandLineArgs)
 
         m_EngineConfig.m_InputConfig.m_KeyMappings = Input::DEFAULT_KEY_MAPPINGS;
 
-        InspectionHelpers::SaveToText(m_EngineConfig, engineConfigFilename);
+        InspectionHelpers::SaveToTextFile(m_EngineConfig, engineConfigFilename);
     }
     else if (needToWriteBack)
     {
         LogMessage("Updating " + engineConfigFilename + ".");
-        InspectionHelpers::SaveToText(m_EngineConfig, engineConfigFilename);
+        InspectionHelpers::SaveToTextFile(m_EngineConfig, engineConfigFilename);
     }
     
     m_Window->setActive(false);

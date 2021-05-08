@@ -134,14 +134,13 @@ public:
 
     template <typename T>
     [[nodiscard]]
-    static LoadFromTextResult<T> LoadFromText(std::string _path)
+    static LoadFromTextResult<T> LoadFromTextFile(std::string _path)
     {
         std::fstream infile;
         infile.open(_path);
 
         if (!infile)
         {
-            LogError("File \"" + _path + "\" cannot be opened.");
             return { std::nullopt, InspectionResult::FileIOError };
         }
 
@@ -162,7 +161,7 @@ public:
     }
 
     template <typename T>
-    static void SaveToText(const T& _source, std::string _path)
+    static void SaveToTextFile(const T& _source, std::string _path)
     {
         std::fstream outfile;
         outfile.open(_path, std::fstream::out);
@@ -198,7 +197,6 @@ public:
 
         if (!infile)
         {
-            LogError("File \"" + _path + "\" cannot be opened.");
             return { std::nullopt, FromBinaryInspectionResult::FileIOError };
         }
 
