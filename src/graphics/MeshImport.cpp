@@ -147,7 +147,8 @@ std::optional<MeshImport::ImportedMeshData> MeshImport::ImportOBJ(const std::str
 
             if (tokens.size() > 4)
             {
-                LogWarning("Line " + std::to_string(lineNumberForLogging) + ": Non-triangular faces are not supported. Skipping " + std::to_string(tokens.size() - 4) + " face elements.");
+                LogError("Line " + std::to_string(lineNumberForLogging) + ": Non-triangular faces are not supported. Found " + std::to_string(tokens.size() - 4) + " extra face elements.");
+                return std::nullopt;
             }
 
             // Each time we see a unique v/vt/vn combination, we have to add it to the result as a new vertex.

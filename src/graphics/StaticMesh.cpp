@@ -40,7 +40,7 @@ void StaticMesh::AcquireResources(MeshAssetID _meshAsset)
     }
     else
     {
-        LogError("Couldn't import mesh!");
+        LogError("Couldn't import mesh " + Assets::GetMeshAssetName(_meshAsset) + ".");
 
         // Would rather not abort for this, instead draw a big garbage triangle.
 

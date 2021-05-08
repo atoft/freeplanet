@@ -88,7 +88,14 @@ bool Test::ValidateStaticMeshes()
 
         std::optional<MeshImport::ImportedMeshData> mesh = MeshImport::ImportOBJ(modelPath);
 
-        success &= (mesh != std::nullopt);
+        const bool meshSuccess = (mesh != std::nullopt);
+
+        if (!meshSuccess)
+        {
+            LogError("Failed to validate " + modelPath);
+        }
+
+        success &= meshSuccess;
     }
 
     return TestResult(success);
